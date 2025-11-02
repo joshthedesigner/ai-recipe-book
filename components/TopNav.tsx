@@ -40,7 +40,7 @@ export default function TopNav() {
         .eq('owner_id', user.id)
         .limit(1);
 
-      setIsGroupOwner(data && data.length > 0);
+      setIsGroupOwner(!!data && data.length > 0);
     }
 
     checkOwnership();
