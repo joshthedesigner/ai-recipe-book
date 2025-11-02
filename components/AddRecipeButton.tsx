@@ -12,10 +12,12 @@ export default function AddRecipeButton({ onClick }: AddRecipeButtonProps) {
       startIcon={<AddIcon />}
       onClick={onClick}
       sx={{
-        borderRadius: '12px',
+        borderRadius: '8px',
         textTransform: 'none',
         fontWeight: 600,
+        color: 'white',
         px: 3,
+        py: 1.25,
         boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
         '&:hover': {
           boxShadow: '0 4px 12px rgba(25, 118, 210, 0.35)',
