@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { routeMessage } from '@/router';
 import { ChatRequest, ChatAPIResponse } from '@/types';
+import { createClient } from '@/db/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +29,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Create server-side Supabase client with user session
+    const supabase = createClient();
+
     // Route the message through our system
-    const response = await routeMessage(message.trim(), userId);
+    const response = await routeMessage(message.trim(), userId, supabase);
 
     // Return the response
     return NextResponse.json(

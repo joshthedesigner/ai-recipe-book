@@ -13,7 +13,7 @@
 import OpenAI from 'openai';
 import { Recipe, AgentResponse } from '@/types';
 import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
-import { createClient } from '@/db/supabaseServer';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -80,7 +80,8 @@ If the recipe is incomplete or missing critical information:
 export async function storeRecipe(
   message: string,
   userId: string,
-  contributorName: string = 'User'
+  contributorName: string = 'User',
+  supabase?: SupabaseClient
 ): Promise<AgentResponse> {
   try {
     // Step 0: Check if message contains actual recipe content or just intent
@@ -134,7 +135,9 @@ export async function storeRecipe(
 
     // Step 4: Save to database
     console.log('Saving recipe to database...');
-    const supabase = createClient();
+    if (!supabase) {
+      throw new Error('Supabase client not provided');
+    }
     const { data, error } = await supabase
       .from('recipes')
       .insert({
