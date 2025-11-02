@@ -7,10 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/db/supabaseClient';
+import { createClient } from '@/db/supabaseServer';
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createClient();
     const searchParams = request.nextUrl.searchParams;
     
     // Get query parameters

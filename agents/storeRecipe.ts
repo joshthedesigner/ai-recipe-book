@@ -11,9 +11,9 @@
  */
 
 import OpenAI from 'openai';
-import { supabase } from '@/db/supabaseClient';
 import { Recipe, AgentResponse } from '@/types';
 import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
+import { createClient } from '@/db/supabaseServer';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -134,6 +134,7 @@ export async function storeRecipe(
 
     // Step 4: Save to database
     console.log('Saving recipe to database...');
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('recipes')
       .insert({
