@@ -298,17 +298,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   const processImages = async (files: File[], translate: boolean = false) => {
     setUploadingImage(true);
     
-    const imageText = files.length === 1 
-      ? `[Uploaded 1 image]` 
-      : `[Uploaded ${files.length} images]`;
-    
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      message: translate ? `[Translating recipe from ${pendingTranslation?.language}...]` : imageText,
-      timestamp: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    // Clear image queue immediately so thumbnails disappear
+    setImageQueue([]);
 
     try {
       // Process all images and extract text
@@ -375,8 +366,6 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
 
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Clear image queue
-        setImageQueue([]);
         setPendingTranslation(null);
       }
 
