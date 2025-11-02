@@ -10,12 +10,15 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Button,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import TopNav from '@/components/TopNav';
 import MessageBubble from '@/components/MessageBubble';
 import RecipeCard from '@/components/RecipeCard';
-import { ChatResponse } from '@/types';
+import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
@@ -39,6 +42,7 @@ export default function ChatPage() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auth protection: redirect to login if not authenticated
@@ -91,6 +95,11 @@ export default function ChatPage() {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
+
+        // Check if recipe needs review
+        if (data.response.needsReview && data.response.pendingRecipe) {
+          setPendingRecipe(data.response.pendingRecipe);
+        }
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
@@ -113,6 +122,65 @@ export default function ChatPage() {
       e.preventDefault();
       handleSend();
     }
+  };
+
+  const handleConfirmRecipe = async () => {
+    if (!pendingRecipe || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: 'confirm',
+          userId: user?.id,
+          confirmRecipe: pendingRecipe,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          message: data.response.message,
+          timestamp: new Date().toISOString(),
+          chatResponse: data.response,
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+        setPendingRecipe(null); // Clear pending recipe
+      } else {
+        throw new Error(data.error || 'Failed to save recipe');
+      }
+    } catch (error) {
+      console.error('Error confirming recipe:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        message: 'Sorry, I encountered an error saving the recipe. Please try again.',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelRecipe = () => {
+    setPendingRecipe(null);
+    const cancelMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      message: 'No problem! Recipe not saved. Is there anything else I can help you with?',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, cancelMessage]);
   };
 
   return (
@@ -155,6 +223,55 @@ export default function ChatPage() {
               )}
             </Box>
           ))}
+
+          {/* Recipe Confirmation Buttons */}
+          {pendingRecipe && !isLoading && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                mb: 3,
+              }}
+            >
+              <Box
+                sx={{
+                  maxWidth: '600px',
+                  width: '100%',
+                  display: 'flex',
+                  gap: 2,
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="success"
+                  startIcon={<CheckIcon />}
+                  onClick={handleConfirmRecipe}
+                  sx={{
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                  }}
+                >
+                  Yes, Save Recipe
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<CloseIcon />}
+                  onClick={handleCancelRecipe}
+                  sx={{
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: 3,
+                  }}
+                >
+                  No, Cancel
+                </Button>
+              </Box>
+            </Box>
+          )}
 
           {/* Loading indicator */}
           {isLoading && (

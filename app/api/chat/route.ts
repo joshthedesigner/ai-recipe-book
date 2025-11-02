@@ -11,12 +11,32 @@ import { NextRequest, NextResponse } from 'next/server';
 import { routeMessage } from '@/router';
 import { ChatRequest, ChatAPIResponse } from '@/types';
 import { createClient } from '@/db/supabaseServer';
+import { saveConfirmedRecipe } from '@/agents/storeRecipe';
 
 export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body: ChatRequest = await request.json();
-    const { message, userId } = body;
+    const { message, userId, confirmRecipe } = body;
+
+    // Create server-side Supabase client with user session
+    const supabase = createClient();
+
+    // Special handling: If user is confirming a recipe, save it directly
+    if (confirmRecipe && userId) {
+      const result = await saveConfirmedRecipe(confirmRecipe, userId, supabase);
+      return NextResponse.json(
+        {
+          success: result.success,
+          response: {
+            message: result.message,
+            recipe: result.data,
+            needsClarification: false,
+          },
+        } as ChatAPIResponse,
+        { status: 200 }
+      );
+    }
 
     // Validate input
     if (!message || message.trim().length === 0) {
@@ -28,9 +48,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Create server-side Supabase client with user session
-    const supabase = createClient();
 
     // Route the message through our system
     const response = await routeMessage(message.trim(), userId, supabase);

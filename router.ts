@@ -112,7 +112,17 @@ async function handleStoreRecipe(
     };
   }
   
-  const result = await storeRecipe(message, userId, 'User', supabase);
+  const result = await storeRecipe(message, userId, 'User', supabase, true); // Enable review mode
+  
+  // Check if the recipe needs review (scraped from URL)
+  if (result.success && result.data && result.message.includes('Recipe Preview')) {
+    return {
+      message: result.message,
+      pendingRecipe: result.data,
+      needsReview: true,
+      needsClarification: false,
+    };
+  }
   
   return {
     message: result.message,

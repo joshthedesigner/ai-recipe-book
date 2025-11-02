@@ -54,6 +54,8 @@ export interface ChatResponse {
   recipe?: Recipe;
   recipes?: Recipe[];
   needsClarification?: boolean;
+  needsReview?: boolean;           // Recipe needs user review before saving
+  pendingRecipe?: Recipe;          // Recipe awaiting confirmation
 }
 
 // ========================================
@@ -74,6 +76,7 @@ export interface AgentResponse {
 export interface ChatRequest {
   message: string;
   userId?: string;
+  confirmRecipe?: Recipe;          // Recipe to confirm and save
 }
 
 export interface ChatAPIResponse {

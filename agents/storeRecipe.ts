@@ -78,11 +78,99 @@ If the recipe is incomplete or missing critical information:
   "reason": "Missing ingredients and cooking instructions"
 }`;
 
+/**
+ * Save a confirmed recipe directly to the database
+ * Used after user confirms a previewed recipe
+ */
+export async function saveConfirmedRecipe(
+  recipe: Recipe,
+  userId: string,
+  supabase: SupabaseClient
+): Promise<AgentResponse> {
+  try {
+    console.log('Saving confirmed recipe to database...');
+
+    // Generate embedding
+    let embedding;
+    try {
+      const searchText = createRecipeSearchText(recipe);
+      embedding = await generateEmbedding(searchText);
+    } catch (embedError) {
+      console.error('Error generating embedding:', embedError);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble processing the recipe for search.',
+        error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+      };
+    }
+
+    // Check authentication
+    const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+    if (!sessionData?.user) {
+      return {
+        success: false,
+        message: 'Authentication session not found. Please try logging out and back in.',
+        error: 'No authenticated user in session',
+      };
+    }
+
+    if (sessionData.user.id !== userId) {
+      return {
+        success: false,
+        message: 'User authentication mismatch. Please refresh the page and try again.',
+        error: 'User ID does not match session',
+      };
+    }
+
+    // Save to database
+    const { data, error } = await supabase
+      .from('recipes')
+      .insert({
+        user_id: userId,
+        title: recipe.title,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        tags: recipe.tags,
+        source_url: recipe.source_url || null,
+        image_url: recipe.image_url || null,
+        contributor_name: recipe.contributor_name,
+        embedding: embedding,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving recipe to database:', error);
+      return {
+        success: false,
+        message: `Database error: ${error.message}`,
+        error: error.message,
+      };
+    }
+
+    const summary = generateRecipeSummary(data);
+
+    return {
+      success: true,
+      message: `✅ Recipe saved successfully!\n\n${summary}`,
+      data: data,
+    };
+  } catch (error) {
+    console.error('Error in saveConfirmedRecipe:', error);
+    return {
+      success: false,
+      message: 'Sorry, I encountered an error saving your recipe.',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
 export async function storeRecipe(
   message: string,
   userId: string,
   contributorName: string = 'User',
-  supabase?: SupabaseClient
+  supabase?: SupabaseClient,
+  reviewMode: boolean = true  // Default to requiring review for URLs
 ): Promise<AgentResponse> {
   try {
     // Step 0: Check if message contains a URL
@@ -110,6 +198,28 @@ export async function storeRecipe(
             return {
               success: false,
               message: `I found a webpage but couldn't extract a complete recipe from it. The site might not have proper recipe formatting. Try copying and pasting the recipe text instead!`,
+            };
+          }
+
+          // If in review mode, return the recipe for confirmation
+          if (reviewMode) {
+            console.log('Review mode enabled - returning recipe for confirmation');
+            const previewRecipe: Recipe = {
+              title: extractedRecipe.title,
+              ingredients: extractedRecipe.ingredients,
+              steps: extractedRecipe.steps,
+              tags: extractedRecipe.tags,
+              source_url: extractedRecipe.source_url || url,
+              image_url: extractedRecipe.image_url || null,
+              contributor_name: contributorName,
+            };
+
+            const summary = generateRecipeSummary(previewRecipe);
+
+            return {
+              success: true,
+              message: `📋 **Recipe Preview**\n\n${summary}\n\n✅ Does this look correct? Reply **"yes"** to save or **"no"** to cancel.`,
+              data: previewRecipe,
             };
           }
 
