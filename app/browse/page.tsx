@@ -441,25 +441,6 @@ export default function BrowsePage() {
           </Grid>
         </Box>
 
-        {/* Results Count */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            {loading ? (
-              'Loading recipes...'
-            ) : filteredRecipes.length > PAGE_SIZE ? (
-              <>
-                Showing {displayedRecipes.length} of {filteredRecipes.length} recipe
-                {filteredRecipes.length !== 1 ? 's' : ''}
-                {hasMore && ' (scroll for more)'}
-              </>
-            ) : (
-              <>
-                Showing {filteredRecipes.length} of {recipes.length} recipe
-                {recipes.length !== 1 ? 's' : ''}
-              </>
-            )}
-          </Typography>
-        </Box>
 
         {/* Loading State */}
         {loading && (
@@ -541,9 +522,6 @@ export default function BrowsePage() {
               >
                 <Typography variant="body2">
                   You've reached the end! 🎉
-                </Typography>
-                <Typography variant="caption">
-                  {displayedRecipes.length} of {filteredRecipes.length} recipes shown
                 </Typography>
               </Box>
             )}
