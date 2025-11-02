@@ -42,6 +42,12 @@ const INITIAL_MESSAGE: Message = {
   timestamp: new Date().toISOString(),
 };
 
+interface ImageQueueItem {
+  file: File;
+  preview: string;
+  id: string;
+}
+
 export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSidebarProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -50,14 +56,16 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageQueue, setImageQueue] = useState<ImageQueueItem[]>([]);
   const [pendingTranslation, setPendingTranslation] = useState<{
     text: string;
     language: string;
+    images: File[];
   } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const MAX_IMAGES = 5;
 
   // Reset conversation when sidebar opens
   useEffect(() => {
@@ -66,8 +74,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setInput('');
       setPendingRecipe(null);
       setIsLoading(false);
-      setSelectedImage(null);
-      setImagePreview(null);
+      setImageQueue([]);
       setPendingTranslation(null);
       setUploadingImage(false);
     }
@@ -79,8 +86,16 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    // Check if we have either text or images
+    if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
 
+    // If images are queued, process them
+    if (imageQueue.length > 0) {
+      await processImages(imageQueue.map(img => img.file));
+      return;
+    }
+
+    // Otherwise, send text message normally
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -226,71 +241,126 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   };
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      // Create preview
+    const files = event.target.files;
+    if (!files) return;
+
+    // Check if adding these files would exceed limit
+    const remainingSlots = MAX_IMAGES - imageQueue.length;
+    if (remainingSlots === 0) {
+      showToast(`Maximum ${MAX_IMAGES} images allowed`, 'warning');
+      return;
+    }
+
+    // Process each selected file
+    const filesToAdd = Array.from(files).slice(0, remainingSlots);
+    
+    filesToAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        const newImage: ImageQueueItem = {
+          file,
+          preview: reader.result as string,
+          id: `${Date.now()}-${Math.random()}`,
+        };
+        setImageQueue((prev) => [...prev, newImage]);
       };
       reader.readAsDataURL(file);
-      // Process image immediately
-      processImage(file);
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    if (filesToAdd.length < files.length) {
+      showToast(`Added ${filesToAdd.length} of ${files.length} images (max ${MAX_IMAGES})`, 'info');
     }
   };
 
-  const processImage = async (file: File, translate: boolean = false) => {
+  const handleRemoveImage = (id: string) => {
+    setImageQueue((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const handleClearImages = () => {
+    setImageQueue([]);
+  };
+
+  const processImages = async (files: File[], translate: boolean = false) => {
     setUploadingImage(true);
+    
+    const imageText = files.length === 1 
+      ? `[Uploaded 1 image]` 
+      : `[Uploaded ${files.length} images]`;
     
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      message: translate ? `[Translating recipe from ${pendingTranslation?.language}...]` : `[Uploaded image: ${file.name}]`,
+      message: translate ? `[Translating recipe from ${pendingTranslation?.language}...]` : imageText,
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      formData.append('translate', translate.toString());
+      // Process all images and extract text
+      const extractedTexts: string[] = [];
+      let detectedLanguage = 'en';
+      let detectedLanguageName = 'English';
 
-      const response = await fetch('/api/recipes/extract-from-image', {
-        method: 'POST',
-        body: formData,
-      });
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('translate', translate.toString());
 
-      const data = await response.json();
+        const response = await fetch('/api/recipes/extract-from-image', {
+          method: 'POST',
+          body: formData,
+        });
 
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to extract recipe from image');
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to extract recipe from image');
+        }
+
+        const { raw_text, translated_text, language, language_name, needs_translation } = data.data;
+
+        // Store language from first non-English image
+        if (needs_translation && detectedLanguage === 'en') {
+          detectedLanguage = language;
+          detectedLanguageName = language_name;
+        }
+
+        // Collect extracted or translated text
+        const textToAdd = translate ? translated_text : raw_text;
+        extractedTexts.push(textToAdd);
       }
 
-      const { raw_text, translated_text, language, language_name, needs_translation } = data.data;
+      // Combine all extracted texts
+      const combinedText = extractedTexts.join('\n\n---\n\n');
 
-      // If needs translation, ask user
-      if (needs_translation) {
-        setPendingTranslation({ text: raw_text, language: language_name });
+      // If any image needs translation and we haven't translated yet, ask user
+      if (detectedLanguage !== 'en' && !translate) {
+        setPendingTranslation({ 
+          text: combinedText, 
+          language: detectedLanguageName,
+          images: files,
+        });
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          message: `This recipe appears to be in **${language_name}**. Would you like me to translate it to English before saving?`,
+          message: `${files.length > 1 ? 'These recipes appear' : 'This recipe appears'} to be in **${detectedLanguageName}**. Would you like me to translate to English before saving?`,
           timestamp: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
       } else {
-        // Process the extracted text (translated or English)
-        const textToProcess = translate ? translated_text : raw_text;
-        
-        // Send extracted text directly to store recipe endpoint with review mode
+        // Process the combined extracted text
         const storeResponse = await fetch('/api/recipes/store', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: textToProcess,
+            message: combinedText,
             userId: user?.id,
             reviewMode: true, // Enable review mode for confirmation
           }),
@@ -322,9 +392,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           throw new Error(storeData.error || 'Failed to process recipe');
         }
 
-        // Clear image state
-        setSelectedImage(null);
-        setImagePreview(null);
+        // Clear image queue
+        setImageQueue([]);
         setPendingTranslation(null);
       }
 
@@ -337,9 +406,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-      showToast('Failed to process image. Please try again.', 'error');
-      setSelectedImage(null);
-      setImagePreview(null);
+      showToast('Failed to process images. Please try again.', 'error');
+      setImageQueue([]);
       setPendingTranslation(null);
     } finally {
       setUploadingImage(false);
@@ -347,19 +415,18 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   };
 
   const handleTranslateYes = () => {
-    if (selectedImage && pendingTranslation) {
-      processImage(selectedImage, true);
+    if (pendingTranslation && pendingTranslation.images) {
+      processImages(pendingTranslation.images, true);
     }
   };
 
   const handleTranslateNo = () => {
     setPendingTranslation(null);
-    setSelectedImage(null);
-    setImagePreview(null);
+    setImageQueue([]);
     const cancelMessage: Message = {
       id: (Date.now() + 1).toString(),
       role: 'assistant',
-      message: 'Okay, skipping translation. Feel free to upload another image or paste a recipe!',
+      message: 'Okay, skipping translation. Feel free to upload more images or paste a recipe!',
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, cancelMessage]);
@@ -520,33 +587,9 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
               >
                 <CircularProgress size={16} />
                 <Typography variant="body1" color="text.secondary">
-                  {uploadingImage ? 'Processing image...' : 'Thinking...'}
+                  {uploadingImage ? `Processing ${imageQueue.length > 1 ? `${imageQueue.length} images` : 'image'}...` : 'Thinking...'}
                 </Typography>
               </Box>
-            </Box>
-          )}
-
-          {/* Image Preview */}
-          {imagePreview && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                mb: 3,
-              }}
-            >
-              <Box
-                component="img"
-                src={imagePreview}
-                alt="Recipe preview"
-                sx={{
-                  maxWidth: '300px',
-                  maxHeight: '300px',
-                  borderRadius: '8px',
-                  border: '1px solid',
-                  borderColor: 'divider',
-                }}
-              />
             </Box>
           )}
 
@@ -566,19 +609,82 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
             ref={fileInputRef}
             type="file"
             accept="image/*,.heic,.heif"
+            multiple
             onChange={handleImageSelect}
             style={{ display: 'none' }}
           />
+
+          {/* Image Thumbnails Preview */}
+          {imageQueue.length > 0 && (
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                mb: 1.5,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              {imageQueue.map((img) => (
+                <Box
+                  key={img.id}
+                  sx={{
+                    position: 'relative',
+                    width: 60,
+                    height: 60,
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={img.preview}
+                    alt="Preview"
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveImage(img.id)}
+                    sx={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      bgcolor: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      width: 20,
+                      height: 20,
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                      },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Box>
+              ))}
+              {imageQueue.length < MAX_IMAGES && (
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  {imageQueue.length}/{MAX_IMAGES} images
+                </Typography>
+              )}
+            </Box>
+          )}
 
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
             {/* Image Upload Button */}
             <IconButton
               onClick={() => fileInputRef.current?.click()}
-              disabled={isLoading || uploadingImage}
+              disabled={isLoading || uploadingImage || imageQueue.length >= MAX_IMAGES}
               sx={{
                 bgcolor: 'background.paper',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: imageQueue.length > 0 ? 'primary.main' : 'divider',
                 '&:hover': {
                   bgcolor: 'action.hover',
                 },
@@ -587,7 +693,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 mb: 0.25,
               }}
             >
-              <ImageIcon sx={{ fontSize: 20 }} />
+              <ImageIcon sx={{ fontSize: 20, color: imageQueue.length > 0 ? 'primary.main' : 'inherit' }} />
             </IconButton>
 
             {/* Text Input */}
@@ -605,12 +711,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 endAdornment: (
                   <IconButton
                     onClick={handleSend}
-                    disabled={!input.trim() || isLoading || uploadingImage}
+                    disabled={(!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage}
                     sx={{
-                      bgcolor: input.trim() && !isLoading && !uploadingImage ? 'primary.main' : 'transparent',
-                      color: input.trim() && !isLoading && !uploadingImage ? 'white' : 'text.disabled',
+                      bgcolor: (input.trim() || imageQueue.length > 0) && !isLoading && !uploadingImage ? 'primary.main' : 'transparent',
+                      color: (input.trim() || imageQueue.length > 0) && !isLoading && !uploadingImage ? 'white' : 'text.disabled',
                       '&:hover': { 
-                        bgcolor: input.trim() && !isLoading && !uploadingImage ? 'primary.dark' : 'transparent',
+                        bgcolor: (input.trim() || imageQueue.length > 0) && !isLoading && !uploadingImage ? 'primary.dark' : 'transparent',
                       },
                       width: 36,
                       height: 36,
