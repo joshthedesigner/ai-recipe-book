@@ -127,10 +127,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               )}
             </Box>
 
-            <Typography variant="body2" color="text.secondary">
-              📝 {recipe.ingredients.length} ingredients • 👨‍🍳 {recipe.steps.length} steps
-            </Typography>
-
             <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
               <Typography variant="caption" color="text.secondary">
                 By {recipe.contributor_name}
