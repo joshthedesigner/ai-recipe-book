@@ -36,6 +36,14 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
+  // Debug logging
+  if (recipe.cookbook_name) {
+    console.log('Recipe with cookbook:', recipe.title, {
+      cookbook_name: recipe.cookbook_name,
+      cookbook_page: recipe.cookbook_page,
+    });
+  }
+
   const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click
     setAnchorEl(event.currentTarget);
