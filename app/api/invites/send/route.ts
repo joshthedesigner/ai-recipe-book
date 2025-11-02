@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email via Resend
-    const { data: emailData, error: emailError } = await resend.emails.send({
+    const { data: sentEmail, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>',
       to: inviteeEmail,
       subject,
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Invitation email sent successfully',
-      emailId: emailData?.id,
+      emailId: sentEmail?.id,
     });
 
   } catch (error) {
