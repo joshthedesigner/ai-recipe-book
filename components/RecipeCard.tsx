@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, MouseEvent } from 'react';
 import {
   Card,
   CardContent,
@@ -11,18 +12,46 @@ import {
   List,
   ListItem,
   ListItemText,
+  IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText as MenuItemText,
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Recipe } from '@/types';
 
 interface RecipeCardProps {
   recipe: Recipe;
   compact?: boolean;
   onClick?: () => void;
+  onDelete?: (recipeId: string) => void;
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete }: RecipeCardProps) {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent card click
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = (event?: MouseEvent) => {
+    event?.stopPropagation(); // Prevent card click
+    setAnchorEl(null);
+  };
+
+  const handleDelete = (event: MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    handleMenuClose();
+    if (recipe.id && onDelete) {
+      onDelete(recipe.id);
+    }
+  };
   // Grid view (for browse page) - compact, clickable card
   if (compact) {
     return (
@@ -33,15 +62,37 @@ export default function RecipeCard({ recipe, compact = false, onClick }: RecipeC
           display: 'flex',
           flexDirection: 'column',
           transition: 'all 0.2s ease',
+          position: 'relative',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: 4,
           },
         }}
       >
+        {/* Overflow Menu Button */}
+        {onDelete && (
+          <IconButton
+            size="small"
+            onClick={handleMenuClick}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1,
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, pr: 4 }}>
               <RestaurantIcon sx={{ mr: 1, color: 'primary.main', fontSize: 24 }} />
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
                 {recipe.title}
@@ -71,6 +122,28 @@ export default function RecipeCard({ recipe, compact = false, onClick }: RecipeC
             </Box>
           </CardContent>
         </CardActionArea>
+
+        {/* Overflow Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={(e) => handleMenuClose(e as MouseEvent)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem onClick={handleDelete}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <MenuItemText>Delete</MenuItemText>
+          </MenuItem>
+        </Menu>
       </Card>
     );
   }

@@ -23,6 +23,7 @@ import ClearIcon from '@mui/icons-material/Clear';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeDetailModal from '@/components/RecipeDetailModal';
+import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -38,6 +39,8 @@ export default function BrowsePage() {
   const [filterContributor, setFilterContributor] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Get unique tags and contributors for filter dropdowns
   const allTags = Array.from(new Set(recipes.flatMap(r => r.tags))).sort();
@@ -122,10 +125,53 @@ export default function BrowsePage() {
     setModalOpen(true);
   };
 
+  const handleDeleteClick = (recipeId: string) => {
+    // Find the recipe and show confirmation dialog
+    const recipe = recipes.find((r) => r.id === recipeId);
+    if (recipe) {
+      setRecipeToDelete(recipe);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!recipeToDelete?.id) return;
+
+    try {
+      const response = await fetch(`/api/recipes/${recipeToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the deleted recipe from state
+        setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeToDelete.id));
+        setDeleteDialogOpen(false);
+        setRecipeToDelete(null);
+        // Close detail modal if it's open for this recipe
+        if (selectedRecipe?.id === recipeToDelete.id) {
+          setModalOpen(false);
+          setSelectedRecipe(null);
+        }
+      } else {
+        alert('Failed to delete recipe: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      alert('Failed to delete recipe. Please try again.');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setRecipeToDelete(null);
+  };
+
   const handleDeleteRecipe = (recipeId: string) => {
-    // Remove the deleted recipe from state
-    setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeId));
-    setSelectedRecipe(null);
+    // This is called from the RecipeDetailModal
+    // We can reuse the same flow
+    handleDeleteClick(recipeId);
   };
 
   const clearFilters = () => {
@@ -301,7 +347,12 @@ export default function BrowsePage() {
           <Grid container spacing={3}>
             {filteredRecipes.map((recipe) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                <RecipeCard recipe={recipe} compact onClick={() => handleCardClick(recipe)} />
+                <RecipeCard 
+                  recipe={recipe} 
+                  compact 
+                  onClick={() => handleCardClick(recipe)}
+                  onDelete={handleDeleteClick}
+                />
               </Grid>
             ))}
           </Grid>
@@ -314,6 +365,14 @@ export default function BrowsePage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onDelete={handleDeleteRecipe}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        title={recipeToDelete?.title || ''}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
       />
     </Box>
   );
