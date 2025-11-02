@@ -263,11 +263,10 @@ export default function BrowsePage() {
 
         {/* Search and Filters */}
         <Box sx={{ mb: 4 }}>
-          {/* Search Bar */}
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={4}>
+          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
+            {/* Search Bar - Left Aligned */}
+            <Grid item xs={12} md="auto">
               <TextField
-                fullWidth
                 placeholder="Search recipes, ingredients, or tags..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -285,90 +284,93 @@ export default function BrowsePage() {
                     </InputAdornment>
                   ),
                 }}
-                sx={{ mb: 2 }}
+                size="small"
+                sx={{ width: { xs: '100%', md: '300px' } }}
               />
             </Grid>
-          </Grid>
 
-          {/* Filters Row */}
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Sort By</InputLabel>
-                <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
-                  <MenuItem value="created_at">Date Added (Newest)</MenuItem>
-                  <MenuItem value="title">Title (A-Z)</MenuItem>
-                  <MenuItem value="contributor_name">Contributor (A-Z)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+            {/* Filters - Right Aligned */}
+            <Grid item xs={12} md="auto">
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={6} md="auto">
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                    <InputLabel>Sort By</InputLabel>
+                    <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
+                      <MenuItem value="created_at">Date Added (Newest)</MenuItem>
+                      <MenuItem value="title">Title (A-Z)</MenuItem>
+                      <MenuItem value="contributor_name">Contributor (A-Z)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Cuisine</InputLabel>
-                <Select
-                  value={filterCuisine}
-                  label="Cuisine"
-                  onChange={(e) => setFilterCuisine(e.target.value)}
-                >
-                  <MenuItem value="">All Cuisines</MenuItem>
-                  {allCuisines.map((cuisine) => (
-                    <MenuItem key={cuisine} value={cuisine}>
-                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                <Grid item xs={12} sm={6} md="auto">
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                    <InputLabel>Cuisine</InputLabel>
+                    <Select
+                      value={filterCuisine}
+                      label="Cuisine"
+                      onChange={(e) => setFilterCuisine(e.target.value)}
+                    >
+                      <MenuItem value="">All Cuisines</MenuItem>
+                      {allCuisines.map((cuisine) => (
+                        <MenuItem key={cuisine} value={cuisine}>
+                          {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Main Ingredient</InputLabel>
-                <Select
-                  value={filterMainIngredient}
-                  label="Main Ingredient"
-                  onChange={(e) => setFilterMainIngredient(e.target.value)}
-                >
-                  <MenuItem value="">All Ingredients</MenuItem>
-                  {allMainIngredients.map((ingredient) => (
-                    <MenuItem key={ingredient} value={ingredient}>
-                      {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                <Grid item xs={12} sm={6} md="auto">
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                    <InputLabel>Main Ingredient</InputLabel>
+                    <Select
+                      value={filterMainIngredient}
+                      label="Main Ingredient"
+                      onChange={(e) => setFilterMainIngredient(e.target.value)}
+                    >
+                      <MenuItem value="">All Ingredients</MenuItem>
+                      {allMainIngredients.map((ingredient) => (
+                        <MenuItem key={ingredient} value={ingredient}>
+                          {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={12} sm={6} md={2}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Contributor</InputLabel>
-                <Select
-                  value={filterContributor}
-                  label="Contributor"
-                  onChange={(e) => setFilterContributor(e.target.value)}
-                >
-                  <MenuItem value="">All Contributors</MenuItem>
-                  {allContributors.map((contributor) => (
-                    <MenuItem key={contributor} value={contributor}>
-                      {contributor}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+                <Grid item xs={12} sm={6} md="auto">
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                    <InputLabel>Contributor</InputLabel>
+                    <Select
+                      value={filterContributor}
+                      label="Contributor"
+                      onChange={(e) => setFilterContributor(e.target.value)}
+                    >
+                      <MenuItem value="">All Contributors</MenuItem>
+                      {allContributors.map((contributor) => (
+                        <MenuItem key={contributor} value={contributor}>
+                          {contributor}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            {hasActiveFilters && (
-              <Grid item xs={12} sm={6} md={3}>
-                <Chip
-                  label="Clear Filters"
-                  onDelete={clearFilters}
-                  deleteIcon={<ClearIcon />}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ height: 40, px: 1 }}
-                />
+                {hasActiveFilters && (
+                  <Grid item xs={12} sm={6} md="auto">
+                    <Chip
+                      label="Clear Filters"
+                      onDelete={clearFilters}
+                      deleteIcon={<ClearIcon />}
+                      color="primary"
+                      variant="outlined"
+                      sx={{ height: 40, px: 1 }}
+                    />
+                  </Grid>
+                )}
               </Grid>
-            )}
+            </Grid>
           </Grid>
         </Box>
 
