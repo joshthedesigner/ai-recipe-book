@@ -54,12 +54,14 @@ Extract the following fields:
 IMPORTANT RULES:
 - Extract ONLY information that is explicitly provided
 - Do NOT invent or assume missing information
-- If title is missing, use a descriptive name based on ingredients
-- If ingredients or steps are incomplete, note that in your response
+- If title is missing, use a descriptive name based on ingredients or steps
+- If some ingredients or steps are missing, extract what's available
+- Work with partial recipes - even if incomplete, extract what you can
 - Tags should be lowercase and simple (e.g., "italian", "dessert", "chicken", "vegetarian")
 - Return valid JSON only
+- Set incomplete to true ONLY if there is NO usable content at all
 
-Example output:
+Example output (complete recipe):
 {
   "title": "Spaghetti Carbonara",
   "ingredients": ["400g spaghetti", "200g pancetta", "4 eggs", "100g Pecorino cheese", "Black pepper", "Salt"],
@@ -68,14 +70,23 @@ Example output:
   "incomplete": false
 }
 
-If the recipe is incomplete or missing critical information:
+Example output (partial recipe - STILL VALID):
 {
-  "title": "Recipe needs more details",
+  "title": "Cabbage Salad",
+  "ingredients": ["cabbage", "carrots", "dressing"],
+  "steps": ["Shred cabbage", "Mix ingredients"],
+  "tags": ["salad", "vegetarian", "side dish"],
+  "incomplete": false
+}
+
+ONLY mark as incomplete if there's absolutely nothing usable:
+{
+  "title": "Unknown Recipe",
   "ingredients": [],
   "steps": [],
   "tags": [],
   "incomplete": true,
-  "reason": "Missing ingredients and cooking instructions"
+  "reason": "No recipe content found in text"
 }`;
 
 /**
@@ -340,11 +351,23 @@ export async function storeRecipe(
       };
     }
     
-    // Step 2: Validate the extraction
+    // Step 2: Validate the extraction - only reject if absolutely nothing usable
     if (extractedRecipe.incomplete) {
       return {
         success: false,
-        message: `I couldn't extract a complete recipe from your message. ${extractedRecipe.reason || 'Please provide the recipe title, ingredients, and cooking steps.'}`,
+        message: `I couldn't extract any recipe content from your message. ${extractedRecipe.reason || 'Please provide at least a title and some ingredients or steps.'}`,
+      };
+    }
+
+    // Check if we have minimum viable content
+    const hasTitle = extractedRecipe.title && extractedRecipe.title !== 'Unknown Recipe';
+    const hasIngredients = extractedRecipe.ingredients && extractedRecipe.ingredients.length > 0;
+    const hasSteps = extractedRecipe.steps && extractedRecipe.steps.length > 0;
+
+    if (!hasTitle || (!hasIngredients && !hasSteps)) {
+      return {
+        success: false,
+        message: `I found some content, but need a bit more to save the recipe. Please provide:\n- A recipe title\n- At least some ingredients OR cooking steps\n\nFeel free to share what you have, even if it's not complete!`,
       };
     }
 
