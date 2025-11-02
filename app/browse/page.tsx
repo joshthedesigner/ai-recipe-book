@@ -40,7 +40,6 @@ export default function BrowsePage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
-  const [filterTag, setFilterTag] = useState('');
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterContributor, setFilterContributor] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
@@ -52,8 +51,7 @@ export default function BrowsePage() {
   // Common cuisine types
   const CUISINE_TYPES = ['american', 'chinese', 'french', 'greek', 'indian', 'italian', 'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 'middle eastern', 'mediterranean'];
 
-  // Get unique tags, cuisines, and contributors for filter dropdowns
-  const allTags = Array.from(new Set(recipes.flatMap(r => r.tags))).sort();
+  // Get unique cuisines and contributors for filter dropdowns
   const allContributors = Array.from(new Set(recipes.map(r => r.contributor_name))).sort();
   
   // Extract cuisine types from tags
@@ -84,7 +82,7 @@ export default function BrowsePage() {
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
     applyFilters();
-  }, [recipes, searchQuery, sortBy, filterTag, filterCuisine, filterContributor]);
+  }, [recipes, searchQuery, sortBy, filterCuisine, filterContributor]);
 
   const fetchRecipes = async () => {
     try {
@@ -117,11 +115,6 @@ export default function BrowsePage() {
           recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
           recipe.ingredients.some((ing) => ing.toLowerCase().includes(query))
       );
-    }
-
-    // Tag filter
-    if (filterTag) {
-      filtered = filtered.filter((recipe) => recipe.tags.includes(filterTag));
     }
 
     // Cuisine filter
@@ -208,13 +201,12 @@ export default function BrowsePage() {
 
   const clearFilters = () => {
     setSearchQuery('');
-    setFilterTag('');
     setFilterCuisine('');
     setFilterContributor('');
     setSortBy('created_at');
   };
 
-  const hasActiveFilters = searchQuery || filterTag || filterCuisine || filterContributor || sortBy !== 'created_at';
+  const hasActiveFilters = searchQuery || filterCuisine || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
     // Refresh recipe list when a new recipe is added
@@ -289,24 +281,6 @@ export default function BrowsePage() {
                   {allCuisines.map((cuisine) => (
                     <MenuItem key={cuisine} value={cuisine}>
                       {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Tags</InputLabel>
-                <Select
-                  value={filterTag}
-                  label="Tags"
-                  onChange={(e) => setFilterTag(e.target.value)}
-                >
-                  <MenuItem value="">All Tags</MenuItem>
-                  {allTags.map((tag) => (
-                    <MenuItem key={tag} value={tag}>
-                      {tag}
                     </MenuItem>
                   ))}
                 </Select>
