@@ -94,7 +94,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, pr: 4 }}>
-              <RestaurantIcon sx={{ mr: 1, color: 'primary.main', fontSize: 24 }} />
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
                 {recipe.title}
               </Typography>
@@ -154,7 +153,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
       <CardContent>
         {/* Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <RestaurantIcon sx={{ mr: 1, fontSize: 32, color: 'primary.main' }} />
           <Typography variant="h5" component="div">
             {recipe.title}
           </Typography>
