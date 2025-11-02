@@ -138,6 +138,32 @@ export async function storeRecipe(
     if (!supabase) {
       throw new Error('Supabase client not provided');
     }
+    
+    // Debug: Check if we have an authenticated session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+    console.log('Auth check - User ID from session:', sessionData?.user?.id);
+    console.log('Auth check - User ID we are trying to insert:', userId);
+    
+    if (!sessionData?.user) {
+      return {
+        success: false,
+        message: 'Authentication session not found. Please try logging out and back in.',
+        error: 'No authenticated user in session',
+      };
+    }
+    
+    if (sessionData.user.id !== userId) {
+      console.error('User ID mismatch!', {
+        sessionUserId: sessionData.user.id,
+        providedUserId: userId
+      });
+      return {
+        success: false,
+        message: 'User authentication mismatch. Please refresh the page and try again.',
+        error: 'User ID does not match session',
+      };
+    }
+    
     const { data, error } = await supabase
       .from('recipes')
       .insert({
