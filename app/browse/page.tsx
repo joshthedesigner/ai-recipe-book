@@ -22,14 +22,17 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
+import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import RecipeDetailModal from '@/components/RecipeDetailModal';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function BrowsePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { showToast } = useToast();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,9 +76,12 @@ export default function BrowsePage() {
 
       if (data.success) {
         setRecipes(data.recipes);
+      } else {
+        showToast('Failed to load recipes. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error fetching recipes:', error);
+      showToast('Unable to connect to server. Please check your connection.', 'error');
     } finally {
       setLoading(false);
     }
@@ -154,12 +160,13 @@ export default function BrowsePage() {
           setModalOpen(false);
           setSelectedRecipe(null);
         }
+        showToast('Recipe deleted successfully', 'success');
       } else {
-        alert('Failed to delete recipe: ' + (data.error || 'Unknown error'));
+        showToast('Failed to delete recipe: ' + (data.error || 'Unknown error'), 'error');
       }
     } catch (error) {
       console.error('Error deleting recipe:', error);
-      alert('Failed to delete recipe. Please try again.');
+      showToast('Failed to delete recipe. Please try again.', 'error');
     }
   };
 
@@ -303,9 +310,13 @@ export default function BrowsePage() {
 
         {/* Loading State */}
         {loading && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress />
-          </Box>
+          <Grid container spacing={3}>
+            {[...Array(8)].map((_, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                <RecipeCardSkeleton />
+              </Grid>
+            ))}
+          </Grid>
         )}
 
         {/* Empty State */}

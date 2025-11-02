@@ -20,6 +20,7 @@ import MessageBubble from '@/components/MessageBubble';
 import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Message {
   id: string;
@@ -32,11 +33,12 @@ interface Message {
 export default function ChatPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
+  const { showToast } = useToast();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
       role: 'assistant',
-      message: 'Hello! I\'m your AI recipe assistant. I can help you:\n\n**Save recipes** - Just paste a recipe or say "save this recipe"\n\n**Find recipes** - Ask me "show me pasta recipes" or "find chicken dishes"\n\n**Generate recipes** - Say "create a vegan curry recipe"\n\n**Cooking advice** - Ask me anything about cooking\n\nWhat would you like to do?',
+      message: 'Hello! I\'m your AI recipe assistant. I can help you:\n\n**Save recipes** - Just paste a recipe or say "save this recipe"\n\n**Find recipes** - Ask me "show me pasta recipes" or "find chicken dishes"\n\n**Cooking advice** - Ask me anything about cooking\n\nWhat would you like to do?',
       timestamp: new Date().toISOString(),
     },
   ]);
@@ -108,10 +110,11 @@ export default function ChatPage() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        message: 'Sorry, I encountered an error. Please try again.',
+        message: 'Sorry, I encountered an error connecting to the server. Please check your internet connection and try again.',
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+      showToast('Failed to send message. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +158,7 @@ export default function ChatPage() {
 
         setMessages((prev) => [...prev, assistantMessage]);
         setPendingRecipe(null); // Clear pending recipe
+        showToast('Recipe saved successfully! 🎉', 'success');
       } else {
         throw new Error(data.error || 'Failed to save recipe');
       }
@@ -167,6 +171,7 @@ export default function ChatPage() {
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
+      showToast('Failed to save recipe. Please try again.', 'error');
     } finally {
       setIsLoading(false);
     }

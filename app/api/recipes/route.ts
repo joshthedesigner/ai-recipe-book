@@ -22,10 +22,10 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Build query
+    // Build query - exclude embedding vector for performance (6KB per recipe!)
     let query = supabase
       .from('recipes')
-      .select('*');
+      .select('id, user_id, title, ingredients, steps, tags, source_url, image_url, contributor_name, created_at, updated_at');
 
     // Apply filters
     if (tag) {
@@ -67,7 +67,12 @@ export async function GET(request: NextRequest) {
           hasMore: data && data.length === limit,
         },
       },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: {
+          'Cache-Control': 'private, max-age=60', // Cache for 1 minute
+        },
+      }
     );
 
   } catch (error) {

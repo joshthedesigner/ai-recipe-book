@@ -1,10 +1,9 @@
 /**
  * Intent Classifier Agent
  * 
- * Purpose: Classifies user messages into one of four intents:
+ * Purpose: Classifies user messages into one of three intents:
  * - store_recipe: User wants to add/save a recipe
  * - search_recipe: User wants to find existing recipes
- * - generate_recipe: User wants AI to create a new recipe
  * - general_chat: General conversation/cooking advice
  * 
  * Key Rules:

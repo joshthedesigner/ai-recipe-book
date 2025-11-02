@@ -8,6 +8,10 @@
 import { supabase } from '@/db/supabaseClient';
 import { Recipe } from '@/types';
 import { generateEmbedding } from './embed';
+import { logger } from '@/utils/logger';
+
+// Optimized field selection - excludes heavy embedding vector (6KB per recipe)
+const RECIPE_FIELDS = 'id, user_id, title, ingredients, steps, tags, source_url, image_url, contributor_name, created_at, updated_at';
 
 export interface SearchOptions {
   matchThreshold?: number;  // Minimum similarity (0-1), default 0.7
@@ -34,11 +38,11 @@ export async function searchRecipes(
     } = options;
 
     // Generate embedding for the search query
-    console.log('Generating embedding for query:', query);
+    logger.log('Generating embedding for query:', query);
     const queryEmbedding = await generateEmbedding(query);
 
     // Call the match_recipes function from the database
-    console.log('Searching recipes with similarity threshold:', matchThreshold);
+    logger.log('Searching recipes with similarity threshold:', matchThreshold);
     const { data, error } = await supabase.rpc('match_recipes', {
       query_embedding: queryEmbedding,
       match_threshold: matchThreshold,
@@ -46,15 +50,15 @@ export async function searchRecipes(
     });
 
     if (error) {
-      console.error('Error searching recipes:', error);
+      logger.error('Error searching recipes:', error);
       throw error;
     }
 
-    console.log(`Found ${data?.length || 0} matching recipes`);
+    logger.log(`Found ${data?.length || 0} matching recipes`);
     return data || [];
 
   } catch (error) {
-    console.error('Error in searchRecipes:', error);
+    logger.error('Error in searchRecipes:', error);
     throw error;
   }
 }
@@ -74,20 +78,20 @@ export async function searchRecipesByKeyword(
 
     const { data, error } = await supabase
       .from('recipes')
-      .select('*')
+      .select(RECIPE_FIELDS)
       .or(`title.ilike.${searchTerm},tags.cs.{${keyword}}`)
       .limit(matchCount);
 
     if (error) {
-      console.error('Error searching recipes by keyword:', error);
+      logger.error('Error searching recipes by keyword:', error);
       throw error;
     }
 
-    console.log(`Found ${data?.length || 0} recipes matching keyword: ${keyword}`);
+    logger.log(`Found ${data?.length || 0} recipes matching keyword: ${keyword}`);
     return data || [];
 
   } catch (error) {
-    console.error('Error in searchRecipesByKeyword:', error);
+    logger.error('Error in searchRecipesByKeyword:', error);
     throw error;
   }
 }
@@ -99,7 +103,7 @@ export async function getAllRecipes(userId?: string): Promise<Recipe[]> {
   try {
     let query = supabase
       .from('recipes')
-      .select('*')
+      .select(RECIPE_FIELDS)
       .order('created_at', { ascending: false });
 
     if (userId) {
@@ -109,14 +113,14 @@ export async function getAllRecipes(userId?: string): Promise<Recipe[]> {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error getting all recipes:', error);
+      logger.error('Error getting all recipes:', error);
       throw error;
     }
 
     return data || [];
 
   } catch (error) {
-    console.error('Error in getAllRecipes:', error);
+    logger.error('Error in getAllRecipes:', error);
     throw error;
   }
 }
@@ -128,7 +132,7 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
   try {
     const { data, error } = await supabase
       .from('recipes')
-      .select('*')
+      .select(RECIPE_FIELDS)
       .eq('id', id)
       .single();
 
@@ -137,14 +141,14 @@ export async function getRecipeById(id: string): Promise<Recipe | null> {
         // No rows returned
         return null;
       }
-      console.error('Error getting recipe:', error);
+      logger.error('Error getting recipe:', error);
       throw error;
     }
 
     return data;
 
   } catch (error) {
-    console.error('Error in getRecipeById:', error);
+    logger.error('Error in getRecipeById:', error);
     throw error;
   }
 }

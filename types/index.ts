@@ -7,7 +7,6 @@
 export type IntentType = 
   | 'store_recipe'      // User wants to add/save a recipe
   | 'search_recipe'     // User wants to find existing recipes
-  | 'generate_recipe'   // User wants AI to create a new recipe
   | 'general_chat';     // General conversation/cooking advice
 
 export interface IntentClassification {
@@ -32,7 +31,6 @@ export interface Recipe {
   contributor_name: string;
   created_at?: string;
   updated_at?: string;
-  is_ai_generated?: boolean;  // Flag for generated recipes
 }
 
 // ========================================

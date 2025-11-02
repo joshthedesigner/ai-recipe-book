@@ -14,6 +14,7 @@
 import OpenAI from 'openai';
 import { AgentResponse } from '@/types';
 import { searchRecipes, searchRecipesByKeyword, SearchResult } from '@/vector/search';
+import { logger } from '@/utils/logger';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -68,11 +69,11 @@ async function extractSearchKeywords(query: string): Promise<string> {
     });
 
     const extracted = response.choices[0].message.content?.trim() || query;
-    console.log(`Query extraction: "${query}" → "${extracted}"`);
+    logger.log(`Query extraction: "${query}" → "${extracted}"`);
     
     return extracted;
   } catch (error) {
-    console.error('Error extracting search keywords:', error);
+    logger.error('Error extracting search keywords:', error);
     // Fall back to original query if extraction fails
     return query;
   }
@@ -83,13 +84,13 @@ export async function searchRecipe(
   userId?: string
 ): Promise<AgentResponse> {
   try {
-    console.log('Searching for recipes:', query);
+    logger.log('Searching for recipes:', query);
 
     // Step 1: Extract search keywords from natural language
     const searchKeywords = await extractSearchKeywords(query);
-    console.log(`Query extraction: "${query}" → "${searchKeywords}"`);
+    logger.log(`Query extraction: "${query}" → "${searchKeywords}"`);
     if (searchKeywords !== query) {
-      console.log('Will fallback to original query if needed');
+      logger.log('Will fallback to original query if needed');
     }
 
     // Step 2: Try semantic search with extracted keywords
@@ -101,7 +102,7 @@ export async function searchRecipe(
 
     // Step 3: If no results AND keywords differ from original, try original query
     if ((!results || results.length === 0) && searchKeywords !== query) {
-      console.log(`No results for "${searchKeywords}", trying original query: "${query}"`);
+      logger.log(`No results for "${searchKeywords}", trying original query: "${query}"`);
       results = await searchRecipes(query, {
         matchThreshold: 0.7,
         matchCount: 10,
@@ -111,14 +112,14 @@ export async function searchRecipe(
 
     // Step 4: If still no results, try keyword search as fallback
     if (!results || results.length === 0) {
-      console.log('No vector results, trying keyword search...');
+      logger.log('No vector results, trying keyword search...');
       results = await searchRecipesByKeyword(searchKeywords, {
         matchCount: 10,
       }) as SearchResult[];
-      
+
       // Try original query in keyword search too
       if ((!results || results.length === 0) && searchKeywords !== query) {
-        console.log(`No keyword results for "${searchKeywords}", trying original: "${query}"`);
+        logger.log(`No keyword results for "${searchKeywords}", trying original: "${query}"`);
         results = await searchRecipesByKeyword(query, {
           matchCount: 10,
         }) as SearchResult[];
@@ -144,7 +145,7 @@ export async function searchRecipe(
     };
 
   } catch (error) {
-    console.error('Error in searchRecipe:', error);
+    logger.error('Error in searchRecipe:', error);
     return {
       success: false,
       message: 'Sorry, I encountered an error searching for recipes. Please try again.',

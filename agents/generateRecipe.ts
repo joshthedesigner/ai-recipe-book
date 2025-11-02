@@ -1,6 +1,10 @@
 /**
  * Generate Recipe Agent
  * 
+ * NOTE: This agent is DISABLED. Recipe generation feature has been removed.
+ * Keeping file for reference only.
+ *
+ * 
  * Purpose: Create new recipes using AI
  * 
  * Key Rules:

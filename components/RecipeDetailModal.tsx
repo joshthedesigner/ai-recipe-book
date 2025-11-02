@@ -23,6 +23,7 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Recipe } from '@/types';
+import { useToast } from '@/contexts/ToastContext';
 
 interface RecipeDetailModalProps {
   recipe: Recipe | null;
@@ -32,6 +33,7 @@ interface RecipeDetailModalProps {
 }
 
 export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: RecipeDetailModalProps) {
+  const { showToast } = useToast();
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -50,15 +52,16 @@ export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: R
       const data = await response.json();
 
       if (data.success) {
+        showToast('Recipe deleted successfully', 'success');
         onDelete?.(recipe.id);
         onClose();
         setConfirmDelete(false);
       } else {
-        alert('Failed to delete recipe: ' + (data.error || 'Unknown error'));
+        showToast('Failed to delete recipe: ' + (data.error || 'Unknown error'), 'error');
       }
     } catch (error) {
       console.error('Error deleting recipe:', error);
-      alert('Failed to delete recipe. Please try again.');
+      showToast('Failed to delete recipe. Please try again.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -110,11 +113,7 @@ export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: R
         {/* Metadata */}
         <Box sx={{ mb: 3, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            {recipe.is_ai_generated ? (
-              <>🤖 AI Generated Recipe</>
-            ) : (
-              <>👨‍🍳 Added by {recipe.contributor_name}</>
-            )}
+            👨‍🍳 Added by {recipe.contributor_name}
           </Typography>
           {recipe.created_at && (
             <Typography variant="body2" color="text.secondary">

@@ -117,7 +117,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
 
             <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
               <Typography variant="caption" color="text.secondary">
-                {recipe.is_ai_generated ? '🤖 AI Generated' : `By ${recipe.contributor_name}`}
+                By {recipe.contributor_name}
               </Typography>
             </Box>
           </CardContent>
@@ -226,11 +226,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         {/* Footer */}
         <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
           <Typography variant="caption" color="text.secondary">
-            {recipe.is_ai_generated ? (
-              <>🤖 AI Generated Recipe</>
-            ) : (
-              <>👨‍🍳 Added by {recipe.contributor_name}</>
-            )}
+            👨‍🍳 Added by {recipe.contributor_name}
             {recipe.source_url && (
               <>
                 {' • '}
