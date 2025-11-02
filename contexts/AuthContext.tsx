@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { useRouter } from 'next/navigation';
+import { activatePendingInvites } from '@/utils/invites';
 
 interface AuthContextType {
   user: User | null;
@@ -44,13 +45,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         return { error };
+      }
+
+      // Activate any pending invites for this user
+      if (data.user) {
+        const result = await activatePendingInvites(supabase, data.user.id, data.user.email || '');
+        if (result.activated > 0) {
+          console.log(`Activated ${result.activated} pending invite(s)`);
+        }
       }
 
       router.push('/browse');
@@ -74,6 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         return { error };
+      }
+
+      // Activate any pending invites for this user
+      if (data.user) {
+        const result = await activatePendingInvites(supabase, data.user.id, data.user.email || '');
+        if (result.activated > 0) {
+          console.log(`Activated ${result.activated} pending invite(s)`);
+        }
       }
 
       // If email confirmation is disabled, sign them in
