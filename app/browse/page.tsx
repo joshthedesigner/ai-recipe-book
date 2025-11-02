@@ -285,7 +285,7 @@ export default function BrowsePage() {
                   ),
                 }}
                 size="small"
-                sx={{ width: { xs: '100%', md: '300px' } }}
+                sx={{ width: { xs: '100%', md: '400px' } }}
               />
             </Grid>
 
@@ -293,7 +293,7 @@ export default function BrowsePage() {
             <Grid item xs={12} md="auto">
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
                     <InputLabel>Sort By</InputLabel>
                     <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
                       <MenuItem value="created_at">Date Added (Newest)</MenuItem>
@@ -304,7 +304,7 @@ export default function BrowsePage() {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
                     <InputLabel>Cuisine</InputLabel>
                     <Select
                       value={filterCuisine}
@@ -322,7 +322,7 @@ export default function BrowsePage() {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
                     <InputLabel>Main Ingredient</InputLabel>
                     <Select
                       value={filterMainIngredient}
@@ -340,7 +340,7 @@ export default function BrowsePage() {
                 </Grid>
 
                 <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
                     <InputLabel>Contributor</InputLabel>
                     <Select
                       value={filterContributor}
