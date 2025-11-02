@@ -38,7 +38,7 @@ interface RecipeSidebarProps {
 const INITIAL_MESSAGE: Message = {
   id: '0',
   role: 'assistant',
-  message: 'Hi! I can help you add recipes. Paste a URL or describe a recipe to get started.',
+  message: 'Hi! I can help you add recipes. Paste a URL, upload a recipe photo, or describe a recipe to get started. I can also translate recipes from other languages if needed.',
   timestamp: new Date().toISOString(),
 };
 
