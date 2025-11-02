@@ -108,6 +108,15 @@ An intelligent recipe management system that lets families save, search, and gen
 - Empty and no-results states
 - Client-side filtering for instant UX
 
+**Phase 6.5: User Authentication** ✅
+- Supabase Auth integration
+- Login and Signup pages
+- Protected routes (chat, browse)
+- User avatar menu with sign out
+- Session persistence and management
+- Auto-created user profiles
+- Real user IDs for all operations
+
 **Next Phase:** Multi-Input Recipe Addition (Photo, URL, OCR)
 
 ## 🛠️ Technology Stack
