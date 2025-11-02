@@ -51,7 +51,123 @@ export function extractURL(text: string): string | null {
 }
 
 /**
- * Scrape recipe from URL
+ * Validate if a step is a real cooking instruction
+ */
+function isValidCookingStep(step: string): boolean {
+  // Filter out common non-cooking steps
+  const invalidPatterns = [
+    /gather.*ingredients/i,
+    /read.*recipe/i,
+    /^now,?\s+gather/i,
+    /^in\s+\w+,\s+we\s+use/i, // "In Japan, we use..."
+    /^for\s+this\s+recipe/i,
+    /^i\s+(focus|encourage)/i,
+    /^however,\s+if\s+you/i,
+    /click.*to.*rate/i,
+    /see.*notes/i,
+    /^note:/i,
+    /^tip:/i,
+  ];
+  
+  if (invalidPatterns.some(pattern => pattern.test(step))) {
+    return false;
+  }
+  
+  // Must have cooking-related words
+  const cookingWords = [
+    'cook', 'heat', 'add', 'mix', 'stir', 'chop', 'cut', 'slice', 'dice',
+    'boil', 'simmer', 'bake', 'fry', 'saute', 'season', 'pour', 'place',
+    'remove', 'drain', 'serve', 'combine', 'whisk', 'blend', 'grill',
+    'roast', 'toast', 'spread', 'layer', 'cover', 'refrigerate'
+  ];
+  
+  const stepLower = step.toLowerCase();
+  const hasVerb = cookingWords.some(verb => stepLower.includes(verb));
+  
+  // Real cooking steps are usually longer than 20 chars
+  return hasVerb && step.length > 20;
+}
+
+/**
+ * Parse steps directly from HTML (fallback)
+ */
+function parseStepsFromHTML($: cheerio.CheerioAPI): string[] {
+  // Common CSS selectors for recipe steps
+  const selectors = [
+    '.recipe-steps li',
+    '.instructions li',
+    'ol.recipe-instructions li',
+    '[itemprop="recipeInstructions"] li',
+    '.wprm-recipe-instruction-text',
+    '.tasty-recipes-instructions li',
+    '.mv-create-instructions li',
+    '.step',
+    '.instruction-step',
+    '.recipe-directions li',
+  ];
+  
+  for (const selector of selectors) {
+    const elements = $(selector);
+    if (elements.length > 0) {
+      const steps = elements
+        .map((i, el) => $(el).text().trim())
+        .get()
+        .filter((step: string) => step.length > 20); // Filter short non-steps
+      
+      if (steps.length >= 3) {
+        console.log(`Found ${steps.length} steps using selector: ${selector}`);
+        return steps;
+      }
+    }
+  }
+  
+  return [];
+}
+
+/**
+ * Extract steps using OpenAI (last resort)
+ */
+async function extractStepsWithAI(html: string, title: string): Promise<string[]> {
+  const client = getOpenAIClient();
+
+  // Strip HTML and get readable text
+  const $ = cheerio.load(html);
+  $('script').remove();
+  $('style').remove();
+  const text = $('body').text().replace(/\s+/g, ' ').trim();
+
+  // Truncate if too long
+  const truncatedText = text.substring(0, 8000);
+
+  const prompt = `Extract ONLY the cooking steps/instructions from this recipe webpage.
+Ignore: ingredient lists, prep notes, background stories, "gather ingredients", tips sections.
+Return ONLY valid JSON array of step strings.
+
+Recipe title: "${title}"
+
+Webpage text:
+${truncatedText}
+
+Return format: ["step 1", "step 2", "step 3"]`;
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' },
+    temperature: 0,
+  });
+
+  const content = response.choices[0].message.content;
+  if (!content) {
+    throw new Error('No response from OpenAI');
+  }
+
+  const parsed = JSON.parse(content);
+  return parsed.steps || [];
+}
+
+/**
+ * Scrape recipe from URL (HYBRID APPROACH)
  */
 export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
   console.log('Scraping recipe from:', url);
@@ -68,16 +184,57 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
     const html = response.data;
     const $ = cheerio.load(html);
 
-    // Try to find schema.org Recipe structured data
+    // Step 1: Try to find schema.org Recipe structured data
     const schemaRecipe = extractSchemaRecipe($);
     
     if (schemaRecipe) {
       console.log('Found schema.org recipe data');
-      return schemaRecipe;
+      
+      // Step 2: Validate and filter steps
+      const validSteps = schemaRecipe.steps.filter(isValidCookingStep);
+      console.log(`Validated steps: ${validSteps.length}/${schemaRecipe.steps.length} are valid`);
+      
+      // Step 3: If we have enough valid steps, use them
+      if (validSteps.length >= 3) {
+        return { ...schemaRecipe, steps: validSteps };
+      }
+      
+      // Step 4: Try HTML fallback
+      console.log('Not enough valid steps from schema, trying HTML parsing...');
+      const htmlSteps = parseStepsFromHTML($);
+      
+      if (htmlSteps.length >= 3) {
+        const validHtmlSteps = htmlSteps.filter(isValidCookingStep);
+        if (validHtmlSteps.length >= 3) {
+          console.log('Using HTML-parsed steps');
+          return { ...schemaRecipe, steps: validHtmlSteps };
+        }
+      }
+      
+      // Step 5: Use OpenAI to extract steps only
+      console.log('HTML parsing insufficient, using OpenAI for steps...');
+      try {
+        const aiSteps = await extractStepsWithAI(html, schemaRecipe.title);
+        const validAiSteps = aiSteps.filter(isValidCookingStep);
+        
+        if (validAiSteps.length >= 3) {
+          console.log('Using AI-extracted steps');
+          return { ...schemaRecipe, steps: validAiSteps };
+        }
+      } catch (aiError) {
+        console.error('AI step extraction failed:', aiError);
+      }
+      
+      // Step 6: Final validation - do we have at least 3 steps?
+      if (validSteps.length < 3) {
+        throw new Error('Could not extract enough valid cooking steps from recipe');
+      }
+      
+      return { ...schemaRecipe, steps: validSteps };
     }
 
-    // Fallback: Use OpenAI to parse the page
-    console.log('No schema found, using OpenAI to parse');
+    // No schema found: Fallback to full OpenAI parsing
+    console.log('No schema found, using OpenAI to parse entire recipe');
     return await parseRecipeWithAI(html, url);
 
   } catch (error) {
