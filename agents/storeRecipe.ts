@@ -97,7 +97,17 @@ export async function storeRecipe(
     console.log('Extracting recipe from message...');
     
     // Step 1: Extract structured recipe data using AI
-    const extractedRecipe = await extractRecipeData(message);
+    let extractedRecipe;
+    try {
+      extractedRecipe = await extractRecipeData(message);
+    } catch (extractError) {
+      console.error('Error extracting recipe:', extractError);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble understanding the recipe format. This might happen with very long recipes. Try breaking it into smaller sections or simplifying the format.',
+        error: extractError instanceof Error ? extractError.message : 'Extraction failed',
+      };
+    }
     
     // Step 2: Validate the extraction
     if (extractedRecipe.incomplete) {
@@ -109,8 +119,18 @@ export async function storeRecipe(
 
     // Step 3: Generate embedding for semantic search
     console.log('Generating embedding for recipe...');
-    const searchText = createRecipeSearchText(extractedRecipe);
-    const embedding = await generateEmbedding(searchText);
+    let embedding;
+    try {
+      const searchText = createRecipeSearchText(extractedRecipe);
+      embedding = await generateEmbedding(searchText);
+    } catch (embedError) {
+      console.error('Error generating embedding:', embedError);
+      return {
+        success: false,
+        message: 'Sorry, I had trouble processing the recipe for search. The recipe might be too long. Try using a shorter version.',
+        error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+      };
+    }
 
     // Step 4: Save to database
     console.log('Saving recipe to database...');
@@ -131,10 +151,10 @@ export async function storeRecipe(
       .single();
 
     if (error) {
-      console.error('Error saving recipe:', error);
+      console.error('Error saving recipe to database:', error);
       return {
         success: false,
-        message: 'Sorry, I encountered an error saving your recipe. Please try again.',
+        message: `Database error: ${error.message}. This might happen if the recipe is too large or has invalid data.`,
         error: error.message,
       };
     }
@@ -150,10 +170,11 @@ export async function storeRecipe(
 
   } catch (error) {
     console.error('Error in storeRecipe:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return {
       success: false,
-      message: 'Sorry, I encountered an error processing your recipe. Please try again.',
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: `Sorry, I encountered an error: ${errorMessage}. If the recipe is very long, try shortening it or splitting it into parts.`,
+      error: errorMessage,
     };
   }
 }
