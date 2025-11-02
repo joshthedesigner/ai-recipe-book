@@ -283,35 +283,42 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         // Process the extracted text (translated or English)
         const textToProcess = translate ? translated_text : raw_text;
         
-        // Send extracted text to chat API to structure it
-        const chatResponse = await fetch('/api/chat', {
+        // Send extracted text directly to store recipe endpoint with review mode
+        const storeResponse = await fetch('/api/recipes/store', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message: `Here's a recipe I extracted from an image:\n\n${textToProcess}`,
+            message: textToProcess,
             userId: user?.id,
+            reviewMode: true, // Enable review mode for confirmation
           }),
         });
 
-        const chatData = await chatResponse.json();
+        const storeData = await storeResponse.json();
 
-        if (chatData.success) {
+        if (storeData.success) {
           const assistantMessage: Message = {
             id: (Date.now() + 1).toString(),
             role: 'assistant',
-            message: chatData.response.message,
+            message: storeData.message,
             timestamp: new Date().toISOString(),
-            chatResponse: chatData.response,
+            chatResponse: {
+              message: storeData.message,
+              needsReview: true,
+              pendingRecipe: storeData.recipe,
+            },
           };
 
           setMessages((prev) => [...prev, assistantMessage]);
 
-          // Check if recipe needs review
-          if (chatData.response.needsReview && chatData.response.pendingRecipe) {
-            setPendingRecipe(chatData.response.pendingRecipe);
+          // Set pending recipe for confirmation
+          if (storeData.recipe) {
+            setPendingRecipe(storeData.recipe);
           }
+        } else {
+          throw new Error(storeData.error || 'Failed to process recipe');
         }
 
         // Clear image state

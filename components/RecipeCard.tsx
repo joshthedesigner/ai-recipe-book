@@ -206,17 +206,12 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           Ingredients ({recipe.ingredients.length})
         </Typography>
         <List dense>
-          {recipe.ingredients.slice(0, 10).map((ingredient, index) => (
+          {recipe.ingredients.map((ingredient, index) => (
             <ListItem key={index}>
               <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
               <ListItemText primary={ingredient} />
             </ListItem>
           ))}
-          {recipe.ingredients.length > 10 && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              ...and {recipe.ingredients.length - 10} more
-            </Typography>
-          )}
         </List>
 
         <Divider sx={{ my: 2 }} />
@@ -226,7 +221,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           Instructions ({recipe.steps.length} steps)
         </Typography>
         <List>
-          {recipe.steps.slice(0, 5).map((step, index) => (
+          {recipe.steps.map((step, index) => (
             <ListItem key={index} alignItems="flex-start">
               <Box
                 sx={{
@@ -247,11 +242,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               <ListItemText primary={step} />
             </ListItem>
           ))}
-          {recipe.steps.length > 5 && (
-            <Typography variant="body2" color="text.secondary" sx={{ ml: 6 }}>
-              ...{recipe.steps.length - 5} more steps
-            </Typography>
-          )}
         </List>
 
         {/* Footer */}
