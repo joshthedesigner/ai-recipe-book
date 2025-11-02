@@ -112,7 +112,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         )}
 
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
-          {recipe.image_url && (
+          {recipe.image_url ? (
             <CardMedia
               component="img"
               height="200"
@@ -122,6 +122,18 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
                 objectFit: 'cover',
               }}
             />
+          ) : (
+            <Box
+              sx={{
+                height: 200,
+                bgcolor: 'grey.100',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
+            </Box>
           )}
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, pr: 4 }}>
@@ -212,8 +224,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         )}
 
         {/* Recipe Image */}
-        {recipe.image_url && (
-          <Box sx={{ mt: 2, mb: 2 }}>
+        <Box sx={{ mt: 2, mb: 2 }}>
+          {recipe.image_url ? (
             <CardMedia
               component="img"
               image={recipe.image_url}
@@ -225,8 +237,22 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
                 borderRadius: 1,
               }}
             />
-          </Box>
-        )}
+          ) : (
+            <Box
+              sx={{
+                width: '100%',
+                height: 300,
+                bgcolor: 'grey.100',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 1,
+              }}
+            >
+              <RestaurantIcon sx={{ fontSize: 80, color: 'grey.400' }} />
+            </Box>
+          )}
+        </Box>
 
         <Divider sx={{ my: 2 }} />
 
