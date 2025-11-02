@@ -30,6 +30,8 @@ import RecipeSidebar from '@/components/RecipeSidebar';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { supabase } from '@/db/supabaseClient';
+import { canUserAddRecipes, getUserDefaultGroup } from '@/utils/permissions';
 
 export default function BrowsePage() {
   const router = useRouter();
@@ -53,6 +55,8 @@ export default function BrowsePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [canAddRecipes, setCanAddRecipes] = useState(false);
+  const [groupId, setGroupId] = useState<string | null>(null);
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -96,6 +100,27 @@ export default function BrowsePage() {
       router.push('/login');
     }
   }, [user, authLoading, router]);
+
+  // Check if user has permission to add recipes
+  useEffect(() => {
+    async function checkPermissions() {
+      if (!user) return;
+
+      try {
+        const defaultGroupId = await getUserDefaultGroup(supabase, user.id);
+        setGroupId(defaultGroupId);
+
+        if (defaultGroupId) {
+          const hasPermission = await canUserAddRecipes(supabase, user.id, defaultGroupId);
+          setCanAddRecipes(hasPermission);
+        }
+      } catch (error) {
+        console.error('Error checking permissions:', error);
+      }
+    }
+
+    checkPermissions();
+  }, [user]);
 
   // Fetch recipes on mount
   useEffect(() => {
@@ -325,7 +350,7 @@ export default function BrowsePage() {
               Browse and search your saved recipes
             </Typography>
           </Box>
-          <AddRecipeButton onClick={() => setSidebarOpen(true)} />
+          {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
         </Box>
 
         {/* Search and Filters */}

@@ -16,6 +16,7 @@ import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
 import { mergeAutoTags } from '@/utils/autoTag';
+import { getUserDefaultGroup, canUserAddRecipes } from '@/utils/permissions';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -123,6 +124,25 @@ export async function saveConfirmedRecipe(
   try {
     console.log('Saving confirmed recipe to database...');
 
+    // Check permissions and get group_id
+    const groupId = await getUserDefaultGroup(supabase, userId);
+    if (!groupId) {
+      return {
+        success: false,
+        message: 'You are not a member of any recipe group. Please contact your administrator.',
+        error: 'No group found for user',
+      };
+    }
+
+    const hasPermission = await canUserAddRecipes(supabase, userId, groupId);
+    if (!hasPermission) {
+      return {
+        success: false,
+        message: 'You do not have permission to add recipes. Please contact your administrator for write access.',
+        error: 'User lacks write permission',
+      };
+    }
+
     // Generate embedding
     let embedding;
     try {
@@ -160,6 +180,7 @@ export async function saveConfirmedRecipe(
       .from('recipes')
       .insert({
         user_id: userId,
+        group_id: groupId,
         title: recipe.title,
         ingredients: recipe.ingredients,
         steps: recipe.steps,
@@ -210,7 +231,34 @@ export async function storeRecipe(
   cookbookPage?: string | null
 ): Promise<AgentResponse> {
   try {
-    // Step 0: Check if message contains a URL
+    // Step 0: Check permissions and get group_id
+    if (!supabase) {
+      return {
+        success: false,
+        message: 'Database connection required',
+        error: 'No Supabase client provided',
+      };
+    }
+
+    const groupId = await getUserDefaultGroup(supabase, userId);
+    if (!groupId) {
+      return {
+        success: false,
+        message: 'You are not a member of any recipe group. Please contact your administrator.',
+        error: 'No group found for user',
+      };
+    }
+
+    const hasPermission = await canUserAddRecipes(supabase, userId, groupId);
+    if (!hasPermission) {
+      return {
+        success: false,
+        message: 'You do not have permission to add recipes. Please contact your administrator for write access.',
+        error: 'User lacks write permission',
+      };
+    }
+
+    // Step 1: Check if message contains a URL
     if (containsURL(message)) {
       const url = extractURL(message);
       if (url) {
@@ -312,6 +360,7 @@ export async function storeRecipe(
             .from('recipes')
             .insert({
               user_id: userId,
+              group_id: groupId,
               title: extractedRecipe.title,
               ingredients: extractedRecipe.ingredients,
               steps: extractedRecipe.steps,
@@ -475,6 +524,7 @@ export async function storeRecipe(
       .from('recipes')
       .insert({
         user_id: userId,
+        group_id: groupId,
         title: extractedRecipe.title,
         ingredients: extractedRecipe.ingredients,
         steps: extractedRecipe.steps,
