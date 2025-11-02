@@ -676,7 +676,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             {/* Image Upload Button */}
             <IconButton
               onClick={() => fileInputRef.current?.click()}
@@ -690,7 +690,6 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 },
                 width: 40,
                 height: 40,
-                mb: 0.25,
               }}
             >
               <ImageIcon sx={{ fontSize: 20, color: imageQueue.length > 0 ? 'primary.main' : 'inherit' }} />
