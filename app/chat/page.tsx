@@ -21,7 +21,7 @@ import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { createClient } from '@/db/supabaseClient';
+import { supabase } from '@/db/supabaseClient';
 import { loadChatHistory, saveChatMessage, getConversationContext } from '@/utils/chatHistory';
 
 interface Message {
@@ -49,7 +49,6 @@ export default function ChatPage() {
   const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   // Auth protection: redirect to login if not authenticated
   useEffect(() => {
