@@ -371,6 +371,28 @@ export async function storeRecipe(
       };
     }
 
+    // If in review mode, return the recipe for confirmation
+    if (reviewMode) {
+      console.log('Review mode enabled - returning recipe for confirmation');
+      const previewRecipe: Recipe = {
+        title: extractedRecipe.title,
+        ingredients: extractedRecipe.ingredients,
+        steps: extractedRecipe.steps,
+        tags: extractedRecipe.tags,
+        source_url: null,
+        image_url: null,
+        contributor_name: contributorName,
+      };
+
+      const preview = generateRecipePreview(previewRecipe);
+
+      return {
+        success: true,
+        message: preview,
+        data: previewRecipe,
+      };
+    }
+
     // Step 3: Generate embedding for semantic search
     console.log('Generating embedding for recipe...');
     let embedding;
