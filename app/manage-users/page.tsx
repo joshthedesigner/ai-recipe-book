@@ -118,12 +118,18 @@ export default function ManageUsersPage() {
       setInviting(true);
 
       // Check if email already invited
-      const { data: existing } = await supabase
+      const { data: existing, error: checkError } = await supabase
         .from('group_members')
         .select('id')
         .eq('group_id', groupId)
         .eq('email', inviteEmail.toLowerCase())
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing invite:', checkError);
+        showToast('Failed to check existing invites', 'error');
+        return;
+      }
 
       if (existing) {
         showToast('This email has already been invited', 'error');
