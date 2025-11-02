@@ -122,6 +122,12 @@ export default function BrowsePage() {
     setModalOpen(true);
   };
 
+  const handleDeleteRecipe = (recipeId: string) => {
+    // Remove the deleted recipe from state
+    setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeId));
+    setSelectedRecipe(null);
+  };
+
   const clearFilters = () => {
     setSearchQuery('');
     setFilterTag('');
@@ -307,6 +313,7 @@ export default function BrowsePage() {
         recipe={selectedRecipe}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
+        onDelete={handleDeleteRecipe}
       />
     </Box>
   );

@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   IconButton,
   Box,
   Typography,
@@ -13,8 +15,10 @@ import {
   ListItem,
   ListItemText,
   Button,
+  CircularProgress,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -24,10 +28,41 @@ interface RecipeDetailModalProps {
   recipe: Recipe | null;
   open: boolean;
   onClose: () => void;
+  onDelete?: (recipeId: string) => void;
 }
 
-export default function RecipeDetailModal({ recipe, open, onClose }: RecipeDetailModalProps) {
+export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: RecipeDetailModalProps) {
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
   if (!recipe) return null;
+
+  const handleDelete = async () => {
+    if (!recipe.id) return;
+
+    setDeleting(true);
+    
+    try {
+      const response = await fetch(`/api/recipes/${recipe.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        onDelete?.(recipe.id);
+        onClose();
+        setConfirmDelete(false);
+      } else {
+        alert('Failed to delete recipe: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error deleting recipe:', error);
+      alert('Failed to delete recipe. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Dialog
@@ -156,6 +191,52 @@ export default function RecipeDetailModal({ recipe, open, onClose }: RecipeDetai
           </Box>
         )}
       </DialogContent>
+
+      {/* Actions */}
+      {onDelete && (
+        <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
+          {!confirmDelete ? (
+            <>
+              <Box />
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteIcon />}
+                onClick={() => setConfirmDelete(true)}
+                disabled={deleting}
+              >
+                Delete Recipe
+              </Button>
+            </>
+          ) : (
+            <>
+              <Typography variant="body2" color="error" sx={{ fontWeight: 500 }}>
+                Are you sure? This cannot be undone.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                  size="small"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
+                  size="small"
+                >
+                  {deleting ? 'Deleting...' : 'Yes, Delete'}
+                </Button>
+              </Box>
+            </>
+          )}
+        </DialogActions>
+      )}
     </Dialog>
   );
 }
