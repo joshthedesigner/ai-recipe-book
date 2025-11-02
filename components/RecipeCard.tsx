@@ -52,6 +52,25 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
       onDelete(recipe.id);
     }
   };
+
+  // Extract and format domain name from URL
+  const getSourceName = (url: string): string => {
+    try {
+      const domain = new URL(url).hostname;
+      // Remove 'www.' prefix
+      const cleanDomain = domain.replace(/^www\./, '');
+      // Get the main domain name (before first dot)
+      const mainName = cleanDomain.split('.')[0];
+      // Capitalize first letter
+      return mainName.charAt(0).toUpperCase() + mainName.slice(1);
+    } catch {
+      return 'Source';
+    }
+  };
+
+  const handleSourceClick = (event: MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent card click
+  };
   // Grid view (for browse page) - compact, clickable card
   if (compact) {
     return (
@@ -109,16 +128,33 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
             </Box>
 
             <Typography variant="body2" color="text.secondary">
-              📝 {recipe.ingredients.length} ingredients
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              👨‍🍳 {recipe.steps.length} steps
+              📝 {recipe.ingredients.length} ingredients • 👨‍🍳 {recipe.steps.length} steps
             </Typography>
 
-            <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+            <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
               <Typography variant="caption" color="text.secondary">
                 By {recipe.contributor_name}
               </Typography>
+              {recipe.source_url && (
+                <Typography 
+                  component="a" 
+                  href={recipe.source_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={handleSourceClick}
+                  variant="caption"
+                  sx={{ 
+                    color: 'primary.main',
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {getSourceName(recipe.source_url)}
+                </Typography>
+              )}
             </Box>
           </CardContent>
         </CardActionArea>
