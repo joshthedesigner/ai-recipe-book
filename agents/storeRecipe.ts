@@ -14,6 +14,7 @@ import OpenAI from 'openai';
 import { Recipe, AgentResponse } from '@/types';
 import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -84,20 +85,139 @@ export async function storeRecipe(
   supabase?: SupabaseClient
 ): Promise<AgentResponse> {
   try {
-    // Step 0: Check if message contains actual recipe content or just intent
+    // Step 0: Check if message contains a URL
+    if (containsURL(message)) {
+      const url = extractURL(message);
+      if (url) {
+        console.log('URL detected, scraping recipe from:', url);
+        try {
+          const scrapedRecipe = await scrapeRecipe(url);
+          
+          // Use the scraped recipe directly
+          const extractedRecipe = {
+            title: scrapedRecipe.title,
+            ingredients: scrapedRecipe.ingredients,
+            steps: scrapedRecipe.steps,
+            tags: scrapedRecipe.tags,
+            source_url: scrapedRecipe.source_url,
+            image_url: scrapedRecipe.image_url,
+            incomplete: false,
+          };
+
+          // Validate we got required fields
+          if (!extractedRecipe.ingredients || extractedRecipe.ingredients.length === 0 ||
+              !extractedRecipe.steps || extractedRecipe.steps.length === 0) {
+            return {
+              success: false,
+              message: `I found a webpage but couldn't extract a complete recipe from it. The site might not have proper recipe formatting. Try copying and pasting the recipe text instead!`,
+            };
+          }
+
+          // Skip to embedding generation (Step 3)
+          console.log('Generating embedding for scraped recipe...');
+          let embedding;
+          try {
+            const searchText = createRecipeSearchText(extractedRecipe);
+            embedding = await generateEmbedding(searchText);
+          } catch (embedError) {
+            console.error('Error generating embedding:', embedError);
+            return {
+              success: false,
+              message: 'Sorry, I had trouble processing the recipe for search. The recipe might be too long. Try using a shorter version.',
+              error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+            };
+          }
+
+          // Save to database (Step 4)
+          console.log('Saving scraped recipe to database...');
+          if (!supabase) {
+            throw new Error('Supabase client not provided');
+          }
+          
+          // Debug: Check if we have an authenticated session
+          const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+          console.log('Auth check - User ID from session:', sessionData?.user?.id);
+          console.log('Auth check - User ID we are trying to insert:', userId);
+          
+          if (!sessionData?.user) {
+            return {
+              success: false,
+              message: 'Authentication session not found. Please try logging out and back in.',
+              error: 'No authenticated user in session',
+            };
+          }
+          
+          if (sessionData.user.id !== userId) {
+            console.error('User ID mismatch!', {
+              sessionUserId: sessionData.user.id,
+              providedUserId: userId
+            });
+            return {
+              success: false,
+              message: 'User authentication mismatch. Please refresh the page and try again.',
+              error: 'User ID does not match session',
+            };
+          }
+          
+          const { data, error } = await supabase
+            .from('recipes')
+            .insert({
+              user_id: userId,
+              title: extractedRecipe.title,
+              ingredients: extractedRecipe.ingredients,
+              steps: extractedRecipe.steps,
+              tags: extractedRecipe.tags,
+              source_url: extractedRecipe.source_url || url,
+              image_url: extractedRecipe.image_url || null,
+              contributor_name: contributorName,
+              embedding: embedding,
+            })
+            .select()
+            .single();
+
+          if (error) {
+            console.error('Error saving recipe to database:', error);
+            return {
+              success: false,
+              message: `Database error: ${error.message}. This might happen if the recipe is too large or has invalid data.`,
+              error: error.message,
+            };
+          }
+
+          // Generate human-readable summary
+          const summary = generateRecipeSummary(data);
+
+          return {
+            success: true,
+            message: `✅ Recipe scraped from website and saved!\n\n${summary}`,
+            data: data,
+          };
+
+        } catch (scrapeError) {
+          console.error('Error scraping URL:', scrapeError);
+          return {
+            success: false,
+            message: `Sorry, I couldn't scrape the recipe from that URL. ${scrapeError instanceof Error ? scrapeError.message : 'Unknown error'}\n\nTry copying and pasting the recipe text instead!`,
+            error: scrapeError instanceof Error ? scrapeError.message : 'Scraping failed',
+          };
+        }
+      }
+    }
+
+    // Step 1: Check if message contains actual recipe content or just intent
     console.log('Checking if message contains recipe content...');
     const contentCheck = await checkForRecipeContent(message);
     
     if (!contentCheck.has_recipe_content) {
       return {
         success: true,
-        message: `Great! I'd love to help you save a recipe. 😊\n\nPlease paste or describe the recipe you'd like to save. Include:\n- **Title** (or I can suggest one)\n- **Ingredients** (with quantities)\n- **Steps** (how to make it)\n- **Tags** (optional - like "italian", "dessert", "quick")\n\nYou can also paste a recipe from a website or just describe it in your own words!`,
+        message: `Great! I'd love to help you save a recipe. 😊\n\nPlease paste or describe the recipe you'd like to save. Include:\n- **Title** (or I can suggest one)\n- **Ingredients** (with quantities)\n- **Steps** (how to make it)\n- **Tags** (optional - like "italian", "dessert", "quick")\n\nYou can also paste a recipe URL from a website, or describe it in your own words!`,
       };
     }
     
     console.log('Extracting recipe from message...');
     
-    // Step 1: Extract structured recipe data using AI
+    // Step 2: Extract structured recipe data using AI
     let extractedRecipe;
     try {
       extractedRecipe = await extractRecipeData(message);
