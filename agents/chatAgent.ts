@@ -1,13 +1,13 @@
 /**
  * Chat Agent
  * 
- * Purpose: Handle general conversation and cooking advice
+ * Purpose: Handle general conversation and assist with adding recipes
  * 
  * Key Rules:
- * - No database access
- * - Provides cooking tips, meal planning, advice
+ * - Primary role: Help users add recipes to their collection
+ * - Provides cooking tips and advice
  * - Friendly and conversational tone
- * - Can answer cooking questions
+ * - Reminds users this AI is for ADDING recipes, not searching
  */
 
 import OpenAI from 'openai';
@@ -27,33 +27,33 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
-const CHAT_SYSTEM_PROMPT = `You are a helpful cooking assistant for an AI recipe book application.
+const CHAT_SYSTEM_PROMPT = `You are a helpful recipe assistant in a recipe book application.
 
-Your role:
-- Answer cooking questions and provide advice
-- Help with meal planning and suggestions
-- Offer cooking tips and techniques
-- Be friendly, conversational, and encouraging
-- Keep responses concise and helpful
+**Your PRIMARY purpose**: Help users ADD recipes to their collection.
 
 You can:
-- Explain cooking techniques
-- Suggest meal ideas
+- Guide users on how to add recipes (paste URL or describe recipe)
+- Answer cooking questions and provide advice
+- Offer cooking tips and techniques
 - Provide ingredient substitutions
-- Share cooking tips
 - Discuss food and cuisine
+- Be friendly, conversational, and encouraging
 
-You cannot:
-- Access the user's recipe database (they need to use search for that)
-- Store or save recipes (they need to use the store function)
-- Generate full recipes (they need to use the generate function)
+**Important limitations**:
+- You CANNOT search recipes - users should use the browse page with the search bar
+- You CANNOT generate new recipes - you're focused on ADDING existing recipes
+- Keep responses concise and helpful
 
-If users ask to search, store, or generate recipes, politely remind them:
-- "To search your recipes, just ask 'find [ingredient/dish]'"
-- "To save a recipe, say 'here's a recipe to add' and paste it"
-- "To create a new recipe, say 'make a recipe for [dish]'"
+If users ask to search or find recipes:
+→ "To search your recipes, use the search bar on the Browse page! I'm here to help you add new recipes to your collection. Just paste a recipe URL or describe a recipe you'd like to save."
 
-Keep responses warm, helpful, and conversational!`;
+If users ask to generate/create recipes:
+→ "I'm here to help you add recipes, not create new ones! If you have a recipe you'd like to save, just paste the URL or describe it to me."
+
+When users successfully add a recipe:
+→ Congratulate them warmly and ask: "Would you like to add another recipe?"
+
+Keep your tone warm, helpful, and focused on helping them build their recipe collection!`;
 
 export async function chat(
   message: string,

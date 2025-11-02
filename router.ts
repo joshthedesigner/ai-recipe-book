@@ -17,8 +17,6 @@ import {
   getClarificationMessage 
 } from '@/agents/intentClassifier';
 import { storeRecipe } from '@/agents/storeRecipe';
-import { searchRecipe } from '@/agents/searchRecipe';
-import { generateRecipe } from '@/agents/generateRecipe';
 import { chat } from '@/agents/chatAgent';
 import { ChatResponse, IntentType, ChatMessage } from '@/types';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -79,15 +77,13 @@ async function handleIntent(
     case 'store_recipe':
       return handleStoreRecipe(message, userId, supabase);
     
-    case 'search_recipe':
-      return handleSearchRecipe(message, userId);
-    
-    case 'generate_recipe':
-      // Recipe generation is disabled - redirect to search
-      console.log('Generate recipe request redirected to search');
-      return handleSearchRecipe(message, userId);
-    
     case 'general_chat':
+      return handleGeneralChat(message, userId, conversationHistory);
+    
+    // Search and generate are no longer supported - handled by browse UI
+    case 'search_recipe':
+    case 'generate_recipe':
+      console.log(`${intent} request redirected to general chat`);
       return handleGeneralChat(message, userId, conversationHistory);
     
     default:
@@ -134,31 +130,7 @@ async function handleStoreRecipe(
   };
 }
 
-async function handleSearchRecipe(
-  message: string,
-  userId?: string
-): Promise<ChatResponse> {
-  const result = await searchRecipe(message, userId);
-  
-  return {
-    message: result.message,
-    recipes: result.data,
-    needsClarification: false,
-  };
-}
-
-async function handleGenerateRecipe(
-  message: string,
-  userId?: string
-): Promise<ChatResponse> {
-  const result = await generateRecipe(message, userId);
-  
-  return {
-    message: result.message,
-    recipe: result.data,
-    needsClarification: false,
-  };
-}
+// Search and generate handlers removed - now handled by browse UI
 
 async function handleGeneralChat(
   message: string,

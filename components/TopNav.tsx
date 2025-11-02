@@ -15,15 +15,12 @@ import {
   Divider,
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import ChatIcon from '@mui/icons-material/Chat';
-import GridViewIcon from '@mui/icons-material/GridView';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TopNav() {
-  const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -81,31 +78,11 @@ export default function TopNav() {
           AI Recipe Book
         </Typography>
 
-        {/* Navigation Buttons */}
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-          <IconButton
-            onClick={() => router.push('/chat')}
-            sx={{
-              color: pathname === '/chat' ? 'primary.main' : 'text.secondary',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <ChatIcon />
-          </IconButton>
-          <IconButton
-            onClick={() => router.push('/browse')}
-            sx={{
-              color: pathname === '/browse' ? 'primary.main' : 'text.secondary',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <GridViewIcon />
-          </IconButton>
-
-          {/* User Menu */}
+        {/* User Menu */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {user && (
             <>
-              <IconButton onClick={handleMenuOpen} sx={{ ml: 1 }}>
+              <IconButton onClick={handleMenuOpen}>
                 <Avatar
                   sx={{
                     width: 36,

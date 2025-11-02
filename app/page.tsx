@@ -12,7 +12,7 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push('/chat');
+        router.push('/browse');
       } else {
         router.push('/login');
       }

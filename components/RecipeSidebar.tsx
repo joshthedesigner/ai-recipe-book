@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Box,
-  Container,
+  Drawer,
   TextField,
   IconButton,
-  Paper,
   CircularProgress,
   Typography,
   Button,
@@ -15,7 +13,6 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
-import TopNav from '@/components/TopNav';
 import MessageBubble from '@/components/MessageBubble';
 import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
@@ -31,29 +28,37 @@ interface Message {
   chatResponse?: ChatResponse;
 }
 
-export default function ChatPage() {
-  const router = useRouter();
-  const { user, loading } = useAuth();
+interface RecipeSidebarProps {
+  open: boolean;
+  onClose: () => void;
+  onRecipeAdded?: () => void;
+}
+
+const INITIAL_MESSAGE: Message = {
+  id: '0',
+  role: 'assistant',
+  message: 'Hi! I can help you add recipes. Paste a URL or describe a recipe to get started.',
+  timestamp: new Date().toISOString(),
+};
+
+export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSidebarProps) {
+  const { user } = useAuth();
   const { showToast } = useToast();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '0',
-      role: 'assistant',
-      message: 'Hello! I\'m your AI recipe assistant. I can help you:\n\n**Save recipes** - Just paste a recipe or say "save this recipe"\n\n**Find recipes** - Ask me "show me pasta recipes" or "find chicken dishes"\n\n**Cooking advice** - Ask me anything about cooking\n\nWhat would you like to do?',
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auth protection: redirect to login if not authenticated
+  // Reset conversation when sidebar opens
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+    if (open) {
+      setMessages([INITIAL_MESSAGE]);
+      setInput('');
+      setPendingRecipe(null);
+      setIsLoading(false);
     }
-  }, [user, loading, router]);
+  }, [open]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -165,14 +170,19 @@ export default function ChatPage() {
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          message: data.response.message,
+          message: '✅ Recipe saved! Would you like to add another?',
           timestamp: new Date().toISOString(),
           chatResponse: data.response,
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
-        setPendingRecipe(null); // Clear pending recipe
+        setPendingRecipe(null);
         showToast('Recipe saved successfully! 🎉', 'success');
+        
+        // Notify parent to refresh recipe list
+        if (onRecipeAdded) {
+          onRecipeAdded();
+        }
       } else {
         throw new Error(data.error || 'Failed to save recipe');
       }
@@ -203,18 +213,45 @@ export default function ChatPage() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <TopNav />
-
-      {/* Chat Messages Area */}
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: 'auto',
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      sx={{
+        '& .MuiDrawer-paper': {
+          width: { xs: '100%', sm: '500px' },
           bgcolor: 'background.default',
-        }}
-      >
-        <Box sx={{ maxWidth: '768px', mx: 'auto', px: 3, py: 4 }}>
+        },
+      }}
+    >
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Header */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            p: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Add Recipe
+          </Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
+
+        {/* Chat Messages Area */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            p: 3,
+          }}
+        >
           {messages.map((msg) => (
             <Box key={msg.id}>
               <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp} />
@@ -222,21 +259,8 @@ export default function ChatPage() {
               {/* Display recipe if present */}
               {msg.chatResponse?.recipe && (
                 <Box sx={{ mb: 3, display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                  <Box sx={{ maxWidth: '600px', width: '100%' }}>
+                  <Box sx={{ maxWidth: '100%', width: '100%' }}>
                     <RecipeCard recipe={msg.chatResponse.recipe} />
-                  </Box>
-                </Box>
-              )}
-
-              {/* Display search results if present */}
-              {msg.chatResponse?.recipes && msg.chatResponse.recipes.length > 0 && (
-                <Box sx={{ mb: 3, display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                  <Box sx={{ maxWidth: '600px', width: '100%' }}>
-                    {msg.chatResponse.recipes.slice(0, 3).map((recipe) => (
-                      <Box key={recipe.id} sx={{ mb: 1 }}>
-                        <RecipeCard recipe={recipe} compact />
-                      </Box>
-                    ))}
                   </Box>
                 </Box>
               )}
@@ -250,45 +274,37 @@ export default function ChatPage() {
                 display: 'flex',
                 justifyContent: 'flex-start',
                 mb: 3,
+                gap: 2,
               }}
             >
-              <Box
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<CheckIcon />}
+                onClick={handleConfirmRecipe}
                 sx={{
-                  maxWidth: '600px',
-                  width: '100%',
-                  display: 'flex',
-                  gap: 2,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
                 }}
               >
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<CheckIcon />}
-                  onClick={handleConfirmRecipe}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: 3,
-                  }}
-                >
-                  Yes, Save Recipe
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  startIcon={<CloseIcon />}
-                  onClick={handleCancelRecipe}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    px: 3,
-                  }}
-                >
-                  No, Cancel
-                </Button>
-              </Box>
+                Yes, Save Recipe
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<CloseIcon />}
+                onClick={handleCancelRecipe}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
+                No, Cancel
+              </Button>
             </Box>
           )}
 
@@ -303,7 +319,6 @@ export default function ChatPage() {
             >
               <Box
                 sx={{
-                  maxWidth: '600px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
@@ -319,18 +334,15 @@ export default function ChatPage() {
 
           <div ref={messagesEndRef} />
         </Box>
-      </Box>
 
-      {/* Input Area */}
-      <Box
-        sx={{
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.default',
-          p: 2, // 16px padding
-        }}
-      >
-        <Box sx={{ maxWidth: '600px', mx: 'auto' }}>
+        {/* Input Area */}
+        <Box
+          sx={{
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            p: 2,
+          }}
+        >
           <TextField
             fullWidth
             multiline
@@ -365,7 +377,7 @@ export default function ChatPage() {
               '& .MuiOutlinedInput-root': {
                 bgcolor: '#ffffff',
                 borderRadius: '12px',
-                p: 1.5, // 12px padding
+                p: 1.5,
                 boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
                 '& fieldset': {
                   borderColor: '#d1d5db',
@@ -391,7 +403,7 @@ export default function ChatPage() {
           />
         </Box>
       </Box>
-    </Box>
+    </Drawer>
   );
 }
 

@@ -25,6 +25,8 @@ import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import RecipeDetailModal from '@/components/RecipeDetailModal';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
+import AddRecipeButton from '@/components/AddRecipeButton';
+import RecipeSidebar from '@/components/RecipeSidebar';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -44,6 +46,7 @@ export default function BrowsePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Get unique tags and contributors for filter dropdowns
   const allTags = Array.from(new Set(recipes.flatMap(r => r.tags))).sort();
@@ -190,19 +193,27 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterTag || filterContributor || sortBy !== 'created_at';
 
+  const handleRecipeAdded = () => {
+    // Refresh recipe list when a new recipe is added
+    fetchRecipes();
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            Recipe Collection
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Browse and search your saved recipes
-          </Typography>
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
+              Recipe Collection
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Browse and search your saved recipes
+            </Typography>
+          </Box>
+          <AddRecipeButton onClick={() => setSidebarOpen(true)} />
         </Box>
 
         {/* Search and Filters */}
@@ -384,6 +395,13 @@ export default function BrowsePage() {
         title={recipeToDelete?.title || ''}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      {/* Recipe Sidebar for Adding Recipes */}
+      <RecipeSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        onRecipeAdded={handleRecipeAdded}
       />
     </Box>
   );

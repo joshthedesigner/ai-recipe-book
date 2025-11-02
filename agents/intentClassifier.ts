@@ -1,15 +1,15 @@
 /**
  * Intent Classifier Agent
  * 
- * Purpose: Classifies user messages into one of three intents:
+ * Purpose: Classifies user messages into one of two intents:
  * - store_recipe: User wants to add/save a recipe
- * - search_recipe: User wants to find existing recipes
  * - general_chat: General conversation/cooking advice
  * 
  * Key Rules:
  * - Returns JSON only (intent + confidence)
  * - No actions taken by this agent
  * - Must be confident before routing
+ * - This AI is focused on ADDING recipes, not searching or generating
  */
 
 import OpenAI from 'openai';
@@ -29,7 +29,10 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
-const SYSTEM_PROMPT = `You are an intent classifier for an AI recipe book application.
+const SYSTEM_PROMPT = `You are an intent classifier for an AI recipe assistant.
+
+IMPORTANT: This AI is designed to help users ADD recipes to their collection. 
+It is NOT for searching recipes or generating new ones.
 
 Your ONLY job is to classify user messages into ONE of these intents:
 
@@ -41,40 +44,30 @@ Your ONLY job is to classify user messages into ONE of these intents:
    - "I have a recipe to store"
    - "https://www.example.com/recipe" (any URL by itself = store)
    - A URL with no other context = store
+   - Pasting recipe text = store
 
-2. "search_recipe" - User wants to FIND recipes OR is asking about ANY recipe
-   Examples:
-   - "Show me pasta recipes"
-   - "Find recipes with chicken"
-   - "What desserts do I have?"
-   - "Do I have any vegetarian meals?"
-   - "Make me miso soup" (search for miso soup)
-   - "I want chicken dinner" (search for chicken)
-   - "Create a vegan recipe" (search for vegan)
-   - "Recipe for chocolate cake" (search for chocolate cake)
-
-3. "general_chat" - General conversation, questions, or cooking advice (NOT recipe requests)
+2. "general_chat" - General conversation, questions, or cooking advice
    Examples:
    - "What should I cook this week?"
    - "How do I cook rice?"
    - "Hello"
    - "Thanks!"
    - "What's your name?"
+   - "Can you help me add a recipe?"
+   - "How does this work?"
 
 CRITICAL RULES:
 - Return ONLY valid JSON with "intent" and "confidence" (0-1)
 - Be very confident in your classification (aim for 0.8+)
 - **If message contains ONLY a URL (https://...) = "store_recipe"**
-- **URLs = store, NOT search**
-- ANY recipe request = "search_recipe" (even if user says "make", "create", "generate")
-- Words like "find", "show", "search", "make", "create", "recipe for" = search_recipe
-- Words like "save", "add", "here's a recipe" = store_recipe  
-- NEVER use "generate_recipe" intent - it's disabled
-- When user asks for a recipe, they want to search their collection
+- **URLs = store_recipe**
+- Words like "save", "add", "here's a recipe", "paste", "store" = store_recipe  
+- This assistant does NOT search or generate recipes - redirect those to general_chat
+- When user seems to want search/generate features, classify as general_chat so AI can explain its purpose
 
 Return format:
 {
-  "intent": "search_recipe",
+  "intent": "store_recipe",
   "confidence": 0.95
 }`;
 
@@ -107,8 +100,8 @@ export async function classifyIntent(message: string): Promise<IntentClassificat
 
     const classification = JSON.parse(content) as IntentClassification;
 
-    // Validate the response
-    const validIntents: IntentType[] = ['store_recipe', 'search_recipe', 'generate_recipe', 'general_chat'];
+    // Validate the response - only store_recipe and general_chat are valid
+    const validIntents: IntentType[] = ['store_recipe', 'general_chat'];
     if (!validIntents.includes(classification.intent)) {
       console.error('Invalid intent returned:', classification.intent);
       // Default to general_chat if invalid
@@ -149,10 +142,10 @@ export function getClarificationMessage(message: string, classification: IntentC
 
   // Provide helpful clarification based on likely intent
   const clarifications: Record<IntentType, string> = {
-    store_recipe: "I'm not sure if you want to save a recipe. If you'd like to add a recipe to your collection, please say 'save this recipe' or 'here's a recipe to add'.",
-    search_recipe: "I'm not sure if you want to search for recipes. If you'd like to find recipes in your collection, please say 'find recipes with [ingredient]' or 'show me [type] recipes'.",
-    generate_recipe: "I'm not sure if you want me to create a new recipe. If you'd like me to generate a recipe, please say 'create a recipe for [dish]' or 'make a [type] recipe'.",
-    general_chat: "I'm not sure what you'd like to do. You can:\n- Search recipes: 'find pasta recipes'\n- Save a recipe: 'save this recipe: [recipe text]'\n- Generate a recipe: 'create a vegan curry recipe'\n- Ask me anything about cooking!"
+    store_recipe: "I'm not sure if you want to save a recipe. If you'd like to add a recipe to your collection, please paste a recipe URL or say 'here's a recipe to add'.",
+    search_recipe: "", // Not used anymore
+    generate_recipe: "", // Not used anymore
+    general_chat: "I'm not sure what you'd like to do. I'm here to help you add recipes to your collection. You can:\n- Paste a recipe URL\n- Describe a recipe to save\n- Ask me questions about cooking!"
   };
 
   return clarifications[intent] || clarifications.general_chat;
