@@ -81,7 +81,9 @@ async function handleIntent(
       return handleSearchRecipe(message, userId);
     
     case 'generate_recipe':
-      return handleGenerateRecipe(message, userId);
+      // Recipe generation is disabled - redirect to search
+      console.log('Generate recipe request redirected to search');
+      return handleSearchRecipe(message, userId);
     
     case 'general_chat':
       return handleGeneralChat(message, userId);

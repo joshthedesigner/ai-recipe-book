@@ -41,35 +41,33 @@ Your ONLY job is to classify user messages into ONE of these intents:
    - "Add this to my collection"
    - "I have a recipe to store"
 
-2. "search_recipe" - User wants to FIND existing recipes in their collection
+2. "search_recipe" - User wants to FIND recipes OR is asking about ANY recipe
    Examples:
    - "Show me pasta recipes"
    - "Find recipes with chicken"
    - "What desserts do I have?"
    - "Do I have any vegetarian meals?"
+   - "Make me miso soup" (search for miso soup)
+   - "I want chicken dinner" (search for chicken)
+   - "Create a vegan recipe" (search for vegan)
+   - "Recipe for chocolate cake" (search for chocolate cake)
 
-3. "generate_recipe" - User wants AI to CREATE a new recipe
-   Examples:
-   - "Make a vegan shawarma recipe"
-   - "Create a chocolate cake recipe"
-   - "Come up with a pasta dish"
-   - "Generate a recipe for chicken dinner"
-
-4. "general_chat" - General conversation, questions, or cooking advice
+3. "general_chat" - General conversation, questions, or cooking advice (NOT recipe requests)
    Examples:
    - "What should I cook this week?"
    - "How do I cook rice?"
    - "Hello"
    - "Thanks!"
+   - "What's your name?"
 
 IMPORTANT RULES:
 - Return ONLY valid JSON with "intent" and "confidence" (0-1)
 - Be very confident in your classification (aim for 0.8+)
-- When in doubt between intents, return lower confidence
-- "store" vs "search" vs "generate" distinction is CRITICAL
-- Words like "find", "show", "search" = search_recipe
-- Words like "save", "add", "here's" = store_recipe  
-- Words like "make", "create", "generate", "come up with" = generate_recipe
+- ANY recipe request = "search_recipe" (even if user says "make", "create", "generate")
+- Words like "find", "show", "search", "make", "create", "recipe for" = search_recipe
+- Words like "save", "add", "here's a recipe" = store_recipe  
+- NEVER use "generate_recipe" intent - it's disabled
+- When user asks for a recipe, they want to search their collection
 
 Return format:
 {

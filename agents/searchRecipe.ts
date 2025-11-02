@@ -39,7 +39,7 @@ export async function searchRecipe(
     if (!results || results.length === 0) {
       return {
         success: true,
-        message: `I couldn't find any recipes matching "${query}" in your collection.\n\nWould you like me to:\n- Generate a new "${query}" recipe?\n- Try searching with different keywords?\n- Browse all your recipes?`,
+        message: `I couldn't find any recipes matching "${query}" in your collection. 🔍\n\nTry:\n- Searching with different keywords\n- Browse all your recipes in the Browse tab\n- Add a "${query}" recipe to your collection if you have one!`,
         data: [],
       };
     }
