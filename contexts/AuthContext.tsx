@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      router.push('/chat');
+      router.push('/browse');
       return { error: null };
     } catch (error) {
       return { error };
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // If email confirmation is disabled, sign them in
       if (data.user && data.session) {
-        router.push('/chat');
+        router.push('/browse');
       }
 
       return { error: null };
