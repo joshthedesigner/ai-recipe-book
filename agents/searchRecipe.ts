@@ -29,15 +29,16 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
-const QUERY_EXTRACTION_PROMPT = `You are a search query optimizer. Extract the actual search keywords from natural language recipe queries.
+const QUERY_EXTRACTION_PROMPT = `You are a search query optimizer. Extract MINIMAL search keywords from natural language recipe queries.
 
-Rules:
-- Remove filler words like "do you have", "show me", "find me", "I want", "looking for"
-- Keep the core ingredients, dish names, or cuisine types
-- Keep important descriptors like "quick", "easy", "healthy", "vegetarian"
-- Return ONLY the keywords, no extra text
+Critical Rules:
+- ONLY remove filler/question words - NEVER add words
+- Remove: "do you have", "show me", "find me", "I want", "looking for", "any", "?"
+- Keep: ingredients, dish names, cuisine types, descriptors (quick, easy, healthy)
+- Return the SIMPLEST form - do NOT add words like "recipes", "meals", "dishes"
 
 Examples:
+"fish?" → "fish"
 "do you have fish recipes" → "fish"
 "show me italian pasta dishes" → "italian pasta"
 "find me something with chicken" → "chicken"
@@ -45,8 +46,9 @@ Examples:
 "looking for healthy breakfast" → "healthy breakfast"
 "any desserts?" → "desserts"
 "miso soup" → "miso soup"
+"chicken?" → "chicken"
 
-Return format: Just the keywords as a single string.`;
+Return format: Just the minimal keywords as a single string. Do NOT add extra words.`;
 
 /**
  * Extract search keywords from natural language query
@@ -85,23 +87,45 @@ export async function searchRecipe(
 
     // Step 1: Extract search keywords from natural language
     const searchKeywords = await extractSearchKeywords(query);
+    console.log(`Query extraction: "${query}" → "${searchKeywords}"`);
+    if (searchKeywords !== query) {
+      console.log('Will fallback to original query if needed');
+    }
 
-    // Step 2: Try semantic search first (vector similarity)
+    // Step 2: Try semantic search with extracted keywords
     let results = await searchRecipes(searchKeywords, {
       matchThreshold: 0.7,  // 70% similarity minimum
       matchCount: 10,
       userId,
     });
 
-    // Step 3: If no results, try keyword search as fallback
+    // Step 3: If no results AND keywords differ from original, try original query
+    if ((!results || results.length === 0) && searchKeywords !== query) {
+      console.log(`No results for "${searchKeywords}", trying original query: "${query}"`);
+      results = await searchRecipes(query, {
+        matchThreshold: 0.7,
+        matchCount: 10,
+        userId,
+      });
+    }
+
+    // Step 4: If still no results, try keyword search as fallback
     if (!results || results.length === 0) {
       console.log('No vector results, trying keyword search...');
       results = await searchRecipesByKeyword(searchKeywords, {
         matchCount: 10,
       }) as SearchResult[];
+      
+      // Try original query in keyword search too
+      if ((!results || results.length === 0) && searchKeywords !== query) {
+        console.log(`No keyword results for "${searchKeywords}", trying original: "${query}"`);
+        results = await searchRecipesByKeyword(query, {
+          matchCount: 10,
+        }) as SearchResult[];
+      }
     }
 
-    // Step 4: Handle no results
+    // Step 5: Handle no results
     if (!results || results.length === 0) {
       return {
         success: true,
@@ -110,7 +134,7 @@ export async function searchRecipe(
       };
     }
 
-    // Step 5: Generate human-readable summary
+    // Step 6: Generate human-readable summary
     const summary = generateSearchSummary(searchKeywords, results);
 
     return {
