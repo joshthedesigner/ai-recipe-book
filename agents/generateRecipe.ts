@@ -70,7 +70,6 @@ export async function generateRecipe(
     const generatedRecipe: Recipe = {
       ...recipe,
       contributor_name: 'AI Generated',
-      is_ai_generated: true,
     };
 
     // Step 3: Generate human-readable summary
