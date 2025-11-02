@@ -92,25 +92,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           },
         }}
       >
-        {/* Overflow Menu Button */}
-        {onDelete && (
-          <IconButton
-            size="small"
-            onClick={handleMenuClick}
-            sx={{
-              position: 'absolute',
-              top: 8,
-              right: 8,
-              zIndex: 1,
-              '&:hover': {
-                bgcolor: 'action.hover',
-              },
-            }}
-          >
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
-        )}
-
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
           {recipe.image_url ? (
             <CardMedia
@@ -136,10 +117,24 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
             </Box>
           )}
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, pr: 4 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5, gap: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
                 {recipe.title}
               </Typography>
+              {onDelete && (
+                <IconButton
+                  size="small"
+                  onClick={handleMenuClick}
+                  sx={{
+                    mt: -0.5,
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  <MoreVertIcon fontSize="small" />
+                </IconButton>
+              )}
             </Box>
 
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
