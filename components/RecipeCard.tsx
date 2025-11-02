@@ -23,6 +23,7 @@ import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Recipe } from '@/types';
 
 interface RecipeCardProps {
@@ -161,24 +162,33 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
                   📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, p${recipe.cookbook_page}` : ''}
                 </Typography>
               ) : recipe.source_url ? (
-                <Typography 
+                <Box 
                   component="a" 
                   href={recipe.source_url} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   onClick={handleSourceClick}
-                  variant="caption"
                   sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
                     color: 'primary.main',
                     textDecoration: 'none',
-                    fontWeight: 600,
                     '&:hover': {
                       textDecoration: 'underline',
                     },
                   }}
                 >
-                  {getSourceName(recipe.source_url)}
-                </Typography>
+                  <Typography 
+                    variant="caption"
+                    sx={{ 
+                      fontWeight: 600,
+                    }}
+                  >
+                    {getSourceName(recipe.source_url)}
+                  </Typography>
+                  <OpenInNewIcon sx={{ fontSize: 12 }} />
+                </Box>
               ) : null}
             </Box>
           </CardContent>
@@ -317,8 +327,9 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
             {!recipe.cookbook_name && recipe.source_url && (
               <>
                 {' • '}
-                <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">
+                <a href={recipe.source_url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                   View Source
+                  <OpenInNewIcon sx={{ fontSize: 12 }} />
                 </a>
               </>
             )}
