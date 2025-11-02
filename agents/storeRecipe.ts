@@ -144,8 +144,8 @@ export async function saveConfirmedRecipe(
         tags: recipe.tags,
         source_url: recipe.source_url || null,
         image_url: recipe.image_url || null,
-        cookbook_name: cookbookName || null,
-        cookbook_page: cookbookPage || null,
+        cookbook_name: recipe.cookbook_name || null,
+        cookbook_page: recipe.cookbook_page || null,
         contributor_name: recipe.contributor_name,
         embedding: embedding,
       })
