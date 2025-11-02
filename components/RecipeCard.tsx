@@ -3,6 +3,7 @@
 import {
   Card,
   CardContent,
+  CardActionArea,
   Typography,
   Chip,
   Box,
@@ -18,29 +19,58 @@ import { Recipe } from '@/types';
 interface RecipeCardProps {
   recipe: Recipe;
   compact?: boolean;
+  onClick?: () => void;
 }
 
-export default function RecipeCard({ recipe, compact = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick }: RecipeCardProps) {
+  // Grid view (for browse page) - compact, clickable card
   if (compact) {
     return (
-      <Card elevation={2} sx={{ mb: 2 }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-            <RestaurantIcon sx={{ mr: 1, color: 'primary.main' }} />
-            <Typography variant="h6">{recipe.title}</Typography>
-          </Box>
+      <Card 
+        elevation={2} 
+        sx={{ 
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: 4,
+          },
+        }}
+      >
+        <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+              <RestaurantIcon sx={{ mr: 1, color: 'primary.main', fontSize: 24 }} />
+              <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                {recipe.title}
+              </Typography>
+            </Box>
 
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
-            {recipe.tags.slice(0, 4).map((tag) => (
-              <Chip key={tag} label={tag} size="small" />
-            ))}
-          </Box>
+            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
+              {recipe.tags.slice(0, 3).map((tag) => (
+                <Chip key={tag} label={tag} size="small" color="primary" variant="outlined" />
+              ))}
+              {recipe.tags.length > 3 && (
+                <Chip label={`+${recipe.tags.length - 3}`} size="small" variant="outlined" />
+              )}
+            </Box>
 
-          <Typography variant="body2" color="text.secondary">
-            {recipe.ingredients.length} ingredients • {recipe.steps.length} steps
-            {recipe.is_ai_generated && ' • AI Generated'}
-          </Typography>
-        </CardContent>
+            <Typography variant="body2" color="text.secondary">
+              📝 {recipe.ingredients.length} ingredients
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              👨‍🍳 {recipe.steps.length} steps
+            </Typography>
+
+            <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+              <Typography variant="caption" color="text.secondary">
+                {recipe.is_ai_generated ? '🤖 AI Generated' : `By ${recipe.contributor_name}`}
+              </Typography>
+            </Box>
+          </CardContent>
+        </CardActionArea>
       </Card>
     );
   }
