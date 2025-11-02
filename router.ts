@@ -80,9 +80,8 @@ async function handleIntent(
     case 'general_chat':
       return handleGeneralChat(message, userId, conversationHistory);
     
-    // Search and generate are no longer supported - handled by browse UI
+    // Search is no longer supported - handled by browse UI
     case 'search_recipe':
-    case 'generate_recipe':
       console.log(`${intent} request redirected to general chat`);
       return handleGeneralChat(message, userId, conversationHistory);
     
