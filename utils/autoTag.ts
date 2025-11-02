@@ -40,7 +40,6 @@ const CUISINE_HIERARCHY: Record<string, string> = {
   'cajun': 'american',
   'creole': 'american',
   'southern': 'american',
-  'tex-mex': 'american', // Also American
   
   // French Regional
   'provençal': 'french',
