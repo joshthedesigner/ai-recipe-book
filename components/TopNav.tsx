@@ -83,7 +83,16 @@ export default function TopNav() {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {user && (
             <>
-              <IconButton onClick={handleMenuOpen} sx={{ gap: 0.5 }}>
+              <IconButton 
+                onClick={handleMenuOpen} 
+                disableRipple
+                sx={{ 
+                  gap: 0.5,
+                  '&:hover': {
+                    bgcolor: 'transparent',
+                  },
+                }}
+              >
                 <Avatar
                   sx={{
                     width: 36,
