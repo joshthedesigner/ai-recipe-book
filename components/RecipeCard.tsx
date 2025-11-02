@@ -63,6 +63,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           flexDirection: 'column',
           transition: 'all 0.2s ease',
           position: 'relative',
+          bgcolor: 'white',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: 4,
@@ -79,8 +80,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               top: 8,
               right: 8,
               zIndex: 1,
-              bgcolor: 'background.paper',
-              boxShadow: 1,
               '&:hover': {
                 bgcolor: 'action.hover',
               },
@@ -149,7 +148,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
   }
 
   return (
-    <Card elevation={3} sx={{ mb: 3 }}>
+    <Card elevation={3} sx={{ mb: 3, bgcolor: 'white' }}>
       <CardContent>
         {/* Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
