@@ -442,10 +442,10 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          message: storeData.message,
+          message: '', // No text message, just show the recipe card
           timestamp: new Date().toISOString(),
           chatResponse: {
-            message: storeData.message,
+            message: '',
             needsReview: true,
             pendingRecipe: storeData.recipe,
             recipe: storeData.recipe,
@@ -539,7 +539,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         >
           {messages.map((msg) => (
             <Box key={msg.id}>
-              <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp} />
+              {/* Only show message bubble if there's a message */}
+              {msg.message && <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp} />}
 
               {/* Display recipe if present */}
               {msg.chatResponse?.recipe && (
