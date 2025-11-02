@@ -41,6 +41,7 @@ export default function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [filterTag, setFilterTag] = useState('');
+  const [filterCuisine, setFilterCuisine] = useState('');
   const [filterContributor, setFilterContributor] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -48,9 +49,23 @@ export default function BrowsePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Get unique tags and contributors for filter dropdowns
+  // Common cuisine types
+  const CUISINE_TYPES = ['american', 'chinese', 'french', 'greek', 'indian', 'italian', 'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 'middle eastern', 'mediterranean'];
+
+  // Get unique tags, cuisines, and contributors for filter dropdowns
   const allTags = Array.from(new Set(recipes.flatMap(r => r.tags))).sort();
   const allContributors = Array.from(new Set(recipes.map(r => r.contributor_name))).sort();
+  
+  // Extract cuisine types from tags
+  const allCuisines = Array.from(
+    new Set(
+      recipes.flatMap(r => 
+        r.tags.filter(tag => 
+          CUISINE_TYPES.includes(tag.toLowerCase())
+        )
+      )
+    )
+  ).sort();
 
   // Auth protection: redirect to login if not authenticated
   useEffect(() => {
@@ -69,7 +84,7 @@ export default function BrowsePage() {
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
     applyFilters();
-  }, [recipes, searchQuery, sortBy, filterTag, filterContributor]);
+  }, [recipes, searchQuery, sortBy, filterTag, filterCuisine, filterContributor]);
 
   const fetchRecipes = async () => {
     try {
@@ -107,6 +122,13 @@ export default function BrowsePage() {
     // Tag filter
     if (filterTag) {
       filtered = filtered.filter((recipe) => recipe.tags.includes(filterTag));
+    }
+
+    // Cuisine filter
+    if (filterCuisine) {
+      filtered = filtered.filter((recipe) => 
+        recipe.tags.some(tag => tag.toLowerCase() === filterCuisine.toLowerCase())
+      );
     }
 
     // Contributor filter
@@ -187,11 +209,12 @@ export default function BrowsePage() {
   const clearFilters = () => {
     setSearchQuery('');
     setFilterTag('');
+    setFilterCuisine('');
     setFilterContributor('');
     setSortBy('created_at');
   };
 
-  const hasActiveFilters = searchQuery || filterTag || filterContributor || sortBy !== 'created_at';
+  const hasActiveFilters = searchQuery || filterTag || filterCuisine || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
     // Refresh recipe list when a new recipe is added
@@ -256,10 +279,28 @@ export default function BrowsePage() {
 
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
-                <InputLabel>Filter by Tag</InputLabel>
+                <InputLabel>Cuisine</InputLabel>
+                <Select
+                  value={filterCuisine}
+                  label="Cuisine"
+                  onChange={(e) => setFilterCuisine(e.target.value)}
+                >
+                  <MenuItem value="">All Cuisines</MenuItem>
+                  {allCuisines.map((cuisine) => (
+                    <MenuItem key={cuisine} value={cuisine}>
+                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Tags</InputLabel>
                 <Select
                   value={filterTag}
-                  label="Filter by Tag"
+                  label="Tags"
                   onChange={(e) => setFilterTag(e.target.value)}
                 >
                   <MenuItem value="">All Tags</MenuItem>
@@ -274,10 +315,10 @@ export default function BrowsePage() {
 
             <Grid item xs={12} sm={6} md={3}>
               <FormControl fullWidth size="small">
-                <InputLabel>Filter by Contributor</InputLabel>
+                <InputLabel>Contributor</InputLabel>
                 <Select
                   value={filterContributor}
-                  label="Filter by Contributor"
+                  label="Contributor"
                   onChange={(e) => setFilterContributor(e.target.value)}
                 >
                   <MenuItem value="">All Contributors</MenuItem>
