@@ -56,7 +56,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
   if (compact) {
     return (
       <Card 
-        elevation={2} 
+        elevation={0} 
         sx={{ 
           height: '100%',
           display: 'flex',
@@ -64,6 +64,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           transition: 'all 0.2s ease',
           position: 'relative',
           bgcolor: 'white',
+          border: '1px solid',
+          borderColor: 'divider',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: 4,
@@ -148,7 +150,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
   }
 
   return (
-    <Card elevation={3} sx={{ mb: 3, bgcolor: 'white' }}>
+    <Card elevation={0} sx={{ mb: 3, bgcolor: 'white', border: '1px solid', borderColor: 'divider' }}>
       <CardContent>
         {/* Title */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
