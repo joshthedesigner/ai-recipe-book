@@ -40,6 +40,8 @@ Your ONLY job is to classify user messages into ONE of these intents:
    - "Save this recipe: [recipe text]"
    - "Add this to my collection"
    - "I have a recipe to store"
+   - "https://www.example.com/recipe" (any URL by itself = store)
+   - A URL with no other context = store
 
 2. "search_recipe" - User wants to FIND recipes OR is asking about ANY recipe
    Examples:
@@ -60,9 +62,11 @@ Your ONLY job is to classify user messages into ONE of these intents:
    - "Thanks!"
    - "What's your name?"
 
-IMPORTANT RULES:
+CRITICAL RULES:
 - Return ONLY valid JSON with "intent" and "confidence" (0-1)
 - Be very confident in your classification (aim for 0.8+)
+- **If message contains ONLY a URL (https://...) = "store_recipe"**
+- **URLs = store, NOT search**
 - ANY recipe request = "search_recipe" (even if user says "make", "create", "generate")
 - Words like "find", "show", "search", "make", "create", "recipe for" = search_recipe
 - Words like "save", "add", "here's a recipe" = store_recipe  
@@ -77,6 +81,15 @@ Return format:
 
 export async function classifyIntent(message: string): Promise<IntentClassification> {
   try {
+    // Quick check: If message is just a URL, it's always store_recipe
+    const urlRegex = /^https?:\/\/[^\s]+$/i;
+    if (urlRegex.test(message.trim())) {
+      return {
+        intent: 'store_recipe',
+        confidence: 0.99,
+      };
+    }
+
     const client = getOpenAIClient();
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini', // Fast and cost-effective for classification
