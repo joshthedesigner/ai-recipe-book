@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import sharp from 'sharp';
+import { translateRecipe } from '@/agents/translateRecipe';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -198,32 +199,29 @@ export async function POST(request: NextRequest) {
 
     console.log(`Detected language: ${languageName} (${languageCode})`);
 
-    // If not English and translation requested, translate
+    // If not English and translation requested, translate using translation agent
     let finalText = extractedText;
     let translationStatus = 'none';
+    let translationWarning: string | undefined;
 
     if (languageCode !== 'en' && shouldTranslate) {
-      console.log('Translating to English...');
-      const client = getOpenAIClient();
+      console.log('Translating to English using translation agent...');
       
-      const response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: 'Translate the following recipe text to English. Preserve the structure and all details. Return ONLY the translated text.',
-          },
-          {
-            role: 'user',
-            content: extractedText,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 2000,
-      });
-
-      finalText = response.choices[0].message.content || extractedText;
-      translationStatus = 'completed';
+      const result = await translateRecipe(extractedText, languageName, 'English');
+      
+      if (result.success) {
+        finalText = result.translatedText;
+        translationStatus = 'completed';
+        
+        if (result.warning) {
+          translationWarning = result.warning;
+          console.warn('Translation warning:', result.warning);
+        }
+      } else {
+        // Translation failed, keep original
+        translationWarning = result.warning || 'Translation failed';
+        console.error('Translation failed:', result.warning);
+      }
     } else if (languageCode !== 'en') {
       translationStatus = 'requested';
     }
@@ -236,6 +234,7 @@ export async function POST(request: NextRequest) {
         language: languageCode,
         language_name: languageName,
         translation_status: translationStatus,
+        translation_warning: translationWarning,
         needs_translation: languageCode !== 'en' && !shouldTranslate,
       },
     });

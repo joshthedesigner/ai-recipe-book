@@ -306,6 +306,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       const extractedTexts: string[] = [];
       let detectedLanguage = 'en';
       let detectedLanguageName = 'English';
+      let hasTranslationWarning = false;
 
       for (const file of files) {
         const formData = new FormData();
@@ -323,12 +324,18 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           throw new Error(data.error || 'Failed to extract recipe from image');
         }
 
-        const { raw_text, translated_text, language, language_name, needs_translation } = data.data;
+        const { raw_text, translated_text, language, language_name, needs_translation, translation_warning } = data.data;
 
         // Store language from first non-English image
         if (needs_translation && detectedLanguage === 'en') {
           detectedLanguage = language;
           detectedLanguageName = language_name;
+        }
+
+        // Store translation warning if present
+        if (translation_warning) {
+          console.warn('Translation warning:', translation_warning);
+          hasTranslationWarning = true;
         }
 
         // Collect extracted or translated text
@@ -357,10 +364,19 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         // Ask for cookbook information
         setPendingCookbookInfo({ extractedText: combinedText });
         
+        let cookbookMessage = 'Great! I extracted the recipe from your photo. 📖';
+        
+        // Add warning if translation was incomplete
+        if (hasTranslationWarning && translate) {
+          cookbookMessage += '\n\n⚠️ **Note:** Translation may be incomplete. Please review the recipe carefully before saving.';
+        }
+        
+        cookbookMessage += '\n\nWhich cookbook is this from? Please provide the name and page number.\n\n*Example: "Joy of Cooking, Page 245" or just "Joy of Cooking" if you don\'t know the page.*';
+        
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          message: 'Great! I extracted the recipe from your photo. 📖\n\nWhich cookbook is this from? Please provide the name and page number.\n\n*Example: "Joy of Cooking, Page 245" or just "Joy of Cooking" if you don\'t know the page.*',
+          message: cookbookMessage,
           timestamp: new Date().toISOString(),
         };
 
