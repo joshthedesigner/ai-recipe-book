@@ -11,8 +11,6 @@ import { Resend } from 'resend';
 import { createClient } from '@/db/supabaseServer';
 import { generateInviteEmail, generateInviteEmailText } from '@/utils/emailTemplates';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: NextRequest) {
   try {
     const { inviteeEmail, role, groupId } = await request.json();
@@ -90,6 +88,9 @@ export async function POST(request: NextRequest) {
     // Send email via Resend
     console.log('Attempting to send email to:', inviteeEmail);
     console.log('From:', process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>');
+    
+    // Initialize Resend client (lazy loading to avoid build-time errors)
+    const resend = new Resend(process.env.RESEND_API_KEY);
     
     const { data: sentEmail, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>',
