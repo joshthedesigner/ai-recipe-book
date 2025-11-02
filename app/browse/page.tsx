@@ -46,6 +46,7 @@ export default function BrowsePage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingRecipe, setDeletingRecipe] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Common cuisine types
@@ -163,6 +164,8 @@ export default function BrowsePage() {
   const handleDeleteConfirm = async () => {
     if (!recipeToDelete?.id) return;
 
+    setDeletingRecipe(true);
+
     try {
       const response = await fetch(`/api/recipes/${recipeToDelete.id}`, {
         method: 'DELETE',
@@ -187,6 +190,8 @@ export default function BrowsePage() {
     } catch (error) {
       console.error('Error deleting recipe:', error);
       showToast('Failed to delete recipe. Please try again.', 'error');
+    } finally {
+      setDeletingRecipe(false);
     }
   };
 
@@ -412,6 +417,7 @@ export default function BrowsePage() {
         title={recipeToDelete?.title || ''}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+        loading={deletingRecipe}
       />
 
       {/* Recipe Sidebar for Adding Recipes */}

@@ -8,6 +8,7 @@ import {
   Button,
   Typography,
   Box,
+  CircularProgress,
 } from '@mui/material';
 import WarningIcon from '@mui/icons-material/Warning';
 
@@ -16,6 +17,7 @@ interface DeleteConfirmDialogProps {
   title: string;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 export default function DeleteConfirmDialog({
@@ -23,6 +25,7 @@ export default function DeleteConfirmDialog({
   title,
   onConfirm,
   onCancel,
+  loading = false,
 }: DeleteConfirmDialogProps) {
   return (
     <Dialog
@@ -59,6 +62,7 @@ export default function DeleteConfirmDialog({
           onClick={onCancel}
           variant="outlined"
           color="inherit"
+          disabled={loading}
         >
           Cancel
         </Button>
@@ -67,8 +71,10 @@ export default function DeleteConfirmDialog({
           variant="contained"
           color="error"
           autoFocus
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
         >
-          Delete
+          {loading ? 'Deleting...' : 'Delete'}
         </Button>
       </DialogActions>
     </Dialog>
