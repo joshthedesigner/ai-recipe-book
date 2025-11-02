@@ -226,6 +226,8 @@ export async function storeRecipe(
               tags: extractedRecipe.tags,
               source_url: extractedRecipe.source_url || url,
               image_url: extractedRecipe.image_url || null,
+              cookbook_name: cookbookName || null,
+              cookbook_page: cookbookPage || null,
               contributor_name: contributorName,
             };
 
@@ -387,6 +389,8 @@ export async function storeRecipe(
         tags: extractedRecipe.tags,
         source_url: null,
         image_url: null,
+        cookbook_name: cookbookName || null,
+        cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
       };
 
