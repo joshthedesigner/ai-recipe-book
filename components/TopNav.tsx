@@ -17,6 +17,7 @@ import {
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -82,7 +83,7 @@ export default function TopNav() {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {user && (
             <>
-              <IconButton onClick={handleMenuOpen}>
+              <IconButton onClick={handleMenuOpen} sx={{ gap: 0.5 }}>
                 <Avatar
                   sx={{
                     width: 36,
@@ -94,6 +95,7 @@ export default function TopNav() {
                 >
                   {getUserInitials()}
                 </Avatar>
+                <KeyboardArrowDownIcon sx={{ fontSize: 20, color: 'text.primary' }} />
               </IconButton>
 
               <Menu
