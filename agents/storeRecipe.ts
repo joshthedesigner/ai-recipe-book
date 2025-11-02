@@ -15,6 +15,7 @@ import { Recipe, AgentResponse } from '@/types';
 import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
+import { mergeAutoTags } from '@/utils/autoTag';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -575,6 +576,12 @@ async function extractRecipeData(text: string): Promise<any> {
 
     const extracted = JSON.parse(content);
     console.log('Extracted recipe:', extracted);
+    
+    // Apply auto-tagging to ensure all protein/ingredient categories are tagged
+    if (extracted.ingredients && Array.isArray(extracted.ingredients)) {
+      extracted.tags = mergeAutoTags(extracted.tags || [], extracted.ingredients);
+      console.log('Auto-tags applied:', extracted.tags);
+    }
     
     return extracted;
 

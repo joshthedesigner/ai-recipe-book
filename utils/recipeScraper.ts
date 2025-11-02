@@ -9,6 +9,7 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import OpenAI from 'openai';
+import { mergeAutoTags } from './autoTag';
 
 interface ScrapedRecipe {
   title: string;
@@ -167,6 +168,16 @@ Return format: ["step 1", "step 2", "step 3"]`;
 }
 
 /**
+ * Apply auto-tagging to a scraped recipe
+ */
+function applyAutoTags(recipe: ScrapedRecipe): ScrapedRecipe {
+  return {
+    ...recipe,
+    tags: mergeAutoTags(recipe.tags, recipe.ingredients),
+  };
+}
+
+/**
  * Condense recipe steps using AI
  * Makes steps more concise while preserving critical information
  */
@@ -245,7 +256,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       if (validSteps.length >= 3) {
         console.log('Condensing steps for clarity...');
         const condensedSteps = await condenseSteps(validSteps);
-        return { ...schemaRecipe, steps: condensedSteps };
+        return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
       }
       
       // Step 4: Try HTML fallback
@@ -257,7 +268,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         if (validHtmlSteps.length >= 3) {
           console.log('Using HTML-parsed steps, condensing...');
           const condensedSteps = await condenseSteps(validHtmlSteps);
-          return { ...schemaRecipe, steps: condensedSteps };
+          return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
         }
       }
       
@@ -270,7 +281,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         if (validAiSteps.length >= 3) {
           console.log('Using AI-extracted steps, condensing...');
           const condensedSteps = await condenseSteps(validAiSteps);
-          return { ...schemaRecipe, steps: condensedSteps };
+          return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
         }
       } catch (aiError) {
         console.error('AI step extraction failed:', aiError);
@@ -283,7 +294,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       
       console.log('Condensing final validated steps...');
       const condensedSteps = await condenseSteps(validSteps);
-      return { ...schemaRecipe, steps: condensedSteps };
+      return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
     }
 
     // No schema found: Fallback to full OpenAI parsing
@@ -296,7 +307,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       fullRecipe.steps = await condenseSteps(fullRecipe.steps);
     }
     
-    return fullRecipe;
+    return applyAutoTags(fullRecipe);
 
   } catch (error) {
     console.error('Error scraping recipe:', error);
