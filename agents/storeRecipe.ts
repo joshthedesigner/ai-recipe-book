@@ -61,12 +61,33 @@ IMPORTANT RULES:
 - Return valid JSON only
 - Set incomplete to true ONLY if there is NO usable content at all
 
-Example output (complete recipe):
+AUTO-TAGGING RULES FOR MAIN INGREDIENTS:
+- Always analyze the ingredients and automatically add category tags based on protein/main ingredient
+- Add "fish" tag if ingredients include: salmon, tuna, cod, halibut, tilapia, trout, bass, mackerel, sardines, anchovies, or any other fish
+- Add "seafood" tag if ingredients include: shrimp, prawns, crab, lobster, scallops, mussels, clams, oysters, squid, octopus
+- Add "chicken" tag if ingredients include: chicken, poultry (but not for other birds)
+- Add "beef" tag if ingredients include: beef, steak, ground beef, brisket
+- Add "pork" tag if ingredients include: pork, bacon, ham, sausage, prosciutto, pancetta
+- Add "lamb" tag if ingredients include: lamb, mutton
+- Add "vegetarian" tag if there are NO meat, fish, or seafood ingredients
+- Add "vegan" tag if there are no animal products at all (no meat, fish, seafood, dairy, eggs, honey)
+- You can add multiple protein tags if the recipe contains multiple proteins
+
+Example output (complete recipe with auto-tags):
 {
   "title": "Spaghetti Carbonara",
   "ingredients": ["400g spaghetti", "200g pancetta", "4 eggs", "100g Pecorino cheese", "Black pepper", "Salt"],
   "steps": ["Boil pasta", "Fry pancetta", "Mix eggs and cheese", "Combine with hot pasta", "Serve immediately"],
-  "tags": ["pasta", "italian", "dinner", "quick"],
+  "tags": ["pasta", "italian", "dinner", "quick", "pork"],
+  "incomplete": false
+}
+
+Example output (fish recipe with auto-tags):
+{
+  "title": "Grilled Salmon",
+  "ingredients": ["2 salmon fillets", "olive oil", "lemon", "garlic", "herbs"],
+  "steps": ["Season salmon", "Grill for 4-5 minutes per side", "Serve with lemon"],
+  "tags": ["grilled", "fish", "healthy", "dinner"],
   "incomplete": false
 }
 
