@@ -682,9 +682,9 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
               onClick={() => fileInputRef.current?.click()}
               disabled={isLoading || uploadingImage || imageQueue.length >= MAX_IMAGES}
               sx={{
-                bgcolor: 'background.paper',
+                bgcolor: 'transparent',
                 border: '1px solid',
-                borderColor: imageQueue.length > 0 ? 'primary.main' : 'divider',
+                borderColor: 'divider',
                 '&:hover': {
                   bgcolor: 'action.hover',
                 },
@@ -692,7 +692,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 height: 40,
               }}
             >
-              <ImageIcon sx={{ fontSize: 20, color: imageQueue.length > 0 ? 'primary.main' : 'inherit' }} />
+              <ImageIcon sx={{ fontSize: 20 }} />
             </IconButton>
 
             {/* Text Input */}
