@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -23,8 +24,11 @@ import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeDetailModal from '@/components/RecipeDetailModal';
 import { Recipe } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function BrowsePage() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +43,19 @@ export default function BrowsePage() {
   const allTags = Array.from(new Set(recipes.flatMap(r => r.tags))).sort();
   const allContributors = Array.from(new Set(recipes.map(r => r.contributor_name))).sort();
 
+  // Auth protection: redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
   // Fetch recipes on mount
   useEffect(() => {
-    fetchRecipes();
-  }, []);
+    if (user) {
+      fetchRecipes();
+    }
+  }, [user]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Container,
@@ -15,6 +16,7 @@ import TopNav from '@/components/TopNav';
 import MessageBubble from '@/components/MessageBubble';
 import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Message {
   id: string;
@@ -25,6 +27,8 @@ interface Message {
 }
 
 export default function ChatPage() {
+  const router = useRouter();
+  const { user, loading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '0',
@@ -36,6 +40,13 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Auth protection: redirect to login if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -64,6 +75,7 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           message: userMessage.message,
+          userId: user?.id,
         }),
       });
 

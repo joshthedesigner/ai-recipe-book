@@ -99,10 +99,14 @@ async function handleStoreRecipe(
   message: string,
   userId?: string
 ): Promise<ChatResponse> {
-  // For now, use a default user ID if not provided
-  const effectiveUserId = userId || '00000000-0000-0000-0000-000000000001';
+  if (!userId) {
+    return {
+      message: 'You must be logged in to save recipes.',
+      needsClarification: false,
+    };
+  }
   
-  const result = await storeRecipe(message, effectiveUserId, 'User');
+  const result = await storeRecipe(message, userId, 'User');
   
   return {
     message: result.message,
