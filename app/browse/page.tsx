@@ -93,7 +93,6 @@ export default function BrowsePage() {
       const data = await response.json();
 
       if (data.success) {
-        console.log('Fetched recipes:', data.recipes);
         setRecipes(data.recipes);
       } else {
         showToast('Failed to load recipes. Please try again.', 'error');
