@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse the request body
     const body: ChatRequest = await request.json();
-    const { message, userId, confirmRecipe } = body;
+    const { message, userId, confirmRecipe, conversationHistory } = body;
 
     // Create server-side Supabase client with user session
     const supabase = createClient();
@@ -49,8 +49,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Route the message through our system
-    const response = await routeMessage(message.trim(), userId, supabase);
+    // Route the message through our system with conversation history
+    const response = await routeMessage(message.trim(), userId, supabase, conversationHistory);
 
     // Return the response
     return NextResponse.json(

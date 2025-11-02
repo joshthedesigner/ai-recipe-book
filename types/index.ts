@@ -75,6 +75,7 @@ export interface ChatRequest {
   message: string;
   userId?: string;
   confirmRecipe?: Recipe;          // Recipe to confirm and save
+  conversationHistory?: ChatMessage[];  // Recent conversation context
 }
 
 export interface ChatAPIResponse {

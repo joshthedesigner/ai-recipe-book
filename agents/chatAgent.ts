@@ -11,7 +11,7 @@
  */
 
 import OpenAI from 'openai';
-import { AgentResponse } from '@/types';
+import { AgentResponse, ChatMessage } from '@/types';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -57,19 +57,35 @@ Keep responses warm, helpful, and conversational!`;
 
 export async function chat(
   message: string,
-  userId?: string
+  userId?: string,
+  conversationHistory?: ChatMessage[]
 ): Promise<AgentResponse> {
   try {
     console.log('Chat agent handling message:', message);
 
     const client = getOpenAIClient();
 
+    // Build messages array with conversation history for context
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: 'system', content: CHAT_SYSTEM_PROMPT },
+    ];
+
+    // Add conversation history if available (for context awareness)
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationHistory.forEach((msg) => {
+        messages.push({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.message,
+        });
+      });
+    }
+
+    // Add current message
+    messages.push({ role: 'user', content: message });
+
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: CHAT_SYSTEM_PROMPT },
-        { role: 'user', content: message }
-      ],
+      messages,
       temperature: 0.7,  // Friendly and conversational
       max_tokens: 500,   // Keep responses concise
     });

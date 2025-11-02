@@ -20,13 +20,14 @@ import { storeRecipe } from '@/agents/storeRecipe';
 import { searchRecipe } from '@/agents/searchRecipe';
 import { generateRecipe } from '@/agents/generateRecipe';
 import { chat } from '@/agents/chatAgent';
-import { ChatResponse, IntentType } from '@/types';
+import { ChatResponse, IntentType, ChatMessage } from '@/types';
 import { SupabaseClient } from '@supabase/supabase-js';
 
 export async function routeMessage(
   message: string,
   userId?: string,
-  supabase?: SupabaseClient
+  supabase?: SupabaseClient,
+  conversationHistory?: ChatMessage[]
 ): Promise<ChatResponse> {
   try {
     // Step 1: Classify the intent
@@ -48,8 +49,8 @@ export async function routeMessage(
       };
     }
 
-    // Step 3: Route to appropriate agent based on intent
-    const response = await handleIntent(intent, message, userId, supabase);
+    // Step 3: Route to appropriate agent based on intent (with conversation history)
+    const response = await handleIntent(intent, message, userId, supabase, conversationHistory);
     
     return {
       ...response,
@@ -70,7 +71,8 @@ async function handleIntent(
   intent: IntentType,
   message: string,
   userId?: string,
-  supabase?: SupabaseClient
+  supabase?: SupabaseClient,
+  conversationHistory?: ChatMessage[]
 ): Promise<ChatResponse> {
   
   switch (intent) {
@@ -86,7 +88,7 @@ async function handleIntent(
       return handleSearchRecipe(message, userId);
     
     case 'general_chat':
-      return handleGeneralChat(message, userId);
+      return handleGeneralChat(message, userId, conversationHistory);
     
     default:
       return {
@@ -160,9 +162,10 @@ async function handleGenerateRecipe(
 
 async function handleGeneralChat(
   message: string,
-  userId?: string
+  userId?: string,
+  conversationHistory?: ChatMessage[]
 ): Promise<ChatResponse> {
-  const result = await chat(message, userId);
+  const result = await chat(message, userId, conversationHistory);
   
   return {
     message: result.message,
