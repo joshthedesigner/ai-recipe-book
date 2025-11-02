@@ -288,7 +288,7 @@ export default function BrowsePage() {
 
           {/* Filters Row */}
           <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <InputLabel>Sort By</InputLabel>
                 <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
@@ -299,7 +299,7 @@ export default function BrowsePage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <InputLabel>Cuisine</InputLabel>
                 <Select
@@ -317,7 +317,7 @@ export default function BrowsePage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <InputLabel>Main Ingredient</InputLabel>
                 <Select
@@ -335,7 +335,7 @@ export default function BrowsePage() {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid item xs={12} sm={6} md={2}>
               <FormControl fullWidth size="small">
                 <InputLabel>Contributor</InputLabel>
                 <Select
