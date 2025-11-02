@@ -92,7 +92,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           },
         }}
       >
-        <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
+        <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           {recipe.image_url ? (
             <CardMedia
               component="img"
@@ -116,7 +116,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
             </Box>
           )}
-          <CardContent>
+          <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5, gap: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
                 {recipe.title}
@@ -146,7 +146,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               )}
             </Box>
 
-            <Box sx={{ mt: 2, pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
               <Typography variant="caption" color="text.secondary">
                 By {recipe.contributor_name}
               </Typography>
