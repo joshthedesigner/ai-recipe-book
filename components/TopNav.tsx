@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -17,14 +17,34 @@ import {
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
+import PeopleIcon from '@mui/icons-material/People';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/db/supabaseClient';
 
 export default function TopNav() {
   const router = useRouter();
   const { user, signOut } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [isGroupOwner, setIsGroupOwner] = useState(false);
+
+  // Check if user is a group owner
+  useEffect(() => {
+    async function checkOwnership() {
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('recipe_groups')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+
+      setIsGroupOwner(data && data.length > 0);
+    }
+
+    checkOwnership();
+  }, [user]);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -37,6 +57,11 @@ export default function TopNav() {
   const handleSignOut = async () => {
     handleMenuClose();
     await signOut();
+  };
+
+  const handleManageUsers = () => {
+    handleMenuClose();
+    router.push('/manage-users');
   };
 
   // Get user initials for avatar
@@ -76,7 +101,7 @@ export default function TopNav() {
             fontWeight: 600,
           }}
         >
-          AI Recipe Book
+          RecipeBook
         </Typography>
 
         {/* User Menu */}
@@ -133,6 +158,14 @@ export default function TopNav() {
                   />
                 </MenuItem>
                 <Divider />
+                {isGroupOwner && (
+                  <MenuItem onClick={handleManageUsers}>
+                    <ListItemIcon>
+                      <PeopleIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText primary="Manage Users" />
+                  </MenuItem>
+                )}
                 <MenuItem onClick={handleSignOut}>
                   <ListItemIcon>
                     <LogoutIcon fontSize="small" />

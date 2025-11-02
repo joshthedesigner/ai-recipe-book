@@ -7,7 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 
 export const metadata: Metadata = {
-  title: 'AI Recipe Book',
+  title: 'RecipeBook',
   description: 'Your family recipe collection powered by AI',
 };
 

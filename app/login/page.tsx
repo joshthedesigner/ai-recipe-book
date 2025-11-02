@@ -57,7 +57,7 @@ export default function LoginPage() {
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <RestaurantIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              AI Recipe Book
+              RecipeBook
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Sign in to your family recipe collection
