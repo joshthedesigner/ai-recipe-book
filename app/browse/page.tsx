@@ -41,6 +41,7 @@ export default function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [filterCuisine, setFilterCuisine] = useState('');
+  const [filterMainIngredient, setFilterMainIngredient] = useState('');
   const [filterContributor, setFilterContributor] = useState('');
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -51,6 +52,9 @@ export default function BrowsePage() {
 
   // Common cuisine types
   const CUISINE_TYPES = ['american', 'chinese', 'french', 'greek', 'indian', 'italian', 'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 'middle eastern', 'mediterranean'];
+  
+  // Main ingredient types (matching auto-tagging categories)
+  const MAIN_INGREDIENT_TYPES = ['fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'vegetarian', 'vegan'];
 
   // Get unique cuisines and contributors for filter dropdowns
   const allContributors = Array.from(new Set(recipes.map(r => r.contributor_name))).sort();
@@ -61,6 +65,17 @@ export default function BrowsePage() {
       recipes.flatMap(r => 
         r.tags.filter(tag => 
           CUISINE_TYPES.includes(tag.toLowerCase())
+        )
+      )
+    )
+  ).sort();
+  
+  // Extract main ingredient types from tags
+  const allMainIngredients = Array.from(
+    new Set(
+      recipes.flatMap(r => 
+        r.tags.filter(tag => 
+          MAIN_INGREDIENT_TYPES.includes(tag.toLowerCase())
         )
       )
     )
@@ -83,7 +98,7 @@ export default function BrowsePage() {
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
     applyFilters();
-  }, [recipes, searchQuery, sortBy, filterCuisine, filterContributor]);
+  }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient, filterContributor]);
 
   const fetchRecipes = async () => {
     try {
@@ -124,6 +139,13 @@ export default function BrowsePage() {
     if (filterCuisine) {
       filtered = filtered.filter((recipe) => 
         recipe.tags.some(tag => tag.toLowerCase() === filterCuisine.toLowerCase())
+      );
+    }
+
+    // Main ingredient filter
+    if (filterMainIngredient) {
+      filtered = filtered.filter((recipe) => 
+        recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase())
       );
     }
 
@@ -209,11 +231,12 @@ export default function BrowsePage() {
   const clearFilters = () => {
     setSearchQuery('');
     setFilterCuisine('');
+    setFilterMainIngredient('');
     setFilterContributor('');
     setSortBy('created_at');
   };
 
-  const hasActiveFilters = searchQuery || filterCuisine || filterContributor || sortBy !== 'created_at';
+  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
     // Refresh recipe list when a new recipe is added
@@ -288,6 +311,24 @@ export default function BrowsePage() {
                   {allCuisines.map((cuisine) => (
                     <MenuItem key={cuisine} value={cuisine}>
                       {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Main Ingredient</InputLabel>
+                <Select
+                  value={filterMainIngredient}
+                  label="Main Ingredient"
+                  onChange={(e) => setFilterMainIngredient(e.target.value)}
+                >
+                  <MenuItem value="">All Ingredients</MenuItem>
+                  {allMainIngredients.map((ingredient) => (
+                    <MenuItem key={ingredient} value={ingredient}>
+                      {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
                     </MenuItem>
                   ))}
                 </Select>
