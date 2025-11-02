@@ -79,7 +79,7 @@ export async function searchRecipesByKeyword(
     const { data, error } = await supabase
       .from('recipes')
       .select(RECIPE_FIELDS)
-      .or(`title.ilike.${searchTerm},tags.cs.{${keyword}},ingredients::text.ilike.${searchTerm}`)
+      .or(`title.ilike.${searchTerm},tags.cs.{${keyword}}`)
       .limit(matchCount);
 
     if (error) {

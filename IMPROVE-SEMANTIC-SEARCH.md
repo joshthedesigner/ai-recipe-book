@@ -2,12 +2,11 @@
 
 ## Problem
 Searching for "fish" wasn't finding salmon recipes because:
-1. **Semantic threshold too strict** - 70% minimum similarity filtered out valid matches (salmon = 65-68% similar to "fish")
-2. **Keyword search incomplete** - Only searched title and tags, not ingredients
+- **Semantic threshold too strict** - 70% minimum similarity filtered out valid matches (salmon = 65-68% similar to "fish")
 
-## Solution: Two-Pronged Improvement
+## Solution: Lower Semantic Threshold (0.7 → 0.65)
 
-### **1. Lower Semantic Threshold (0.7 → 0.65)**
+### **Lower Semantic Threshold (0.7 → 0.65)**
 
 **Change:** Reduced similarity threshold from 70% to 65%
 
@@ -25,70 +24,24 @@ After:  "fish" → salmon (66% similar) → ✅ Found (> 65%)
 
 ---
 
-### **2. Add Ingredients to Keyword Search**
-
-**Change:** Keyword search now checks title + tags + ingredients
-
-**Before:**
-```sql
-.or(`title.ilike.${searchTerm},tags.cs.{${keyword}}`)
-```
-
-**After:**
-```sql
-.or(`title.ilike.${searchTerm},tags.cs.{${keyword}},ingredients::text.ilike.${searchTerm}`)
-```
-
-**Why:**
-- Many recipes have key terms in ingredients but not title/tags
-- Catches exact word matches as safety net
-- No downside (just broadens fallback search)
-
-**Impact:**
-```
-Recipe: "Grilled Salmon Fillets"
-Ingredients: ["salmon", "lemon", "olive oil"]
-Tags: ["dinner", "healthy"]
-
-Search: "salmon"
-→ Semantic search: ✅ Found (primary)
-→ Keyword in title: ✅ Found (backup)  
-→ Keyword in ingredients: ✅ Found (backup) [NEW!]
-
-Search: "fish"
-→ Semantic search: ✅ Found (65% similar) [IMPROVED!]
-→ Keyword fallback: ✅ Catches if tagged "fish"
-→ Ingredient fallback: ✅ Catches "fish sauce" etc [NEW!]
-```
-
----
-
-## Three-Layer Search Strategy
+## Two-Layer Search Strategy
 
 ### **Layer 1: Semantic Search (Primary)** 🎯
 ```
-matchThreshold: 0.65
+matchThreshold: 0.65 (lowered from 0.7)
 ↓
 Understands: "fish" = salmon, tuna, cod
            "pasta" = spaghetti, linguine
            "chicken" = poultry, fowl
-✅ Best for conceptual matches
+✅ Best for conceptual matches - THIS IS THE KEY FIX
 ```
 
-### **Layer 2: Keyword - Title/Tags** 🔍
+### **Layer 2: Keyword - Title/Tags (Fallback)** 🔍
 ```
 Searches: Recipe title and tags
 ↓
 Finds: Exact word matches
 ✅ Good for specific terms
-```
-
-### **Layer 3: Keyword - Ingredients** 🥘 [NEW!]
-```
-Searches: Ingredient list
-↓
-Finds: Recipes containing the exact ingredient
-✅ Safety net for ingredient-specific searches
 ```
 
 ---
@@ -102,9 +55,7 @@ Finds: Recipes containing the exact ingredient
 - Line 107: Changed `matchThreshold: 0.7` → `0.65`
 - Both semantic search attempts now use 65% threshold
 
-**2. `vector/search.ts`**
-- Line 82: Added `ingredients::text.ilike.${searchTerm}` to OR clause
-- Keyword search now checks ingredients column
+**Note:** Initially tried adding ingredients to keyword search but JSONB array searching in Supabase's .or() clause caused query errors. Removed that change - the threshold adjustment alone is sufficient.
 
 ---
 
