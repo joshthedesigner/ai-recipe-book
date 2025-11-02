@@ -167,6 +167,53 @@ Return format: ["step 1", "step 2", "step 3"]`;
 }
 
 /**
+ * Condense recipe steps using AI
+ * Makes steps more concise while preserving critical information
+ */
+async function condenseSteps(steps: string[]): Promise<string[]> {
+  const client = getOpenAIClient();
+
+  const prompt = `Rewrite these recipe steps to be more concise while keeping ALL critical information.
+
+KEEP:
+- Exact measurements (cups, tbsp, etc)
+- Temperatures (350°F, medium heat)
+- Times (5 minutes, until golden)
+- Key techniques (sauté, simmer, fold)
+
+REMOVE:
+- Unnecessary words ("now", "you can", "I like to")
+- Background explanations
+- Multiple sentences → one sentence
+- Optional suggestions ("if desired")
+
+Original steps:
+${steps.map((step, i) => `${i + 1}. ${step}`).join('\n')}
+
+Return as JSON array of concise steps.
+Format: {"steps": ["concise step 1", "concise step 2"]}`;
+
+  const response = await client.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }],
+    response_format: { type: 'json_object' },
+    temperature: 0.3,
+  });
+
+  const content = response.choices[0].message.content;
+  if (!content) {
+    return steps; // Return original if AI fails
+  }
+
+  try {
+    const parsed = JSON.parse(content);
+    return parsed.steps || steps;
+  } catch (e) {
+    return steps; // Return original if parsing fails
+  }
+}
+
+/**
  * Scrape recipe from URL (HYBRID APPROACH)
  */
 export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
@@ -194,9 +241,11 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       const validSteps = schemaRecipe.steps.filter(isValidCookingStep);
       console.log(`Validated steps: ${validSteps.length}/${schemaRecipe.steps.length} are valid`);
       
-      // Step 3: If we have enough valid steps, use them
+      // Step 3: If we have enough valid steps, condense and use them
       if (validSteps.length >= 3) {
-        return { ...schemaRecipe, steps: validSteps };
+        console.log('Condensing steps for clarity...');
+        const condensedSteps = await condenseSteps(validSteps);
+        return { ...schemaRecipe, steps: condensedSteps };
       }
       
       // Step 4: Try HTML fallback
@@ -206,8 +255,9 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       if (htmlSteps.length >= 3) {
         const validHtmlSteps = htmlSteps.filter(isValidCookingStep);
         if (validHtmlSteps.length >= 3) {
-          console.log('Using HTML-parsed steps');
-          return { ...schemaRecipe, steps: validHtmlSteps };
+          console.log('Using HTML-parsed steps, condensing...');
+          const condensedSteps = await condenseSteps(validHtmlSteps);
+          return { ...schemaRecipe, steps: condensedSteps };
         }
       }
       
@@ -218,8 +268,9 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         const validAiSteps = aiSteps.filter(isValidCookingStep);
         
         if (validAiSteps.length >= 3) {
-          console.log('Using AI-extracted steps');
-          return { ...schemaRecipe, steps: validAiSteps };
+          console.log('Using AI-extracted steps, condensing...');
+          const condensedSteps = await condenseSteps(validAiSteps);
+          return { ...schemaRecipe, steps: condensedSteps };
         }
       } catch (aiError) {
         console.error('AI step extraction failed:', aiError);
@@ -230,12 +281,22 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         throw new Error('Could not extract enough valid cooking steps from recipe');
       }
       
-      return { ...schemaRecipe, steps: validSteps };
+      console.log('Condensing final validated steps...');
+      const condensedSteps = await condenseSteps(validSteps);
+      return { ...schemaRecipe, steps: condensedSteps };
     }
 
     // No schema found: Fallback to full OpenAI parsing
     console.log('No schema found, using OpenAI to parse entire recipe');
-    return await parseRecipeWithAI(html, url);
+    const fullRecipe = await parseRecipeWithAI(html, url);
+    
+    // Condense the AI-generated recipe steps too
+    if (fullRecipe.steps.length >= 3) {
+      console.log('Condensing AI-parsed recipe steps...');
+      fullRecipe.steps = await condenseSteps(fullRecipe.steps);
+    }
+    
+    return fullRecipe;
 
   } catch (error) {
     console.error('Error scraping recipe:', error);
