@@ -13,6 +13,7 @@ import {
 import SendIcon from '@mui/icons-material/Send';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import ImageIcon from '@mui/icons-material/Image';
 import MessageBubble from '@/components/MessageBubble';
 import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
@@ -48,7 +49,15 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [pendingTranslation, setPendingTranslation] = useState<{
+    text: string;
+    language: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset conversation when sidebar opens
   useEffect(() => {
@@ -57,6 +66,10 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setInput('');
       setPendingRecipe(null);
       setIsLoading(false);
+      setSelectedImage(null);
+      setImagePreview(null);
+      setPendingTranslation(null);
+      setUploadingImage(false);
     }
   }, [open]);
 
@@ -212,6 +225,138 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     setMessages((prev) => [...prev, cancelMessage]);
   };
 
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      // Process image immediately
+      processImage(file);
+    }
+  };
+
+  const processImage = async (file: File, translate: boolean = false) => {
+    setUploadingImage(true);
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      message: translate ? `[Translating recipe from ${pendingTranslation?.language}...]` : `[Uploaded image: ${file.name}]`,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('translate', translate.toString());
+
+      const response = await fetch('/api/recipes/extract-from-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to extract recipe from image');
+      }
+
+      const { raw_text, translated_text, language, language_name, needs_translation } = data.data;
+
+      // If needs translation, ask user
+      if (needs_translation) {
+        setPendingTranslation({ text: raw_text, language: language_name });
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          message: `This recipe appears to be in **${language_name}**. Would you like me to translate it to English before saving?`,
+          timestamp: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        // Process the extracted text (translated or English)
+        const textToProcess = translate ? translated_text : raw_text;
+        
+        // Send extracted text to chat API to structure it
+        const chatResponse = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: `Here's a recipe I extracted from an image:\n\n${textToProcess}`,
+            userId: user?.id,
+          }),
+        });
+
+        const chatData = await chatResponse.json();
+
+        if (chatData.success) {
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            message: chatData.response.message,
+            timestamp: new Date().toISOString(),
+            chatResponse: chatData.response,
+          };
+
+          setMessages((prev) => [...prev, assistantMessage]);
+
+          // Check if recipe needs review
+          if (chatData.response.needsReview && chatData.response.pendingRecipe) {
+            setPendingRecipe(chatData.response.pendingRecipe);
+          }
+        }
+
+        // Clear image state
+        setSelectedImage(null);
+        setImagePreview(null);
+        setPendingTranslation(null);
+      }
+
+    } catch (error) {
+      console.error('Error processing image:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error processing the image. Please try again.',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      showToast('Failed to process image. Please try again.', 'error');
+      setSelectedImage(null);
+      setImagePreview(null);
+      setPendingTranslation(null);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleTranslateYes = () => {
+    if (selectedImage && pendingTranslation) {
+      processImage(selectedImage, true);
+    }
+  };
+
+  const handleTranslateNo = () => {
+    setPendingTranslation(null);
+    setSelectedImage(null);
+    setImagePreview(null);
+    const cancelMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      message: 'Okay, skipping translation. Feel free to upload another image or paste a recipe!',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, cancelMessage]);
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -268,7 +413,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           ))}
 
           {/* Recipe Confirmation Buttons */}
-          {pendingRecipe && !isLoading && (
+          {pendingRecipe && !isLoading && !uploadingImage && (
             <Box
               sx={{
                 display: 'flex',
@@ -308,8 +453,49 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
             </Box>
           )}
 
+          {/* Translation Confirmation Buttons */}
+          {pendingTranslation && !uploadingImage && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                mb: 3,
+                gap: 2,
+              }}
+            >
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<CheckIcon />}
+                onClick={handleTranslateYes}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
+                Yes, Translate
+              </Button>
+              <Button
+                variant="outlined"
+                color="secondary"
+                startIcon={<CloseIcon />}
+                onClick={handleTranslateNo}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 3,
+                }}
+              >
+                No, Skip
+              </Button>
+            </Box>
+          )}
+
           {/* Loading indicator */}
-          {isLoading && (
+          {(isLoading || uploadingImage) && (
             <Box
               sx={{
                 display: 'flex',
@@ -326,9 +512,33 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
               >
                 <CircularProgress size={16} />
                 <Typography variant="body1" color="text.secondary">
-                  Thinking...
+                  {uploadingImage ? 'Processing image...' : 'Thinking...'}
                 </Typography>
               </Box>
+            </Box>
+          )}
+
+          {/* Image Preview */}
+          {imagePreview && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                mb: 3,
+              }}
+            >
+              <Box
+                component="img"
+                src={imagePreview}
+                alt="Recipe preview"
+                sx={{
+                  maxWidth: '300px',
+                  maxHeight: '300px',
+                  borderRadius: '8px',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              />
             </Box>
           )}
 
@@ -343,36 +553,66 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
             p: 2,
           }}
         >
-          <TextField
-            fullWidth
-            multiline
-            maxRows={5}
-            placeholder="Type a message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={isLoading}
-            variant="outlined"
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  sx={{
-                    bgcolor: input.trim() && !isLoading ? 'primary.main' : 'transparent',
-                    color: input.trim() && !isLoading ? 'white' : 'text.disabled',
-                    '&:hover': { 
-                      bgcolor: input.trim() && !isLoading ? 'primary.dark' : 'transparent',
-                    },
-                    width: 36,
-                    height: 36,
-                    mr: -0.5,
-                  }}
-                >
-                  <SendIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-              ),
-            }}
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
+          />
+
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+            {/* Image Upload Button */}
+            <IconButton
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading || uploadingImage}
+              sx={{
+                bgcolor: 'background.paper',
+                border: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+                width: 40,
+                height: 40,
+                mb: 0.25,
+              }}
+            >
+              <ImageIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+
+            {/* Text Input */}
+            <TextField
+              fullWidth
+              multiline
+              maxRows={5}
+              placeholder="Type a message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={isLoading || uploadingImage}
+              variant="outlined"
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    onClick={handleSend}
+                    disabled={!input.trim() || isLoading || uploadingImage}
+                    sx={{
+                      bgcolor: input.trim() && !isLoading && !uploadingImage ? 'primary.main' : 'transparent',
+                      color: input.trim() && !isLoading && !uploadingImage ? 'white' : 'text.disabled',
+                      '&:hover': { 
+                        bgcolor: input.trim() && !isLoading && !uploadingImage ? 'primary.dark' : 'transparent',
+                      },
+                      width: 36,
+                      height: 36,
+                      mr: -0.5,
+                    }}
+                  >
+                    <SendIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                ),
+              }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 bgcolor: '#ffffff',
@@ -400,7 +640,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 },
               },
             }}
-          />
+            />
+          </Box>
         </Box>
       </Box>
     </Drawer>
