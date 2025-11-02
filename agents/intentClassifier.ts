@@ -144,7 +144,6 @@ export function getClarificationMessage(message: string, classification: IntentC
   const clarifications: Record<IntentType, string> = {
     store_recipe: "I'm not sure if you want to save a recipe. If you'd like to add a recipe to your collection, please paste a recipe URL or say 'here's a recipe to add'.",
     search_recipe: "", // Not used anymore
-    generate_recipe: "", // Not used anymore
     general_chat: "I'm not sure what you'd like to do. I'm here to help you add recipes to your collection. You can:\n- Paste a recipe URL\n- Describe a recipe to save\n- Ask me questions about cooking!"
   };
 
