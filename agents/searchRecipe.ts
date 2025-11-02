@@ -95,7 +95,7 @@ export async function searchRecipe(
 
     // Step 2: Try semantic search with extracted keywords
     let results = await searchRecipes(searchKeywords, {
-      matchThreshold: 0.7,  // 70% similarity minimum
+      matchThreshold: 0.65,  // 65% similarity (lowered for better recall)
       matchCount: 10,
       userId,
     });
@@ -104,7 +104,7 @@ export async function searchRecipe(
     if ((!results || results.length === 0) && searchKeywords !== query) {
       logger.log(`No results for "${searchKeywords}", trying original query: "${query}"`);
       results = await searchRecipes(query, {
-        matchThreshold: 0.7,
+        matchThreshold: 0.65,  // 65% similarity (lowered for better recall)
         matchCount: 10,
         userId,
       });
