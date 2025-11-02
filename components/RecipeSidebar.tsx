@@ -62,6 +62,9 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     language: string;
     images: File[];
   } | null>(null);
+  const [pendingCookbookInfo, setPendingCookbookInfo] = useState<{
+    extractedText: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,6 +79,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setIsLoading(false);
       setImageQueue([]);
       setPendingTranslation(null);
+      setPendingCookbookInfo(null);
       setUploadingImage(false);
     }
   }, [open]);
@@ -88,6 +92,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   const handleSend = async () => {
     // Check if we have either text or images
     if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
+
+    // If we're waiting for cookbook info, process it
+    if (pendingCookbookInfo) {
+      await processCookbookInfo(input.trim());
+      return;
+    }
 
     // If images are queued, process them
     if (imageQueue.length > 0) {
@@ -353,44 +363,17 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         };
         setMessages((prev) => [...prev, assistantMessage]);
       } else {
-        // Process the combined extracted text
-        const storeResponse = await fetch('/api/recipes/store', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            message: combinedText,
-            userId: user?.id,
-            reviewMode: true, // Enable review mode for confirmation
-          }),
-        });
+        // Ask for cookbook information
+        setPendingCookbookInfo({ extractedText: combinedText });
+        
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          message: 'Great! I extracted the recipe from your photo. 📖\n\nWhich cookbook is this from? Please provide the name and page number.\n\n*Example: "Joy of Cooking, Page 245" or just "Joy of Cooking" if you don\'t know the page.*',
+          timestamp: new Date().toISOString(),
+        };
 
-        const storeData = await storeResponse.json();
-
-        if (storeData.success) {
-          const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            message: storeData.message,
-            timestamp: new Date().toISOString(),
-            chatResponse: {
-              message: storeData.message,
-              needsReview: true,
-              pendingRecipe: storeData.recipe,
-              recipe: storeData.recipe, // Also set recipe for card display
-            },
-          };
-
-          setMessages((prev) => [...prev, assistantMessage]);
-
-          // Set pending recipe for confirmation
-          if (storeData.recipe) {
-            setPendingRecipe(storeData.recipe);
-          }
-        } else {
-          throw new Error(storeData.error || 'Failed to process recipe');
-        }
+        setMessages((prev) => [...prev, assistantMessage]);
 
         // Clear image queue
         setImageQueue([]);
@@ -411,6 +394,88 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setPendingTranslation(null);
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const processCookbookInfo = async (userInput: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      message: userInput,
+      timestamp: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      // Parse cookbook name and page from user input
+      // Expected format: "Book Name, Page 123" or "Book Name, p123" or just "Book Name"
+      let cookbookName = userInput;
+      let cookbookPage: string | null = null;
+
+      // Try to extract page number
+      const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
+      if (pageMatch) {
+        cookbookPage = pageMatch[2];
+        cookbookName = userInput.substring(0, pageMatch.index).trim();
+      }
+
+      // Store the recipe with cookbook info
+      const storeResponse = await fetch('/api/recipes/store', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: pendingCookbookInfo!.extractedText,
+          userId: user?.id,
+          reviewMode: true,
+          cookbookName: cookbookName || null,
+          cookbookPage: cookbookPage || null,
+        }),
+      });
+
+      const storeData = await storeResponse.json();
+
+      if (storeData.success) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          message: storeData.message,
+          timestamp: new Date().toISOString(),
+          chatResponse: {
+            message: storeData.message,
+            needsReview: true,
+            pendingRecipe: storeData.recipe,
+            recipe: storeData.recipe,
+          },
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        // Set pending recipe for confirmation
+        if (storeData.recipe) {
+          setPendingRecipe(storeData.recipe);
+        }
+
+        setPendingCookbookInfo(null);
+      } else {
+        throw new Error(storeData.error || 'Failed to process recipe');
+      }
+    } catch (error) {
+      console.error('Error processing cookbook info:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.',
+        timestamp: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      showToast('Failed to save recipe. Please try again.', 'error');
+      setPendingCookbookInfo(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 

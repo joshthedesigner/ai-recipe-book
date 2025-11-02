@@ -4,7 +4,7 @@ import { createClient } from '@/db/supabaseServer';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, userId, reviewMode } = await request.json();
+    const { message, userId, reviewMode, cookbookName, cookbookPage } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient();
 
     // Call store recipe agent
-    const result = await storeRecipe(message, userId, 'User', supabase, reviewMode);
+    const result = await storeRecipe(message, userId, 'User', supabase, reviewMode, cookbookName, cookbookPage);
 
     if (result.success) {
       return NextResponse.json({

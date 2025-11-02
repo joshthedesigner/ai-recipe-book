@@ -144,6 +144,8 @@ export async function saveConfirmedRecipe(
         tags: recipe.tags,
         source_url: recipe.source_url || null,
         image_url: recipe.image_url || null,
+        cookbook_name: cookbookName || null,
+        cookbook_page: cookbookPage || null,
         contributor_name: recipe.contributor_name,
         embedding: embedding,
       })
@@ -181,7 +183,9 @@ export async function storeRecipe(
   userId: string,
   contributorName: string = 'User',
   supabase?: SupabaseClient,
-  reviewMode: boolean = true  // Default to requiring review for URLs
+  reviewMode: boolean = true,  // Default to requiring review for URLs
+  cookbookName?: string | null,
+  cookbookPage?: string | null
 ): Promise<AgentResponse> {
   try {
     // Step 0: Check if message contains a URL
@@ -290,6 +294,8 @@ export async function storeRecipe(
               tags: extractedRecipe.tags,
               source_url: extractedRecipe.source_url || url,
               image_url: extractedRecipe.image_url || null,
+              cookbook_name: cookbookName || null,
+              cookbook_page: cookbookPage || null,
               contributor_name: contributorName,
               embedding: embedding,
             })
@@ -439,7 +445,7 @@ export async function storeRecipe(
       };
     }
     
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('recipes')
       .insert({
         user_id: userId,
@@ -449,6 +455,8 @@ export async function storeRecipe(
         tags: extractedRecipe.tags,
         source_url: extractedRecipe.source_url || null,
         image_url: null,
+        cookbook_name: cookbookName || null,
+        cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
         embedding: embedding,
       })

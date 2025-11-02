@@ -28,6 +28,8 @@ export interface Recipe {
   tags: string[];
   source_url?: string | null;
   image_url?: string | null;
+  cookbook_name?: string | null;
+  cookbook_page?: string | null;
   contributor_name: string;
   created_at?: string;
   updated_at?: string;

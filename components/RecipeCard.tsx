@@ -150,7 +150,17 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               <Typography variant="caption" color="text.secondary">
                 By {recipe.contributor_name}
               </Typography>
-              {recipe.source_url && (
+              {recipe.cookbook_name ? (
+                <Typography 
+                  variant="caption"
+                  sx={{ 
+                    color: 'primary.main',
+                    fontWeight: 600,
+                  }}
+                >
+                  📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, p${recipe.cookbook_page}` : ''}
+                </Typography>
+              ) : recipe.source_url ? (
                 <Typography 
                   component="a" 
                   href={recipe.source_url} 
@@ -169,7 +179,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
                 >
                   {getSourceName(recipe.source_url)}
                 </Typography>
-              )}
+              ) : null}
             </Box>
           </CardContent>
         </CardActionArea>
@@ -298,7 +308,13 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
           <Typography variant="caption" color="text.secondary">
             👨‍🍳 Added by {recipe.contributor_name}
-            {recipe.source_url && (
+            {recipe.cookbook_name && (
+              <>
+                {' • '}
+                📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, Page ${recipe.cookbook_page}` : ''}
+              </>
+            )}
+            {!recipe.cookbook_name && recipe.source_url && (
               <>
                 {' • '}
                 <a href={recipe.source_url} target="_blank" rel="noopener noreferrer">

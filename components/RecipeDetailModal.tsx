@@ -174,8 +174,16 @@ export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: R
           ))}
         </List>
 
-        {/* Source Link */}
-        {recipe.source_url && (
+        {/* Source Link / Cookbook Info */}
+        {recipe.cookbook_name && (
+          <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Typography variant="body2" color="text.secondary">
+              📖 From: <strong>{recipe.cookbook_name}</strong>
+              {recipe.cookbook_page && `, Page ${recipe.cookbook_page}`}
+            </Typography>
+          </Box>
+        )}
+        {!recipe.cookbook_name && recipe.source_url && (
           <Box sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}>
             <Button
               variant="outlined"
