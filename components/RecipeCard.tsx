@@ -5,6 +5,7 @@ import {
   Card,
   CardContent,
   CardActionArea,
+  CardMedia,
   Typography,
   Chip,
   Box,
@@ -111,6 +112,17 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         )}
 
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1 }}>
+          {recipe.image_url && (
+            <CardMedia
+              component="img"
+              height="200"
+              image={recipe.image_url}
+              alt={recipe.title}
+              sx={{
+                objectFit: 'cover',
+              }}
+            />
+          )}
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5, pr: 4 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
@@ -196,6 +208,23 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
             {recipe.tags.map((tag) => (
               <Chip key={tag} label={tag} size="small" color="primary" variant="outlined" />
             ))}
+          </Box>
+        )}
+
+        {/* Recipe Image */}
+        {recipe.image_url && (
+          <Box sx={{ mt: 2, mb: 2 }}>
+            <CardMedia
+              component="img"
+              image={recipe.image_url}
+              alt={recipe.title}
+              sx={{
+                width: '100%',
+                maxHeight: 400,
+                objectFit: 'cover',
+                borderRadius: 1,
+              }}
+            />
           </Box>
         )}
 
