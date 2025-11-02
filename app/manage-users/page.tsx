@@ -130,7 +130,7 @@ export default function ManageUsersPage() {
         return;
       }
 
-      // Create invite
+      // Create invite in database
       const { error } = await supabase
         .from('group_members')
         .insert({
@@ -143,7 +143,33 @@ export default function ManageUsersPage() {
 
       if (error) throw error;
 
-      showToast(`Invitation sent to ${inviteEmail}`, 'success');
+      // Send invitation email
+      try {
+        const emailResponse = await fetch('/api/invites/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            inviteeEmail: inviteEmail.toLowerCase(),
+            role: inviteRole,
+            groupId: groupId,
+          }),
+        });
+
+        const emailResult = await emailResponse.json();
+        
+        if (emailResult.success) {
+          showToast(`Invitation sent to ${inviteEmail}`, 'success');
+        } else {
+          // Invite created but email failed - still show success with note
+          showToast(`Invite created. Email may not have been sent.`, 'warning');
+          console.error('Email sending failed:', emailResult.error);
+        }
+      } catch (emailError) {
+        // Invite created but email failed - still show success
+        showToast(`Invite created. Email may not have been sent.`, 'warning');
+        console.error('Error sending invitation email:', emailError);
+      }
+
       setInviteDialogOpen(false);
       setInviteEmail('');
       setInviteRole('write');
