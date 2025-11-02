@@ -99,9 +99,16 @@ An intelligent recipe management system that lets families save, search, and gen
 - Loading indicators
 - Auto-scroll and responsive design
 
-**Phase 6: Frontend - Browse/Card View** 🚧 (Ready to start)
+**Phase 6: Frontend - Browse/Card View** ✅
+- Recipe grid with responsive layout (1-4 columns)
+- Search bar (title, ingredients, tags)
+- Filter dropdowns (tag, contributor, sort)
+- Recipe detail modal
+- Clickable cards with hover effects
+- Empty and no-results states
+- Client-side filtering for instant UX
 
-**Next Phase:** Multi-Input Recipe Addition
+**Next Phase:** Multi-Input Recipe Addition (Photo, URL, OCR)
 
 ## 🛠️ Technology Stack
 
