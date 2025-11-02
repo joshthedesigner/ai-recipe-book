@@ -214,11 +214,11 @@ export async function storeRecipe(
               contributor_name: contributorName,
             };
 
-            const summary = generateRecipeSummary(previewRecipe);
+            const preview = generateRecipePreview(previewRecipe);
 
             return {
               success: true,
-              message: `📋 **Recipe Preview**\n\n${summary}\n\n✅ Does this look correct? Reply **"yes"** to save or **"no"** to cancel.`,
+              message: preview,
               data: previewRecipe,
             };
           }
@@ -504,6 +504,31 @@ async function extractRecipeData(text: string): Promise<any> {
     console.error('Error extracting recipe data:', error);
     throw error;
   }
+}
+
+/**
+ * Generate a detailed preview of the recipe for review
+ */
+function generateRecipePreview(recipe: Recipe): string {
+  const ingredientList = recipe.ingredients.map((ing, i) => `${i + 1}. ${ing}`).join('\n');
+  const stepList = recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n');
+  const tagList = recipe.tags.join(', ');
+
+  return `📋 **Recipe Preview**
+
+**${recipe.title}**
+${recipe.source_url ? `🔗 Source: ${recipe.source_url}` : ''}
+
+🏷️ **Tags:** ${tagList}
+
+📝 **Ingredients** (${recipe.ingredients.length}):
+${ingredientList}
+
+👨‍🍳 **Instructions** (${recipe.steps.length}):
+${stepList}
+
+---
+✅ **Does this look correct?** Click the buttons below to save or cancel.`;
 }
 
 /**
