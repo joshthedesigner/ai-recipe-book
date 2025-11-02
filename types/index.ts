@@ -1,0 +1,84 @@
+// Type definitions for the AI Recipe Book
+
+// ========================================
+// INTENT TYPES
+// ========================================
+
+export type IntentType = 
+  | 'store_recipe'      // User wants to add/save a recipe
+  | 'search_recipe'     // User wants to find existing recipes
+  | 'generate_recipe'   // User wants AI to create a new recipe
+  | 'general_chat';     // General conversation/cooking advice
+
+export interface IntentClassification {
+  intent: IntentType;
+  confidence: number;    // 0-1 scale
+  reasoning?: string;    // Optional explanation for debugging
+}
+
+// ========================================
+// RECIPE TYPES
+// ========================================
+
+export interface Recipe {
+  id?: string;
+  user_id?: string;
+  title: string;
+  ingredients: string[];
+  steps: string[];
+  tags: string[];
+  source_url?: string | null;
+  image_url?: string | null;
+  contributor_name: string;
+  created_at?: string;
+  updated_at?: string;
+  is_ai_generated?: boolean;  // Flag for generated recipes
+}
+
+// ========================================
+// CHAT TYPES
+// ========================================
+
+export interface ChatMessage {
+  id?: string;
+  user_id?: string;
+  message: string;
+  role: 'user' | 'assistant';
+  created_at?: string;
+}
+
+export interface ChatResponse {
+  message: string;
+  intent?: IntentType;
+  confidence?: number;
+  recipe?: Recipe;
+  recipes?: Recipe[];
+  needsClarification?: boolean;
+}
+
+// ========================================
+// AGENT TYPES
+// ========================================
+
+export interface AgentResponse {
+  success: boolean;
+  message: string;
+  data?: any;
+  error?: string;
+}
+
+// ========================================
+// API TYPES
+// ========================================
+
+export interface ChatRequest {
+  message: string;
+  userId?: string;
+}
+
+export interface ChatAPIResponse {
+  success: boolean;
+  response: ChatResponse;
+  error?: string;
+}
+
