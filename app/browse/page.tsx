@@ -37,7 +37,9 @@ export default function BrowsePage() {
   const { showToast } = useToast();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+  const [displayedRecipes, setDisplayedRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
   const [filterCuisine, setFilterCuisine] = useState('');
@@ -49,6 +51,13 @@ export default function BrowsePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
+  // TODO: Adjust page size based on screen size or user preference
+  const PAGE_SIZE = 12;
+  // TODO: Adjust scroll threshold for earlier/later loading
+  const SCROLL_THRESHOLD = 300; // pixels from bottom
 
   // Common cuisine types
   const CUISINE_TYPES = ['american', 'chinese', 'french', 'greek', 'indian', 'italian', 'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 'middle eastern', 'mediterranean'];
@@ -99,6 +108,64 @@ export default function BrowsePage() {
   useEffect(() => {
     applyFilters();
   }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient, filterContributor]);
+
+  // Load initial batch of displayed recipes when filtered recipes change
+  useEffect(() => {
+    setCurrentPage(0);
+    setHasMore(true);
+    const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
+    setDisplayedRecipes(initialBatch);
+  }, [filteredRecipes]);
+
+  // Infinite scroll: Load more recipes when user scrolls near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      // Don't load if already loading, no more recipes, or initial load
+      if (loadingMore || !hasMore || loading) return;
+
+      // Calculate distance from bottom
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
+
+      // Load more if within threshold
+      if (distanceFromBottom < SCROLL_THRESHOLD) {
+        loadMoreRecipes();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadingMore, hasMore, loading, currentPage, filteredRecipes]);
+
+  const loadMoreRecipes = () => {
+    if (loadingMore || !hasMore) return;
+
+    setLoadingMore(true);
+    
+    // Simulate network delay for smooth UX
+    setTimeout(() => {
+      const nextPage = currentPage + 1;
+      const startIndex = nextPage * PAGE_SIZE;
+      const endIndex = startIndex + PAGE_SIZE;
+      const nextBatch = filteredRecipes.slice(startIndex, endIndex);
+
+      if (nextBatch.length === 0) {
+        setHasMore(false);
+      } else {
+        setDisplayedRecipes(prev => [...prev, ...nextBatch]);
+        setCurrentPage(nextPage);
+        
+        // Check if we've loaded all recipes
+        if (endIndex >= filteredRecipes.length) {
+          setHasMore(false);
+        }
+      }
+
+      setLoadingMore(false);
+    }, 300); // Small delay for smooth loading indicator
+  };
 
   const fetchRecipes = async () => {
     try {
@@ -379,6 +446,12 @@ export default function BrowsePage() {
           <Typography variant="body2" color="text.secondary">
             {loading ? (
               'Loading recipes...'
+            ) : filteredRecipes.length > PAGE_SIZE ? (
+              <>
+                Showing {displayedRecipes.length} of {filteredRecipes.length} recipe
+                {filteredRecipes.length !== 1 ? 's' : ''}
+                {hasMore && ' (scroll for more)'}
+              </>
             ) : (
               <>
                 Showing {filteredRecipes.length} of {recipes.length} recipe
@@ -435,18 +508,46 @@ export default function BrowsePage() {
 
         {/* Recipe Grid */}
         {!loading && filteredRecipes.length > 0 && (
-          <Grid container spacing={3}>
-            {filteredRecipes.map((recipe) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                <RecipeCard 
-                  recipe={recipe} 
-                  compact 
-                  onClick={() => handleCardClick(recipe)}
-                  onDelete={handleDeleteClick}
-                />
-              </Grid>
-            ))}
-          </Grid>
+          <>
+            <Grid container spacing={3}>
+              {displayedRecipes.map((recipe) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                  <RecipeCard 
+                    recipe={recipe} 
+                    compact 
+                    onClick={() => handleCardClick(recipe)}
+                    onDelete={handleDeleteClick}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, pb: 4 }}>
+                <CircularProgress size={32} />
+              </Box>
+            )}
+
+            {/* End State - No More Recipes */}
+            {!loadingMore && !hasMore && displayedRecipes.length > 0 && (
+              <Box
+                sx={{
+                  textAlign: 'center',
+                  mt: 4,
+                  pb: 4,
+                  color: 'text.secondary',
+                }}
+              >
+                <Typography variant="body2">
+                  You've reached the end! 🎉
+                </Typography>
+                <Typography variant="caption">
+                  {displayedRecipes.length} of {filteredRecipes.length} recipes shown
+                </Typography>
+              </Box>
+            )}
+          </>
         )}
       </Container>
 
