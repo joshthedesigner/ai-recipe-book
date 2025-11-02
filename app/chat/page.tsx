@@ -21,8 +21,7 @@ import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { supabase } from '@/db/supabaseClient';
-import { loadChatHistory, saveChatMessage, getConversationContext } from '@/utils/chatHistory';
+import { getConversationContext } from '@/utils/chatHistory';
 
 interface Message {
   id: string;
@@ -47,7 +46,6 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
-  const [loadingHistory, setLoadingHistory] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auth protection: redirect to login if not authenticated
@@ -56,39 +54,6 @@ export default function ChatPage() {
       router.push('/login');
     }
   }, [user, loading, router]);
-
-  // Load chat history from database when user is authenticated
-  useEffect(() => {
-    async function fetchHistory() {
-      if (!user?.id) {
-        setLoadingHistory(false);
-        return;
-      }
-
-      try {
-        const history = await loadChatHistory(supabase, user.id, 50);
-        
-        if (history.length > 0) {
-          // Convert database history to message format
-          const historyMessages: Message[] = history.map((h) => ({
-            id: h.id || Date.now().toString(),
-            role: h.role,
-            message: h.message,
-            timestamp: h.created_at || new Date().toISOString(),
-          }));
-
-          // Keep welcome message, add history
-          setMessages((prev) => [prev[0], ...historyMessages]);
-        }
-      } catch (error) {
-        console.error('Error loading chat history:', error);
-      } finally {
-        setLoadingHistory(false);
-      }
-    }
-
-    fetchHistory();
-  }, [user]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -146,12 +111,6 @@ export default function ChatPage() {
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
-
-        // Save both messages to database (async, don't block UI)
-        if (user?.id) {
-          saveChatMessage(supabase, user.id, userMessage.message, 'user');
-          saveChatMessage(supabase, user.id, assistantMessage.message, 'assistant');
-        }
 
         // Check if recipe needs review
         if (data.response.needsReview && data.response.pendingRecipe) {
