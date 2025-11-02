@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 // Lazy-load Supabase client to ensure env vars are loaded first
 let supabaseInstance: SupabaseClient | null = null;
@@ -12,7 +13,8 @@ function getSupabaseClient(): SupabaseClient {
       throw new Error('Missing Supabase environment variables. Please check your .env.local file.');
     }
 
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+    // Use createBrowserClient for proper cookie-based auth storage
+    supabaseInstance = createBrowserClient(supabaseUrl, supabaseAnonKey);
   }
   return supabaseInstance;
 }
