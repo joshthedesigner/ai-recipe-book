@@ -88,6 +88,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email via Resend
+    console.log('Attempting to send email to:', inviteeEmail);
+    console.log('From:', process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>');
+    
     const { data: sentEmail, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>',
       to: inviteeEmail,
@@ -97,16 +100,18 @@ export async function POST(request: NextRequest) {
     });
 
     if (emailError) {
-      console.error('Error sending email:', emailError);
+      console.error('Resend API Error:', JSON.stringify(emailError, null, 2));
       return NextResponse.json(
         {
           success: false,
           error: 'Failed to send email',
-          details: emailError.message,
+          details: emailError.message || JSON.stringify(emailError),
         },
         { status: 500 }
       );
     }
+    
+    console.log('Email sent successfully! ID:', sentEmail?.id);
 
     return NextResponse.json({
       success: true,

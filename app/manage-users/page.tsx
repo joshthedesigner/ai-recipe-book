@@ -166,9 +166,10 @@ export default function ManageUsersPage() {
         if (emailResult.success) {
           showToast(`Invitation sent to ${inviteEmail}`, 'success');
         } else {
-          // Invite created but email failed - still show success with note
-          showToast(`Invite created. Email may not have been sent.`, 'warning');
-          console.error('Email sending failed:', emailResult.error);
+          // Invite created but email failed - show specific error
+          const errorDetails = emailResult.details || emailResult.error || 'Unknown error';
+          showToast(`Invite created. Email failed: ${errorDetails}`, 'error');
+          console.error('Email sending failed:', emailResult);
         }
       } catch (emailError) {
         // Invite created but email failed - still show success
