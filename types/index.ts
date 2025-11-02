@@ -22,6 +22,7 @@ export interface IntentClassification {
 export interface Recipe {
   id?: string;
   user_id?: string;
+  group_id?: string;
   title: string;
   ingredients: string[];
   steps: string[];
@@ -85,4 +86,30 @@ export interface ChatAPIResponse {
   response: ChatResponse;
   error?: string;
 }
+
+// ========================================
+// GROUP & PERMISSIONS TYPES
+// ========================================
+
+export interface RecipeGroup {
+  id: string;
+  name: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GroupMember {
+  id: string;
+  group_id: string;
+  user_id?: string | null;
+  email: string;
+  role: 'read' | 'write';
+  status: 'active' | 'pending' | 'inactive';
+  invited_by: string;
+  invited_at: string;
+  joined_at?: string | null;
+}
+
+export type UserRole = 'owner' | 'write' | 'read' | null;
 
