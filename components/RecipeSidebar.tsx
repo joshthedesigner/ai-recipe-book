@@ -308,6 +308,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
               message: storeData.message,
               needsReview: true,
               pendingRecipe: storeData.recipe,
+              recipe: storeData.recipe, // Also set recipe for card display
             },
           };
 
