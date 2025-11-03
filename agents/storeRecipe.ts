@@ -16,7 +16,7 @@ import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
 import { mergeAutoTags } from '@/utils/autoTag';
-import { getUserDefaultGroup, canUserAddRecipes } from '@/utils/permissions';
+import { getUserDefaultGroup, canUserAddRecipes, hasGroupAccess } from '@/utils/permissions';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
