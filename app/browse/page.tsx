@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -96,6 +96,39 @@ export default function BrowsePage() {
     )
   ).sort();
 
+  // Define fetchRecipes before using it in useEffect
+  const fetchRecipes = useCallback(async () => {
+    if (!activeGroup) {
+      console.warn('Cannot fetch recipes: no active group');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      console.log('Fetching recipes for group:', activeGroup.id);
+      // Fetch recipes for the active group
+      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
+      const data = await response.json();
+
+      console.log('Recipes API response:', data);
+
+      if (data.success) {
+        setRecipes(data.recipes || []);
+        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
+      } else {
+        console.error('Recipes API error:', data.error);
+        showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
+        setRecipes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching recipes:', error);
+      showToast('Unable to connect to server. Please check your connection.', 'error');
+      setRecipes([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeGroup, showToast]);
+
   // Auth protection: redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -124,17 +157,20 @@ export default function BrowsePage() {
 
   // Fetch recipes on mount and when active group changes
   useEffect(() => {
-    if (user && !authLoading && !groupsLoading) {
-      if (activeGroup) {
-        fetchRecipes();
-      } else {
-        // User has no groups - show empty state or error
-        console.warn('No active group found for user');
-        setRecipes([]);
-        setLoading(false);
-      }
+    // Wait for all contexts to be ready
+    if (!user || authLoading || groupsLoading) {
+      return;
     }
-  }, [user, activeGroup, authLoading, groupsLoading]);
+
+    if (activeGroup) {
+      fetchRecipes();
+    } else {
+      // User has no groups - show empty state
+      console.warn('No active group found for user');
+      setRecipes([]);
+      setLoading(false);
+    }
+  }, [user, activeGroup, authLoading, groupsLoading, fetchRecipes]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -197,38 +233,6 @@ export default function BrowsePage() {
 
       setLoadingMore(false);
     }, 300); // Small delay for smooth loading indicator
-  };
-
-  const fetchRecipes = async () => {
-    if (!activeGroup) {
-      console.warn('Cannot fetch recipes: no active group');
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      console.log('Fetching recipes for group:', activeGroup.id);
-      // Fetch recipes for the active group
-      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
-      const data = await response.json();
-
-      console.log('Recipes API response:', data);
-
-      if (data.success) {
-        setRecipes(data.recipes || []);
-        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
-      } else {
-        console.error('Recipes API error:', data.error);
-        showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
-        setRecipes([]);
-      }
-    } catch (error) {
-      console.error('Error fetching recipes:', error);
-      showToast('Unable to connect to server. Please check your connection.', 'error');
-      setRecipes([]);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const applyFilters = () => {
