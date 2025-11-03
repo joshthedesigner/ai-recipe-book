@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Box,
   Container,
@@ -38,6 +38,7 @@ import { GroupMember } from '@/types';
 
 export default function ManageUsersPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
   const { activeGroup, groups, loading: groupsLoading } = useGroup();
   const { showToast } = useToast();
@@ -104,19 +105,19 @@ export default function ManageUsersPage() {
     }
   }, [activeGroup, router, showToast]);
 
-  // Reset state when component mounts
+  // Reset state when component mounts OR when navigating to this page
   useEffect(() => {
-    // Reset state when component mounts to ensure fresh data
+    // Reset state when navigating to this page to ensure fresh data
     setMembers([]);
     setGroupName('');
     setLoading(true);
-  }, []); // Empty deps - only run on mount
+  }, [pathname]); // Trigger on pathname change (when navigating to /manage-users)
 
-  // Fetch group and members when activeGroup changes
+  // Fetch group and members when activeGroup changes OR pathname changes
   useEffect(() => {
     // Only fetch if we have all required data
     if (user && activeGroup && !groupsLoading) {
-      console.log('Triggering fetchGroupAndMembers - activeGroup:', activeGroup.id);
+      console.log('Triggering fetchGroupAndMembers - activeGroup:', activeGroup.id, 'pathname:', pathname);
       fetchGroupAndMembers();
     } else if (user && !groupsLoading && !activeGroup) {
       // No active group - show empty state
@@ -125,7 +126,7 @@ export default function ManageUsersPage() {
       setMembers([]);
       setGroupName('');
     }
-  }, [user, activeGroup?.id, groupsLoading, fetchGroupAndMembers]); // Include fetchGroupAndMembers in deps
+  }, [user, activeGroup?.id, groupsLoading, fetchGroupAndMembers, pathname]); // Add pathname to force reload on navigation
 
   // Real-time subscription to member changes
   useEffect(() => {
