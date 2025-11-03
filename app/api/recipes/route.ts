@@ -101,6 +101,10 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
+    } else {
+      // If no groupId provided, return recipes without group_id (legacy) OR user's own recipes
+      // This handles backward compatibility for recipes created before groups were added
+      console.log('No groupId provided, fetching legacy recipes (no group_id)');
     }
 
     // Build query - exclude embedding vector for performance (6KB per recipe!)
@@ -111,6 +115,10 @@ export async function GET(request: NextRequest) {
     // Filter by group_id if provided
     if (groupId) {
       query = query.eq('group_id', groupId);
+    } else {
+      // Fallback: show recipes without group_id (legacy) or user's own recipes
+      // This maintains backward compatibility
+      query = query.or(`group_id.is.null,user_id.eq.${user.id}`);
     }
 
     // Apply filters
