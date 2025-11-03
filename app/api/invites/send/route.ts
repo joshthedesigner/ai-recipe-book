@@ -11,6 +11,9 @@ import { Resend } from 'resend';
 import { createClient } from '@/db/supabaseServer';
 import { generateInviteEmail, generateInviteEmailText } from '@/utils/emailTemplates';
 
+// Force dynamic rendering - this route uses cookies for auth
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { inviteeEmail, role, groupId } = await request.json();
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Internal server error',
+        error: 'An error occurred while processing your request',
       },
       { status: 500 }
     );

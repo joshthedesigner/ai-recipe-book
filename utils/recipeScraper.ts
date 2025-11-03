@@ -225,10 +225,62 @@ Format: {"steps": ["concise step 1", "concise step 2"]}`;
 }
 
 /**
+ * Validate URL to prevent SSRF attacks
+ * Blocks private/internal IPs and non-HTTP(S) protocols
+ */
+function validateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    
+    // Block non-HTTP(S) protocols (file://, ftp://, etc.)
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      console.warn('Blocked non-HTTP(S) protocol:', parsed.protocol);
+      return false;
+    }
+    
+    // Block private/internal IP addresses and localhost
+    const hostname = parsed.hostname.toLowerCase();
+    const blockedPatterns = [
+      /^localhost$/i,
+      /^127\./,
+      /^0\.0\.0\.0$/,
+      /^10\./,                    // Private: 10.0.0.0/8
+      /^172\.(1[6-9]|2[0-9]|3[01])\./, // Private: 172.16.0.0/12
+      /^192\.168\./,              // Private: 192.168.0.0/16
+      /^169\.254\./,              // Link-local: 169.254.0.0/16
+      /^::1$/,                    // IPv6 localhost
+      /^fc00:/,                   // IPv6 private
+      /^fe80:/,                   // IPv6 link-local
+    ];
+    
+    if (blockedPatterns.some(pattern => pattern.test(hostname))) {
+      console.warn('Blocked private/internal IP:', hostname);
+      return false;
+    }
+    
+    // Block URLs longer than 2048 characters (RFC 7230 recommendation)
+    if (url.length > 2048) {
+      console.warn('Blocked URL exceeding length limit');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.warn('Invalid URL format:', error);
+    return false;
+  }
+}
+
+/**
  * Scrape recipe from URL (HYBRID APPROACH)
  */
 export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
   console.log('Scraping recipe from:', url);
+  
+  // Validate URL to prevent SSRF attacks
+  if (!validateUrl(url)) {
+    throw new Error('Invalid or unsafe URL. Please provide a valid public HTTP/HTTPS URL.');
+  }
   
   try {
     // Fetch the webpage
@@ -237,6 +289,8 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         'User-Agent': 'Mozilla/5.0 (compatible; RecipeBookBot/1.0)',
       },
       timeout: 10000, // 10 second timeout
+      maxRedirects: 5, // Limit redirects to prevent abuse
+      validateStatus: (status) => status >= 200 && status < 400, // Only follow successful redirects
     });
 
     const html = response.data;

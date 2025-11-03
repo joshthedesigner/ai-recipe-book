@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import sharp from 'sharp';
 import { translateRecipe } from '@/agents/translateRecipe';
+import { createClient } from '@/db/supabaseServer';
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/utils/rateLimit';
+import { errorResponse } from '@/utils/errorHandler';
+
+// Force dynamic rendering - this route uses cookies for auth
+export const dynamic = 'force-dynamic';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -170,9 +176,37 @@ function getLanguageName(code: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication first
+    const supabase = createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized. Please log in to process images.' },
+        { status: 401 }
+      );
+    }
+
+    // Check rate limit (5 requests per minute per user - image processing is expensive)
+    const rateLimitResult = await checkRateLimit(
+      request,
+      RATE_LIMITS.imageExtract,
+      user.id
+    );
+
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult);
+    }
+
+    // Parse form data
     const formData = await request.formData();
     const file = formData.get('image') as File;
     const shouldTranslate = formData.get('translate') === 'true';
+
+    // File validation constants
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB limit
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/heic', 'image/heif', 'image/jpg'];
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.heic', '.heif'];
 
     if (!file) {
       return NextResponse.json(
@@ -181,11 +215,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Processing image:', file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    // Validate file size BEFORE processing (prevents DoS)
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: `File size exceeds maximum of ${MAX_FILE_SIZE / (1024 * 1024)}MB` },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size is not zero
+    if (file.size === 0) {
+      return NextResponse.json(
+        { success: false, error: 'File is empty' },
+        { status: 400 }
+      );
+    }
+
+    // Validate MIME type (basic check, will validate with actual file content later)
+    if (file.type && !ALLOWED_MIME_TYPES.includes(file.type.toLowerCase())) {
+      return NextResponse.json(
+        { success: false, error: `Invalid file type. Allowed types: ${ALLOWED_MIME_TYPES.join(', ')}` },
+        { status: 400 }
+      );
+    }
+
+    // Sanitize filename
+    const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    console.log('Processing image:', sanitizedFilename, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
 
     // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    // Validate actual file content using sharp (prevents MIME type spoofing)
+    try {
+      const metadata = await sharp(buffer).metadata();
+      // Sharp will throw if it's not a valid image
+      if (!metadata.format || !['jpeg', 'png', 'heic', 'heif'].includes(metadata.format)) {
+        return NextResponse.json(
+          { success: false, error: 'File is not a valid image format' },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { success: false, error: 'File is not a valid image or is corrupted' },
+        { status: 400 }
+      );
+    }
 
     // Preprocess image (convert HEIC, resize if needed)
     const { buffer: processedBuffer, mimeType } = await preprocessImage(buffer, file.type);
@@ -226,6 +303,12 @@ export async function POST(request: NextRequest) {
       translationStatus = 'requested';
     }
 
+    // Return response with rate limit headers
+    const headers = new Headers();
+    headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
+    headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+    headers.set('X-RateLimit-Reset', rateLimitResult.reset.toString());
+
     return NextResponse.json({
       success: true,
       data: {
@@ -237,17 +320,13 @@ export async function POST(request: NextRequest) {
         translation_warning: translationWarning,
         needs_translation: languageCode !== 'en' && !shouldTranslate,
       },
+    }, {
+      headers,
     });
 
   } catch (error) {
     console.error('Error processing image:', error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to process image',
-      },
-      { status: 500 }
-    );
+          return errorResponse(error);
   }
 }
 

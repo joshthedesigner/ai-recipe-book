@@ -4,6 +4,9 @@ import { createClient } from '@/db/supabaseServer';
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/utils/rateLimit';
 import { errorResponse } from '@/utils/errorHandler';
 
+// Force dynamic rendering - this route uses cookies for auth
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     // Create Supabase client with server-side auth

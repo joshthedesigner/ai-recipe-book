@@ -31,24 +31,64 @@ export default function SignupPage() {
   const [success, setSuccess] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
+  const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
+    // Minimum 12 characters
+    if (pwd.length < 12) {
+      return { valid: false, error: 'Password must be at least 12 characters long' };
+    }
+
+    // Must contain lowercase letter
+    if (!/[a-z]/.test(pwd)) {
+      return { valid: false, error: 'Password must contain at least one lowercase letter' };
+    }
+
+    // Must contain uppercase letter
+    if (!/[A-Z]/.test(pwd)) {
+      return { valid: false, error: 'Password must contain at least one uppercase letter' };
+    }
+
+    // Must contain number
+    if (!/[0-9]/.test(pwd)) {
+      return { valid: false, error: 'Password must contain at least one number' };
+    }
+
+    // Must contain special character
+    if (!/[^a-zA-Z0-9]/.test(pwd)) {
+      return { valid: false, error: 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)' };
+    }
+
+    // Check against common weak passwords
+    const commonPasswords = [
+      'password', 'password123', 'qwerty', '123456', '12345678', 'abc123',
+      'password1', 'welcome', 'monkey', '1234567', 'letmein', 'trustno1'
+    ];
+    if (commonPasswords.some(common => pwd.toLowerCase().includes(common))) {
+      return { valid: false, error: 'Password is too common. Please choose a stronger password.' };
+    }
+
+    return { valid: true };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess(false);
 
     // Validation
+    if (!name.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    if (!name.trim()) {
-      setError('Please enter your name');
+    // Strong password validation
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      setError(passwordValidation.error || 'Invalid password');
       return;
     }
 
@@ -152,7 +192,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              helperText="At least 6 characters"
+              helperText="Minimum 12 characters with uppercase, lowercase, number, and special character"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
