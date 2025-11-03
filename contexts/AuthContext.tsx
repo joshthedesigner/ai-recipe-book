@@ -31,26 +31,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     let mounted = true;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let sessionLoaded = false;
+
+    // Safety timeout: if loading takes more than 5 seconds, force it to false
+    timeoutId = setTimeout(() => {
+      if (mounted && !sessionLoaded) {
+        console.warn('AuthContext: Session loading timeout exceeded, setting loading to false');
+        setLoading(false);
+        sessionLoaded = true;
+      }
+    }, 5000);
 
     // Get initial session - important for page reload/navigation
     const initSession = async () => {
       try {
+        console.log('AuthContext: Attempting to get session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+        
         if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setLoading(false);
-          }
+          console.error('AuthContext: Error getting session:', error);
+          if (timeoutId) clearTimeout(timeoutId);
+          sessionLoaded = true;
+          setLoading(false);
           return;
         }
-        if (mounted) {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setLoading(false);
-        }
+        
+        console.log('AuthContext: Session retrieved:', session ? 'valid' : 'null');
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (timeoutId) clearTimeout(timeoutId);
+        sessionLoaded = true;
+        setLoading(false);
       } catch (error) {
-        console.error('Error initializing session:', error);
+        console.error('AuthContext: Error initializing session:', error);
         if (mounted) {
+          if (timeoutId) clearTimeout(timeoutId);
+          sessionLoaded = true;
           setLoading(false);
         }
       }
@@ -61,16 +80,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes (login, logout, token refresh)
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session');
       if (mounted) {
         setSession(session);
         setUser(session?.user ?? null);
+        if (timeoutId) clearTimeout(timeoutId);
+        sessionLoaded = true;
         setLoading(false);
       }
     });
 
     return () => {
       mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
