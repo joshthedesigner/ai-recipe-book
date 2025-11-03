@@ -18,12 +18,13 @@ export async function activatePendingInvites(
   try {
     console.log(`Checking for pending invites for ${email}...`);
 
-    // Find all pending invites for this email
+    // Find all pending invites for this email (where user_id is NULL)
     const { data: pendingInvites, error: fetchError } = await supabase
       .from('group_members')
       .select('*')
       .eq('email', email.toLowerCase())
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .is('user_id', null);
 
     if (fetchError) {
       console.error('Error fetching pending invites:', fetchError);

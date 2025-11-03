@@ -121,10 +121,15 @@ export async function getUserGroups(
     const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean; joinedAt?: string | null }> = [];
 
     // Get owned groups
-    const { data: ownedGroups } = await supabase
+    const { data: ownedGroups, error: ownedError } = await supabase
       .from('recipe_groups')
       .select('id, name')
       .eq('owner_id', userId);
+
+    if (ownedError) {
+      console.error('Error fetching owned groups:', ownedError);
+      throw ownedError;
+    }
 
     const ownedGroupIds = new Set<string>();
 
@@ -143,11 +148,16 @@ export async function getUserGroups(
 
     // Get member groups (excluding groups user owns)
     // Include joined_at to prioritize recently joined groups
-    const { data: memberGroups } = await supabase
+    const { data: memberGroups, error: memberError } = await supabase
       .from('group_members')
       .select('group_id, role, joined_at, recipe_groups(id, name)')
       .eq('user_id', userId)
       .eq('status', 'active');
+
+    if (memberError) {
+      console.error('Error fetching member groups:', memberError);
+      throw memberError;
+    }
 
     if (memberGroups) {
       for (const member of memberGroups) {
