@@ -6,6 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
+import { errorResponse } from '@/utils/errorHandler';
+
+// Force dynamic rendering - this route uses cookies for auth
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(
   request: NextRequest,
@@ -33,10 +37,8 @@ export async function DELETE(
 
     if (error) {
       console.error('Error deleting recipe:', error);
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 500 }
-      );
+      // Use centralized error handler (prevents information leakage)
+      return errorResponse(error);
     }
 
     return NextResponse.json(

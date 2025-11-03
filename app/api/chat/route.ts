@@ -13,6 +13,9 @@ import { ChatRequest, ChatAPIResponse } from '@/types';
 import { createClient } from '@/db/supabaseServer';
 import { saveConfirmedRecipe } from '@/agents/storeRecipe';
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/utils/rateLimit';
+
+// Force dynamic rendering - this route uses cookies for auth
+export const dynamic = 'force-dynamic';
 import { errorResponse } from '@/utils/errorHandler';
 
 export async function POST(request: NextRequest) {
