@@ -29,6 +29,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +54,13 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error } = await signUp(email, password, name);
+    const { error, needsConfirmation } = await signUp(email, password, name);
 
     if (error) {
       setError(error.message || 'Failed to create account. Please try again.');
     } else {
       setSuccess(true);
+      setNeedsConfirmation(needsConfirmation || false);
     }
 
     setLoading(false);
@@ -96,9 +98,25 @@ export default function SignupPage() {
           )}
 
           {/* Success Alert */}
-          {success && (
+          {success && !needsConfirmation && (
             <Alert severity="success" sx={{ mb: 3 }}>
               Account created successfully! Redirecting...
+            </Alert>
+          )}
+
+          {/* Email Confirmation Alert */}
+          {success && needsConfirmation && (
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Almost there! Check your email
+              </Typography>
+              <Typography variant="body2">
+                We've sent a confirmation email to <strong>{email}</strong>. 
+                Click the link in the email to activate your account.
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+                Don't see it? Check your spam folder.
+              </Typography>
             </Alert>
           )}
 

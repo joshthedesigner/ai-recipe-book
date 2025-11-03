@@ -11,7 +11,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signOut: () => Promise<void>;
 }
 
@@ -96,9 +96,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // If email confirmation is disabled, sign them in
       if (data.user && data.session) {
         router.push('/browse');
+        return { error: null, needsConfirmation: false };
       }
 
-      return { error: null };
+      // Email confirmation required
+      return { error: null, needsConfirmation: true };
     } catch (error) {
       return { error };
     }
