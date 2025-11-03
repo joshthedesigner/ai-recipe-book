@@ -11,6 +11,7 @@ interface Group {
   name: string;
   role: UserRole;
   isOwn: boolean;
+  joinedAt?: string | null;
 }
 
 interface GroupContextType {
@@ -49,6 +50,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       const loadTime = Date.now() - startTime;
       
       console.log(`GroupContext: Loaded ${userGroups.length} groups in ${loadTime}ms`);
+      console.log('GroupContext: Groups found:', userGroups.map(g => ({ id: g.id, name: g.name, isOwn: g.isOwn, role: g.role })));
       
       setGroups(userGroups);
 
@@ -63,11 +65,44 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       }
 
       let active: Group | null = null;
+      
+      // Priority 1: Check localStorage preference (if still valid)
       if (storedGroupId) {
         active = userGroups.find(g => g.id === storedGroupId) || null;
       }
+      
+      // Priority 2: Recently joined group (invite activated < 5 min ago)
+      // This prioritizes groups the user just joined via invite
       if (!active) {
-        active = userGroups.find(g => g.isOwn) || userGroups[0] || null;
+        const now = Date.now();
+        const FIVE_MINUTES = 5 * 60 * 1000;
+        
+        const recentlyJoined = userGroups
+          .filter(g => g.joinedAt && !g.isOwn)
+          .sort((a, b) => {
+            const aTime = new Date(a.joinedAt!).getTime();
+            const bTime = new Date(b.joinedAt!).getTime();
+            return bTime - aTime; // Most recent first
+          })
+          .find(g => {
+            const joinedTime = new Date(g.joinedAt!).getTime();
+            return (now - joinedTime) < FIVE_MINUTES;
+          });
+        
+        if (recentlyJoined) {
+          active = recentlyJoined;
+          console.log('GroupContext: Prioritizing recently joined group:', recentlyJoined.name);
+        }
+      }
+      
+      // Priority 3: Owned group (normal login)
+      if (!active) {
+        active = userGroups.find(g => g.isOwn) || null;
+      }
+      
+      // Priority 4: First available group (fallback)
+      if (!active) {
+        active = userGroups[0] || null;
       }
 
       setActiveGroup(active);
@@ -141,6 +176,18 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     // User is available - load groups
     loadGroups(user.id);
+    
+    // Listen for refresh events (e.g., after invites are activated)
+    const handleRefresh = () => {
+      console.log('GroupContext: Refresh event received, reloading groups...');
+      loadGroups(user.id);
+    };
+    
+    window.addEventListener('groups-refresh', handleRefresh);
+    
+    return () => {
+      window.removeEventListener('groups-refresh', handleRefresh);
+    };
   }, [user, authLoading, loadGroups]);
 
   return (

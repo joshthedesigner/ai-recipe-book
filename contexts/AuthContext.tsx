@@ -88,6 +88,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (timeoutId) clearTimeout(timeoutId);
         sessionLoaded = true;
         setLoading(false);
+        
+        // Activate invites when user signs in (handles email confirmation)
+        if (event === 'SIGNED_IN' && session?.user) {
+          const result = await activatePendingInvites(supabase, session.user.id, session.user.email || '');
+          if (result.activated > 0) {
+            console.log(`Activated ${result.activated} pending invite(s) on sign-in`);
+            // Trigger GroupContext refresh to pick up newly activated groups
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('groups-refresh'));
+            }
+          }
+        }
       }
     });
 
@@ -114,6 +126,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const result = await activatePendingInvites(supabase, data.user.id, data.user.email || '');
         if (result.activated > 0) {
           console.log(`Activated ${result.activated} pending invite(s)`);
+          // Trigger GroupContext refresh to pick up newly activated groups
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('groups-refresh'));
+          }
         }
       }
 
@@ -140,13 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // Activate any pending invites for this user
-      if (data.user) {
-        const result = await activatePendingInvites(supabase, data.user.id, data.user.email || '');
-        if (result.activated > 0) {
-          console.log(`Activated ${result.activated} pending invite(s)`);
-        }
-      }
+      // Note: Pending invites are activated by the database trigger on signup
+      // No need to call activatePendingInvites() here - trigger handles it
 
       // If email confirmation is disabled, sign them in
       if (data.user && data.session) {

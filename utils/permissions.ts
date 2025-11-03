@@ -111,13 +111,14 @@ export async function getUserDefaultGroup(
 /**
  * Get all groups user has access to
  * Returns owned groups first, then member groups (excluding owned groups from member list)
+ * Includes joined_at timestamp for member groups to enable smart priority selection
  */
 export async function getUserGroups(
   supabase: SupabaseClient,
   userId: string
-): Promise<Array<{ id: string; name: string; role: UserRole; isOwn: boolean }>> {
+): Promise<Array<{ id: string; name: string; role: UserRole; isOwn: boolean; joinedAt?: string | null }>> {
   try {
-    const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean }> = [];
+    const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean; joinedAt?: string | null }> = [];
 
     // Get owned groups
     const { data: ownedGroups } = await supabase
@@ -135,14 +136,16 @@ export async function getUserGroups(
           name: g.name,
           role: 'owner' as UserRole,
           isOwn: true,
+          joinedAt: null, // Owned groups don't have joined_at
         });
       });
     }
 
     // Get member groups (excluding groups user owns)
+    // Include joined_at to prioritize recently joined groups
     const { data: memberGroups } = await supabase
       .from('group_members')
-      .select('group_id, role, recipe_groups(id, name)')
+      .select('group_id, role, joined_at, recipe_groups(id, name)')
       .eq('user_id', userId)
       .eq('status', 'active');
 
@@ -156,6 +159,7 @@ export async function getUserGroups(
             name: group.name,
             role: member.role as UserRole,
             isOwn: false,
+            joinedAt: member.joined_at || null,
           });
         }
       }
