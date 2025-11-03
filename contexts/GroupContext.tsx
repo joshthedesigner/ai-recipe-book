@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { getUserGroups } from '@/utils/permissions';
@@ -34,8 +34,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load groups for current user
-  const loadGroups = async (userId: string) => {
+  // Load groups for current user - wrapped in useCallback to prevent infinite loops
+  const loadGroups = useCallback(async (userId: string) => {
     try {
       setLoading(true);
       const userGroups = await getUserGroups(supabase, userId);
@@ -83,7 +83,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // Empty deps - loadGroups uses state setters which are stable
 
   // Switch active group
   const switchGroup = async (groupId: string) => {
@@ -135,8 +135,10 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // If no user, clear state
+      // If no user after auth loading is done, clear state
+      // Note: onAuthStateChange listener below will handle cases where user comes after timeout
       if (!user) {
+        console.log('GroupContext: No user after auth loading, clearing state');
         if (mounted) {
           setGroups([]);
           setActiveGroup(null);
@@ -156,6 +158,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       // User is available - load groups
       if (mounted) {
         try {
+          console.log('GroupContext: Loading groups for user:', user.id);
           await loadGroups(user.id);
         } catch (error) {
           console.error('Error loading groups:', error);
@@ -170,10 +173,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     loadGroupsForUser();
 
-    // Also listen for auth state changes as a backup
+    // Listen for auth state changes - this is critical for handling sign-ins
+    // and cases where getSession() times out but session exists
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+
+        console.log('GroupContext: Auth state changed:', event, session ? 'session exists' : 'no session');
 
         // Handle different auth events
         if (event === 'SIGNED_OUT' || !session?.user) {
@@ -189,7 +195,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
           // User signed in, session refreshed, or initial session restored - reload groups
+          // This is especially important when getSession() times out but session exists
           if (session?.user && mounted) {
+            console.log('GroupContext: Loading groups for user from auth state change:', session.user.id);
             await loadGroups(session.user.id);
           }
         }
@@ -201,7 +209,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [user, authLoading]); // Depend on AuthContext user and loading state
+  }, [user, authLoading, loadGroups]); // Depend on AuthContext user and loading state
 
   return (
     <GroupContext.Provider
