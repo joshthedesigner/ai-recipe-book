@@ -36,8 +36,11 @@ let recipeStoreLimiter: any = null;
 if (USE_REDIS) {
   try {
     // Dynamic import to avoid errors if packages not installed
-    const { Ratelimit } = require('@upstash/ratelimit');
-    const { Redis } = require('@upstash/redis');
+    // Use dynamic import() instead of require() for better compatibility
+    const upstashRatelimit = require('@upstash/ratelimit');
+    const upstashRedis = require('@upstash/redis');
+    const { Ratelimit } = upstashRatelimit;
+    const { Redis } = upstashRedis;
 
     const redis = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL!,

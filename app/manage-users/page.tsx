@@ -59,6 +59,51 @@ export default function ManageUsersPage() {
     }
   }, [user, authLoading, router]);
 
+  const fetchGroupAndMembers = useCallback(async () => {
+    // Get current activeGroup from context at call time (not closure)
+    const currentGroup = activeGroup;
+    if (!currentGroup) {
+      console.warn('Cannot fetch members: no active group');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('Fetching members for group:', currentGroup.id);
+
+      // Use activeGroup from context
+      const groupId = currentGroup.id;
+      
+      // Verify user owns this group (for manage-users page, only owners can manage)
+      if (!currentGroup.isOwn) {
+        showToast('You can only manage groups you own', 'error');
+        router.push('/browse');
+        return;
+      }
+
+      setGroupName(currentGroup.name);
+
+      // Get group members
+      const { data: membersData, error: membersError } = await supabase
+        .from('group_members')
+        .select('*')
+        .eq('group_id', groupId)
+        .order('joined_at', { ascending: false });
+
+      if (membersError) throw membersError;
+
+      console.log('Loaded members:', membersData?.length || 0);
+      setMembers(membersData || []);
+    } catch (error) {
+      console.error('Error fetching members:', error);
+      showToast('Failed to load members', 'error');
+      setMembers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [activeGroup, router, showToast]);
+
   // Reset state when component mounts
   useEffect(() => {
     // Reset state when component mounts to ensure fresh data
@@ -106,52 +151,7 @@ export default function ManageUsersPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [activeGroup?.id]);
-
-  const fetchGroupAndMembers = useCallback(async () => {
-    // Get current activeGroup from context at call time (not closure)
-    const currentGroup = activeGroup;
-    if (!currentGroup) {
-      console.warn('Cannot fetch members: no active group');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      console.log('Fetching members for group:', currentGroup.id);
-
-      // Use activeGroup from context
-      const groupId = currentGroup.id;
-      
-      // Verify user owns this group (for manage-users page, only owners can manage)
-      if (!currentGroup.isOwn) {
-        showToast('You can only manage groups you own', 'error');
-        router.push('/browse');
-        return;
-      }
-
-      setGroupName(currentGroup.name);
-
-      // Get group members
-      const { data: membersData, error: membersError } = await supabase
-        .from('group_members')
-        .select('*')
-        .eq('group_id', groupId)
-        .order('joined_at', { ascending: false });
-
-      if (membersError) throw membersError;
-
-      console.log('Loaded members:', membersData?.length || 0);
-      setMembers(membersData || []);
-    } catch (error) {
-      console.error('Error fetching members:', error);
-      showToast('Failed to load members', 'error');
-      setMembers([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeGroup, router, showToast]);
+  }, [activeGroup?.id, fetchGroupAndMembers]);
 
   const handleInviteUser = async () => {
     if (!inviteEmail || !activeGroup?.id) return;
