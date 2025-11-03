@@ -37,7 +37,7 @@ import { useGroup } from '@/contexts/GroupContext';
 export default function BrowsePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { activeGroup } = useGroup();
+  const { activeGroup, loading: groupsLoading } = useGroup();
   const { showToast } = useToast();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
@@ -124,10 +124,17 @@ export default function BrowsePage() {
 
   // Fetch recipes on mount and when active group changes
   useEffect(() => {
-    if (user && activeGroup) {
-      fetchRecipes();
+    if (user && !authLoading && !groupsLoading) {
+      if (activeGroup) {
+        fetchRecipes();
+      } else {
+        // User has no groups - show empty state or error
+        console.warn('No active group found for user');
+        setRecipes([]);
+        setLoading(false);
+      }
     }
-  }, [user, activeGroup]);
+  }, [user, activeGroup, authLoading, groupsLoading]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -193,22 +200,32 @@ export default function BrowsePage() {
   };
 
   const fetchRecipes = async () => {
-    if (!activeGroup) return;
+    if (!activeGroup) {
+      console.warn('Cannot fetch recipes: no active group');
+      return;
+    }
     
     try {
       setLoading(true);
+      console.log('Fetching recipes for group:', activeGroup.id);
       // Fetch recipes for the active group
       const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
       const data = await response.json();
 
+      console.log('Recipes API response:', data);
+
       if (data.success) {
-        setRecipes(data.recipes);
+        setRecipes(data.recipes || []);
+        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
       } else {
-        showToast('Failed to load recipes. Please try again.', 'error');
+        console.error('Recipes API error:', data.error);
+        showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
+        setRecipes([]);
       }
     } catch (error) {
       console.error('Error fetching recipes:', error);
       showToast('Unable to connect to server. Please check your connection.', 'error');
+      setRecipes([]);
     } finally {
       setLoading(false);
     }
