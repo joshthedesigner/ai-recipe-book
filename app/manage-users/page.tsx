@@ -66,6 +66,32 @@ export default function ManageUsersPage() {
     }
   }, [user]);
 
+  // Real-time subscription to member changes
+  useEffect(() => {
+    if (!groupId) return;
+
+    const subscription = supabase
+      .channel('group_members_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'group_members',
+          filter: `group_id=eq.${groupId}`,
+        },
+        (payload) => {
+          console.log('Member status changed:', payload);
+          fetchGroupAndMembers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [groupId]);
+
   const fetchGroupAndMembers = async () => {
     try {
       setLoading(true);

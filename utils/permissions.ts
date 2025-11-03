@@ -86,7 +86,7 @@ export async function getUserDefaultGroup(
       .from('recipe_groups')
       .select('id')
       .eq('owner_id', userId)
-      .single();
+      .maybeSingle();
 
     if (ownedGroup) {
       return ownedGroup.id;
@@ -99,7 +99,7 @@ export async function getUserDefaultGroup(
       .eq('user_id', userId)
       .eq('status', 'active')
       .limit(1)
-      .single();
+      .maybeSingle();
 
     return memberGroup?.group_id || null;
   } catch (error) {

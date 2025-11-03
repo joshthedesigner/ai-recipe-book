@@ -108,14 +108,20 @@ export default function BrowsePage() {
 
       try {
         const defaultGroupId = await getUserDefaultGroup(supabase, user.id);
+        console.log('User default group:', defaultGroupId);
         setGroupId(defaultGroupId);
 
         if (defaultGroupId) {
           const hasPermission = await canUserAddRecipes(supabase, user.id, defaultGroupId);
+          console.log('User can add recipes:', hasPermission);
           setCanAddRecipes(hasPermission);
+        } else {
+          console.log('No group found for user');
+          setCanAddRecipes(false);
         }
       } catch (error) {
         console.error('Error checking permissions:', error);
+        setCanAddRecipes(false);
       }
     }
 
