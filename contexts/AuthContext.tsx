@@ -90,15 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         
         // Activate invites when user signs in (handles email confirmation)
+        // Run non-blocking so it doesn't delay user experience
         if (event === 'SIGNED_IN' && session?.user) {
-          const result = await activatePendingInvites(supabase, session.user.id, session.user.email || '');
-          if (result.activated > 0) {
-            console.log(`Activated ${result.activated} pending invite(s) on sign-in`);
-            // Trigger GroupContext refresh to pick up newly activated groups
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('groups-refresh'));
-            }
-          }
+          activatePendingInvites(supabase, session.user.id, session.user.email || '')
+            .then((result) => {
+              if (result.activated > 0) {
+                console.log(`Activated ${result.activated} pending invite(s) on sign-in`);
+                // Trigger GroupContext refresh to pick up newly activated groups
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('groups-refresh'));
+                }
+              }
+            })
+            .catch((error) => {
+              console.error('Error activating pending invites:', error);
+            });
         }
       }
     });

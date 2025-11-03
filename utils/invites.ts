@@ -18,13 +18,31 @@ export async function activatePendingInvites(
   try {
     console.log(`Checking for pending invites for ${email}...`);
 
-    // Find all pending invites for this email (where user_id is NULL)
-    const { data: pendingInvites, error: fetchError } = await supabase
+    // Find all pending invites for this email
+    // RLS policy already filters by email and status, so we don't need user_id check
+    // Add timeout wrapper to prevent hanging
+    const queryPromise = supabase
       .from('group_members')
       .select('*')
       .eq('email', email.toLowerCase())
-      .eq('status', 'pending')
-      .is('user_id', null);
+      .eq('status', 'pending');
+
+    let queryTimeout: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      queryTimeout = setTimeout(() => {
+        reject(new Error('Query timeout after 10 seconds'));
+      }, 10000);
+    });
+
+    const result = await Promise.race([
+      queryPromise.then((result) => {
+        clearTimeout(queryTimeout);
+        return result;
+      }),
+      timeoutPromise
+    ]);
+
+    const { data: pendingInvites, error: fetchError } = result;
 
     if (fetchError) {
       console.error('Error fetching pending invites:', fetchError);
