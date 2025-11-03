@@ -5,6 +5,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { GroupProvider } from '@/contexts/GroupContext';
 
 export const metadata: Metadata = {
   title: 'RecipeBook',
@@ -23,9 +24,11 @@ export default function RootLayout({
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <AuthProvider>
-              <ToastProvider>
-                {children}
-              </ToastProvider>
+              <GroupProvider>
+                <ToastProvider>
+                  {children}
+                </ToastProvider>
+              </GroupProvider>
             </AuthProvider>
           </ThemeProvider>
         </AppRouterCacheProvider>

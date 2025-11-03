@@ -119,14 +119,19 @@ ONLY mark as incomplete if there's absolutely nothing usable:
 export async function saveConfirmedRecipe(
   recipe: Recipe,
   userId: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  groupId?: string | null  // Optional groupId - if not provided, uses default group
 ): Promise<AgentResponse> {
   try {
     console.log('Saving confirmed recipe to database...');
 
-    // Check permissions and get group_id
-    const groupId = await getUserDefaultGroup(supabase, userId);
-    if (!groupId) {
+    // Use provided groupId or fall back to default group
+    let activeGroupId = groupId;
+    if (!activeGroupId) {
+      activeGroupId = await getUserDefaultGroup(supabase, userId);
+    }
+
+    if (!activeGroupId) {
       return {
         success: false,
         message: 'You are not a member of any recipe group. Please contact your administrator.',
@@ -134,7 +139,17 @@ export async function saveConfirmedRecipe(
       };
     }
 
-    const hasPermission = await canUserAddRecipes(supabase, userId, groupId);
+    // Validate user has access to the specified group
+    const hasAccess = await hasGroupAccess(supabase, userId, activeGroupId);
+    if (!hasAccess) {
+      return {
+        success: false,
+        message: 'You do not have access to this recipe book.',
+        error: 'User lacks access to group',
+      };
+    }
+
+    const hasPermission = await canUserAddRecipes(supabase, userId, activeGroupId);
     if (!hasPermission) {
       return {
         success: false,
@@ -180,7 +195,7 @@ export async function saveConfirmedRecipe(
       .from('recipes')
       .insert({
         user_id: userId,
-        group_id: groupId,
+        group_id: activeGroupId,
         title: recipe.title,
         ingredients: recipe.ingredients,
         steps: recipe.steps,
@@ -228,7 +243,8 @@ export async function storeRecipe(
   supabase?: SupabaseClient,
   reviewMode: boolean = true,  // Default to requiring review for URLs
   cookbookName?: string | null,
-  cookbookPage?: string | null
+  cookbookPage?: string | null,
+  groupId?: string | null  // Optional groupId - if not provided, uses default group
 ): Promise<AgentResponse> {
   try {
     // Step 0: Check permissions and get group_id
@@ -240,8 +256,13 @@ export async function storeRecipe(
       };
     }
 
-    const groupId = await getUserDefaultGroup(supabase, userId);
-    if (!groupId) {
+    // Use provided groupId or fall back to default group
+    let activeGroupId = groupId;
+    if (!activeGroupId) {
+      activeGroupId = await getUserDefaultGroup(supabase, userId);
+    }
+
+    if (!activeGroupId) {
       return {
         success: false,
         message: 'You are not a member of any recipe group. Please contact your administrator.',
@@ -249,7 +270,17 @@ export async function storeRecipe(
       };
     }
 
-    const hasPermission = await canUserAddRecipes(supabase, userId, groupId);
+    // Validate user has access to the specified group
+    const hasAccess = await hasGroupAccess(supabase, userId, activeGroupId);
+    if (!hasAccess) {
+      return {
+        success: false,
+        message: 'You do not have access to this recipe book.',
+        error: 'User lacks access to group',
+      };
+    }
+
+    const hasPermission = await canUserAddRecipes(supabase, userId, activeGroupId);
     if (!hasPermission) {
       return {
         success: false,
@@ -360,7 +391,7 @@ export async function storeRecipe(
             .from('recipes')
             .insert({
               user_id: userId,
-              group_id: groupId,
+              group_id: activeGroupId,
               title: extractedRecipe.title,
               ingredients: extractedRecipe.ingredients,
               steps: extractedRecipe.steps,
@@ -524,7 +555,7 @@ export async function storeRecipe(
       .from('recipes')
       .insert({
         user_id: userId,
-        group_id: groupId,
+        group_id: activeGroupId,
         title: extractedRecipe.title,
         ingredients: extractedRecipe.ingredients,
         steps: extractedRecipe.steps,

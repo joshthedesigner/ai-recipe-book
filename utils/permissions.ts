@@ -110,13 +110,14 @@ export async function getUserDefaultGroup(
 
 /**
  * Get all groups user has access to
+ * Returns owned groups first, then member groups (excluding owned groups from member list)
  */
 export async function getUserGroups(
   supabase: SupabaseClient,
   userId: string
-): Promise<Array<{ id: string; name: string; role: UserRole }>> {
+): Promise<Array<{ id: string; name: string; role: UserRole; isOwn: boolean }>> {
   try {
-    const groups: Array<{ id: string; name: string; role: UserRole }> = [];
+    const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean }> = [];
 
     // Get owned groups
     const { data: ownedGroups } = await supabase
@@ -124,11 +125,21 @@ export async function getUserGroups(
       .select('id, name')
       .eq('owner_id', userId);
 
+    const ownedGroupIds = new Set<string>();
+
     if (ownedGroups) {
-      groups.push(...ownedGroups.map(g => ({ ...g, role: 'owner' as UserRole })));
+      ownedGroups.forEach(g => {
+        ownedGroupIds.add(g.id);
+        groups.push({
+          id: g.id,
+          name: g.name,
+          role: 'owner' as UserRole,
+          isOwn: true,
+        });
+      });
     }
 
-    // Get member groups
+    // Get member groups (excluding groups user owns)
     const { data: memberGroups } = await supabase
       .from('group_members')
       .select('group_id, role, recipe_groups(id, name)')
@@ -138,11 +149,13 @@ export async function getUserGroups(
     if (memberGroups) {
       for (const member of memberGroups) {
         const group = member.recipe_groups as any;
-        if (group) {
+        if (group && !ownedGroupIds.has(group.id)) {
+          // Only add if user doesn't own this group (to avoid duplicates)
           groups.push({
             id: group.id,
             name: group.name,
             role: member.role as UserRole,
+            isOwn: false,
           });
         }
       }

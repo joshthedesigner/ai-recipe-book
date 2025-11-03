@@ -31,11 +31,13 @@ import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/db/supabaseClient';
-import { canUserAddRecipes, getUserDefaultGroup } from '@/utils/permissions';
+import { canUserAddRecipes } from '@/utils/permissions';
+import { useGroup } from '@/contexts/GroupContext';
 
 export default function BrowsePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { activeGroup } = useGroup();
   const { showToast } = useToast();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
@@ -101,24 +103,16 @@ export default function BrowsePage() {
     }
   }, [user, authLoading, router]);
 
-  // Check if user has permission to add recipes
+  // Check if user has permission to add recipes for active group
   useEffect(() => {
     async function checkPermissions() {
-      if (!user) return;
+      if (!user || !activeGroup) return;
 
       try {
-        const defaultGroupId = await getUserDefaultGroup(supabase, user.id);
-        console.log('User default group:', defaultGroupId);
-        setGroupId(defaultGroupId);
-
-        if (defaultGroupId) {
-          const hasPermission = await canUserAddRecipes(supabase, user.id, defaultGroupId);
-          console.log('User can add recipes:', hasPermission);
-          setCanAddRecipes(hasPermission);
-        } else {
-          console.log('No group found for user');
-          setCanAddRecipes(false);
-        }
+        setGroupId(activeGroup.id);
+        const hasPermission = await canUserAddRecipes(supabase, user.id, activeGroup.id);
+        console.log('User can add recipes to active group:', hasPermission);
+        setCanAddRecipes(hasPermission);
       } catch (error) {
         console.error('Error checking permissions:', error);
         setCanAddRecipes(false);
@@ -126,14 +120,14 @@ export default function BrowsePage() {
     }
 
     checkPermissions();
-  }, [user]);
+  }, [user, activeGroup]);
 
-  // Fetch recipes on mount
+  // Fetch recipes on mount and when active group changes
   useEffect(() => {
-    if (user) {
+    if (user && activeGroup) {
       fetchRecipes();
     }
-  }, [user]);
+  }, [user, activeGroup]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -199,11 +193,12 @@ export default function BrowsePage() {
   };
 
   const fetchRecipes = async () => {
+    if (!activeGroup) return;
+    
     try {
       setLoading(true);
-      const response = await fetch('/api/recipes', {
-        cache: 'no-store',
-      });
+      // Fetch recipes for the active group
+      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
       const data = await response.json();
 
       if (data.success) {

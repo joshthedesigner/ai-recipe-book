@@ -19,6 +19,7 @@ import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useGroup } from '@/contexts/GroupContext';
 import { getConversationContext } from '@/utils/chatHistory';
 
 interface Message {
@@ -50,6 +51,7 @@ interface ImageQueueItem {
 
 export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSidebarProps) {
   const { user } = useAuth();
+  const { activeGroup } = useGroup();
   const { showToast } = useToast();
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
@@ -199,6 +201,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           message: 'confirm',
           userId: user?.id,
           confirmRecipe: pendingRecipe,
+          groupId: activeGroup?.id || null,
         }),
       });
 
@@ -438,6 +441,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           reviewMode: true,
           cookbookName: cookbookName || null,
           cookbookPage: cookbookPage || null,
+          groupId: activeGroup?.id || null,
         }),
       });
 
