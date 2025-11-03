@@ -63,14 +63,20 @@ export async function POST(request: NextRequest) {
     const inviterName = user.user_metadata?.name || user.email || 'A user';
 
     // Generate signup URL
-    // Use Vercel URL if available, otherwise fall back to environment variable
+    // Prioritize NEXT_PUBLIC_APP_URL (production URL) over VERCEL_URL (which can be preview URLs)
+    // Only use VERCEL_URL if NEXT_PUBLIC_APP_URL is not set and we're in production
     const baseUrl = 
-      process.env.VERCEL_URL 
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_ENV === 'production' && process.env.VERCEL_URL 
         ? `https://${process.env.VERCEL_URL}`
-        : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        : null) ||
+      'http://localhost:3000';
     const signupUrl = `${baseUrl}/signup`;
     
     console.log('Signup URL:', signupUrl);
+    console.log('VERCEL_ENV:', process.env.VERCEL_ENV);
+    console.log('VERCEL_URL:', process.env.VERCEL_URL);
+    console.log('NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
 
     // Generate email content
     const emailData = {
