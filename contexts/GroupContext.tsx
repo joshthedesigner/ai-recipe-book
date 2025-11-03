@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { getUserGroups } from '@/utils/permissions';
 import { UserRole } from '@/utils/permissions';
@@ -26,19 +25,28 @@ const GroupContext = createContext<GroupContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'activeGroupId';
 
+/**
+ * Simplified GroupContext - no complex timeouts or race condition handling
+ * Simply waits for user, loads groups, handles errors gracefully
+ */
 export function GroupProvider({ children }: { children: ReactNode }) {
-  // Use AuthContext instead of calling getSession/getUser independently
-  // This eliminates race conditions and ensures coordination
   const { user, loading: authLoading } = useAuth();
   const [activeGroup, setActiveGroup] = useState<Group | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load groups for current user - wrapped in useCallback to prevent infinite loops
+  // Load groups for current user
   const loadGroups = useCallback(async (userId: string) => {
     try {
+      console.log('GroupContext: Starting to load groups for user:', userId);
       setLoading(true);
+      
+      const startTime = Date.now();
       const userGroups = await getUserGroups(supabase, userId);
+      const loadTime = Date.now() - startTime;
+      
+      console.log(`GroupContext: Loaded ${userGroups.length} groups in ${loadTime}ms`);
+      
       setGroups(userGroups);
 
       // Get active group from localStorage or default to owned group
@@ -66,31 +74,29 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
       setActiveGroup(active);
       
-      // Only update localStorage on client-side
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && active) {
         try {
-          if (active) {
-            localStorage.setItem(STORAGE_KEY, active.id);
-          } else {
-            localStorage.removeItem(STORAGE_KEY);
-          }
+          localStorage.setItem(STORAGE_KEY, active.id);
         } catch (error) {
           console.warn('Error updating localStorage:', error);
         }
       }
+      
+      console.log('GroupContext: Active group set:', active ? active.name : 'none');
     } catch (error) {
-      console.error('Error loading groups:', error);
+      console.error('GroupContext: Error loading groups:', error);
+      setGroups([]);
+      setActiveGroup(null);
     } finally {
       setLoading(false);
     }
-  }, []); // Empty deps - loadGroups uses state setters which are stable
+  }, []);
 
   // Switch active group
-  const switchGroup = async (groupId: string) => {
+  const switchGroup = useCallback(async (groupId: string) => {
     const group = groups.find(g => g.id === groupId);
     if (group) {
       setActiveGroup(group);
-      // Only update localStorage on client-side
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem(STORAGE_KEY, groupId);
@@ -99,92 +105,59 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         }
       }
     }
-  };
+  }, [groups]);
 
-  // Refresh groups list - use AuthContext user instead of calling getUser
-  const refreshGroups = async () => {
+  // Refresh groups list
+  const refreshGroups = useCallback(async () => {
     if (user) {
       await loadGroups(user.id);
     }
-  };
+  }, [user, loadGroups]);
 
-  // Load groups when user becomes available from AuthContext
-  // This eliminates race conditions - we wait for AuthContext to finish loading
+  // Main effect: Load groups when user becomes available
   useEffect(() => {
-    // Only run on client-side
     if (typeof window === 'undefined') {
       setLoading(false);
       return;
     }
 
-    let mounted = true;
-    let timeoutId: NodeJS.Timeout | null = null;
+    // Wait for auth to finish loading
+    if (authLoading) {
+      console.log('GroupContext: Waiting for auth to load...');
+      return;
+    }
 
-    // Safety timeout: if loading takes more than 10 seconds, force it to false
-    timeoutId = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('GroupContext: Loading timeout exceeded, setting loading to false');
-        setLoading(false);
-      }
-    }, 10000);
-
-    const loadGroupsForUser = async () => {
-      // Wait for AuthContext to finish loading
-      if (authLoading) {
-        console.log('GroupContext: Waiting for AuthContext to finish loading...');
-        return;
-      }
-
-      // If no user after auth loading is done, clear state
-      // Note: onAuthStateChange listener below will handle cases where user comes after timeout
-      if (!user) {
-        console.log('GroupContext: No user after auth loading, clearing state');
-        if (mounted) {
-          setGroups([]);
-          setActiveGroup(null);
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.removeItem(STORAGE_KEY);
-            } catch (error) {
-              console.warn('Error removing from localStorage:', error);
-            }
-          }
-          setLoading(false);
-          if (timeoutId) clearTimeout(timeoutId);
-        }
-        return;
-      }
-
-      // User is available - load groups
-      if (mounted) {
+    // If no user after auth loads, clear state
+    if (!user) {
+      console.log('GroupContext: No user, clearing state');
+      setGroups([]);
+      setActiveGroup(null);
+      setLoading(false);
+      if (typeof window !== 'undefined') {
         try {
-          console.log('GroupContext: Loading groups for user:', user.id);
-          await loadGroups(user.id);
+          localStorage.removeItem(STORAGE_KEY);
         } catch (error) {
-          console.error('Error loading groups:', error);
-          if (mounted) {
-            setLoading(false);
-          }
-        } finally {
-          if (timeoutId) clearTimeout(timeoutId);
+          console.warn('Error removing from localStorage:', error);
         }
       }
-    };
+      return;
+    }
 
-    loadGroupsForUser();
+    // User is available - load groups
+    console.log('GroupContext: User available, loading groups:', user.id);
+    loadGroups(user.id);
+  }, [user, authLoading, loadGroups]);
 
-    // Listen for auth state changes - this is critical for handling sign-ins
-    // and cases where getSession() times out but session exists
+  // Listen for auth state changes as backup (for sign-in/sign-out)
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-
-        console.log('GroupContext: Auth state changed:', event, session ? 'session exists' : 'no session');
-
-        // Handle different auth events
+        console.log('GroupContext: Auth state changed:', event);
+        
         if (event === 'SIGNED_OUT' || !session?.user) {
           setGroups([]);
           setActiveGroup(null);
+          setLoading(false);
           if (typeof window !== 'undefined') {
             try {
               localStorage.removeItem(STORAGE_KEY);
@@ -192,24 +165,18 @@ export function GroupProvider({ children }: { children: ReactNode }) {
               console.warn('Error removing from localStorage:', error);
             }
           }
-          setLoading(false);
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED' || event === 'INITIAL_SESSION') {
-          // User signed in, session refreshed, or initial session restored - reload groups
-          // This is especially important when getSession() times out but session exists
-          if (session?.user && mounted) {
-            console.log('GroupContext: Loading groups for user from auth state change:', session.user.id);
-            await loadGroups(session.user.id);
-          }
+        } else if (event === 'SIGNED_IN' && session?.user) {
+          // Reload groups when user signs in
+          console.log('GroupContext: User signed in, reloading groups');
+          await loadGroups(session.user.id);
         }
       }
     );
 
     return () => {
-      mounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [user, authLoading, loadGroups]); // Depend on AuthContext user and loading state
+  }, [loadGroups]);
 
   return (
     <GroupContext.Provider
