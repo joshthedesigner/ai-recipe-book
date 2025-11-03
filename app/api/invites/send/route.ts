@@ -88,15 +88,37 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Validate and format from email
+    let fromEmail = process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>';
+    
+    // Clean up any whitespace and validate format
+    fromEmail = fromEmail.trim();
+    
+    // Validate format: should be either "email@domain.com" or "Name <email@domain.com>"
+    const emailFormatRegex = /^(.+?)\s*<(.+?)>$|^(.+)$/;
+    const match = fromEmail.match(emailFormatRegex);
+    
+    if (!match) {
+      console.error('Invalid RESEND_FROM_EMAIL format:', fromEmail);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid email configuration. Please check RESEND_FROM_EMAIL format.',
+          details: 'Format must be: "email@example.com" or "Name <email@example.com>"',
+        },
+        { status: 500 }
+      );
+    }
+    
     // Send email via Resend
     console.log('Attempting to send email to:', inviteeEmail);
-    console.log('From:', process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>');
+    console.log('From:', fromEmail);
     
-    // Initialize Resend client (lazy loading to avoid build-time errors)
+    // Initialize Resend client
     const resend = new Resend(process.env.RESEND_API_KEY);
     
     const { data: sentEmail, error: emailError } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>',
+      from: fromEmail,
       to: inviteeEmail,
       subject,
       html,
