@@ -63,8 +63,14 @@ export async function POST(request: NextRequest) {
     const inviterName = user.user_metadata?.name || user.email || 'A user';
 
     // Generate signup URL
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Use Vercel URL if available, otherwise fall back to environment variable
+    const baseUrl = 
+      process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const signupUrl = `${baseUrl}/signup`;
+    
+    console.log('Signup URL:', signupUrl);
 
     // Generate email content
     const emailData = {
