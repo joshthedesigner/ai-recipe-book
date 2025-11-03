@@ -38,7 +38,16 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setGroups(userGroups);
 
       // Get active group from localStorage or default to owned group
-      const storedGroupId = localStorage.getItem(STORAGE_KEY);
+      // Only access localStorage on client-side (after hydration)
+      let storedGroupId: string | null = null;
+      if (typeof window !== 'undefined') {
+        try {
+          storedGroupId = localStorage.getItem(STORAGE_KEY);
+        } catch (error) {
+          console.warn('Error accessing localStorage:', error);
+        }
+      }
+
       let active: Group | null = null;
 
       if (storedGroupId) {
@@ -52,10 +61,18 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       }
 
       setActiveGroup(active);
-      if (active) {
-        localStorage.setItem(STORAGE_KEY, active.id);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
+      
+      // Only update localStorage on client-side
+      if (typeof window !== 'undefined') {
+        try {
+          if (active) {
+            localStorage.setItem(STORAGE_KEY, active.id);
+          } else {
+            localStorage.removeItem(STORAGE_KEY);
+          }
+        } catch (error) {
+          console.warn('Error updating localStorage:', error);
+        }
       }
     } catch (error) {
       console.error('Error loading groups:', error);
@@ -69,7 +86,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     const group = groups.find(g => g.id === groupId);
     if (group) {
       setActiveGroup(group);
-      localStorage.setItem(STORAGE_KEY, groupId);
+      // Only update localStorage on client-side
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(STORAGE_KEY, groupId);
+        } catch (error) {
+          console.warn('Error updating localStorage:', error);
+        }
+      }
     }
   };
 
@@ -81,12 +105,30 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Initialize on mount
+  // Initialize on mount - ensure we're on client-side
   useEffect(() => {
+    // Only run on client-side (after hydration)
+    if (typeof window === 'undefined') {
+      setLoading(false);
+      return;
+    }
+
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await loadGroups(user.id);
+      try {
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Error getting user:', error);
+          setLoading(false);
+          return;
+        }
+        if (user) {
+          await loadGroups(user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing groups:', error);
+        setLoading(false);
       }
     };
 
@@ -100,7 +142,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         } else {
           setGroups([]);
           setActiveGroup(null);
-          localStorage.removeItem(STORAGE_KEY);
+          // Only update localStorage on client-side
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+              console.warn('Error removing from localStorage:', error);
+            }
+          }
           setLoading(false);
         }
       }
