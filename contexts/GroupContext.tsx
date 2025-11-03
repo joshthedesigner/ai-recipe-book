@@ -114,6 +114,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loadGroups]);
 
+  // Track if we're currently loading to prevent duplicate loads
+  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
+
   // Main effect: Load groups when user becomes available
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -143,21 +146,28 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // User is available - load groups
-    console.log('GroupContext: User available, loading groups:', user.id);
-    loadGroups(user.id);
-  }, [user, authLoading, loadGroups]);
+    // User is available - load groups (only if not already loading)
+    if (!isLoadingGroups) {
+      console.log('GroupContext: User available, loading groups:', user.id);
+      setIsLoadingGroups(true);
+      loadGroups(user.id).finally(() => {
+        setIsLoadingGroups(false);
+      });
+    }
+  }, [user, authLoading, loadGroups, isLoadingGroups]);
 
-  // Listen for auth state changes as backup (for sign-in/sign-out)
+  // Listen for auth state changes - this handles sign-in/sign-out
+  // This is the PRIMARY way we detect sign-ins (since getSession() times out)
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('GroupContext: Auth state changed:', event);
+        console.log('GroupContext: Auth state changed:', event, session?.user ? 'has user' : 'no user');
         
         if (event === 'SIGNED_OUT' || !session?.user) {
           setGroups([]);
           setActiveGroup(null);
           setLoading(false);
+          setIsLoadingGroups(false);
           if (typeof window !== 'undefined') {
             try {
               localStorage.removeItem(STORAGE_KEY);
@@ -165,10 +175,16 @@ export function GroupProvider({ children }: { children: ReactNode }) {
               console.warn('Error removing from localStorage:', error);
             }
           }
-        } else if (event === 'SIGNED_IN' && session?.user) {
-          // Reload groups when user signs in
-          console.log('GroupContext: User signed in, reloading groups');
-          await loadGroups(session.user.id);
+        } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
+          // Reload groups when user signs in or session is restored
+          // This is critical because getSession() times out in production
+          if (!isLoadingGroups) {
+            console.log('GroupContext: User signed in/restored, loading groups:', session.user.id);
+            setIsLoadingGroups(true);
+            await loadGroups(session.user.id).finally(() => {
+              setIsLoadingGroups(false);
+            });
+          }
         }
       }
     );
@@ -176,7 +192,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [loadGroups]);
+  }, [loadGroups, isLoadingGroups]);
 
   return (
     <GroupContext.Provider
