@@ -113,33 +113,57 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    let mounted = true;
+
     const init = async () => {
       try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error getting user:', error);
-          setLoading(false);
+        // Use getSession first to check if we have a session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          if (mounted) {
+            setLoading(false);
+          }
           return;
         }
-        if (user) {
-          await loadGroups(user.id);
+
+        if (session?.user) {
+          if (mounted) {
+            await loadGroups(session.user.id);
+          }
         } else {
-          setLoading(false);
+          // No session - check if we have a user anyway (might be stale)
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          if (userError || !user) {
+            if (mounted) {
+              setGroups([]);
+              setActiveGroup(null);
+              setLoading(false);
+            }
+            return;
+          }
+          if (mounted) {
+            await loadGroups(user.id);
+          }
         }
       } catch (error) {
         console.error('Error initializing groups:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     init();
 
-    // Listen for auth changes
+    // Listen for auth changes (login, logout, token refresh, session restore)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          await loadGroups(session.user.id);
-        } else {
+        if (!mounted) return;
+
+        // Handle different auth events
+        if (event === 'SIGNED_OUT' || !session?.user) {
           setGroups([]);
           setActiveGroup(null);
           // Only update localStorage on client-side
@@ -151,11 +175,19 @@ export function GroupProvider({ children }: { children: ReactNode }) {
             }
           }
           setLoading(false);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+          // User signed in or session refreshed - reload groups
+          if (session?.user) {
+            await loadGroups(session.user.id);
+          }
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
