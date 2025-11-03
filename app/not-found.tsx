@@ -1,10 +1,8 @@
-'use client';
-
 import Link from 'next/link';
 
 /**
- * 404 Not Found page - self-contained to avoid dependency issues
- * Uses plain HTML/CSS instead of MUI to ensure it works even if layout fails
+ * 404 Not Found page - must be a Server Component
+ * Next.js requires not-found.tsx to be a server component by default
  */
 export default function NotFound() {
   return (
@@ -63,13 +61,6 @@ export default function NotFound() {
           cursor: 'pointer',
           textDecoration: 'none',
           display: 'inline-block',
-          transition: 'background-color 0.2s',
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#1565c0';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = '#1976d2';
         }}
       >
         Go to Recipes
