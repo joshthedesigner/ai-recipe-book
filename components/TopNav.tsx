@@ -27,7 +27,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
-import { supabase } from '@/db/supabaseClient';
 
 export default function TopNav() {
   const router = useRouter();
