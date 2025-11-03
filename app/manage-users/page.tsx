@@ -13,7 +13,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   IconButton,
   Select,
   MenuItem,
@@ -32,6 +31,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TopNav from '@/components/TopNav';
 import { useAuth } from '@/contexts/AuthContext';
+import { useGroup } from '@/contexts/GroupContext';
 import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/db/supabaseClient';
 import { GroupMember } from '@/types';
@@ -39,10 +39,10 @@ import { GroupMember } from '@/types';
 export default function ManageUsersPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { activeGroup, groups, loading: groupsLoading } = useGroup();
   const { showToast } = useToast();
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [groupId, setGroupId] = useState<string | null>(null);
   const [groupName, setGroupName] = useState('');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -59,16 +59,21 @@ export default function ManageUsersPage() {
     }
   }, [user, authLoading, router]);
 
-  // Fetch group and members
+  // Fetch group and members when activeGroup changes
   useEffect(() => {
-    if (user) {
+    if (user && activeGroup && !groupsLoading) {
       fetchGroupAndMembers();
+    } else if (user && !groupsLoading && !activeGroup) {
+      // No active group - show empty state
+      setLoading(false);
+      setMembers([]);
+      setGroupName('');
     }
-  }, [user]);
+  }, [user, activeGroup, groupsLoading]);
 
   // Real-time subscription to member changes
   useEffect(() => {
-    if (!groupId) return;
+    if (!activeGroup?.id) return;
 
     const subscription = supabase
       .channel('group_members_changes')
@@ -78,7 +83,7 @@ export default function ManageUsersPage() {
           event: '*',
           schema: 'public',
           table: 'group_members',
-          filter: `group_id=eq.${groupId}`,
+          filter: `group_id=eq.${activeGroup.id}`,
         },
         (payload) => {
           console.log('Member status changed:', payload);
@@ -90,33 +95,31 @@ export default function ManageUsersPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [groupId]);
+  }, [activeGroup?.id]);
 
   const fetchGroupAndMembers = async () => {
+    if (!activeGroup) return;
+
     try {
       setLoading(true);
 
-      // Get user's owned group
-      const { data: group, error: groupError } = await supabase
-        .from('recipe_groups')
-        .select('id, name')
-        .eq('owner_id', user!.id)
-        .single();
-
-      if (groupError || !group) {
-        showToast('You do not own a recipe group', 'error');
+      // Use activeGroup from context
+      const groupId = activeGroup.id;
+      
+      // Verify user owns this group (for manage-users page, only owners can manage)
+      if (!activeGroup.isOwn) {
+        showToast('You can only manage groups you own', 'error');
         router.push('/browse');
         return;
       }
 
-      setGroupId(group.id);
-      setGroupName(group.name);
+      setGroupName(activeGroup.name);
 
       // Get group members
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
         .select('*')
-        .eq('group_id', group.id)
+        .eq('group_id', groupId)
         .order('joined_at', { ascending: false });
 
       if (membersError) throw membersError;
@@ -131,7 +134,7 @@ export default function ManageUsersPage() {
   };
 
   const handleInviteUser = async () => {
-    if (!inviteEmail || !groupId) return;
+    if (!inviteEmail || !activeGroup?.id) return;
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -147,7 +150,7 @@ export default function ManageUsersPage() {
       const { data: existing, error: checkError } = await supabase
         .from('group_members')
         .select('id')
-        .eq('group_id', groupId)
+        .eq('group_id', activeGroup.id)
         .eq('email', inviteEmail.toLowerCase())
         .maybeSingle();
 
@@ -166,7 +169,7 @@ export default function ManageUsersPage() {
       const { error } = await supabase
         .from('group_members')
         .insert({
-          group_id: groupId,
+          group_id: activeGroup.id,
           email: inviteEmail.toLowerCase(),
           role: inviteRole,
           status: 'pending',
@@ -183,7 +186,7 @@ export default function ManageUsersPage() {
           body: JSON.stringify({
             inviteeEmail: inviteEmail.toLowerCase(),
             role: inviteRole,
-            groupId: groupId,
+            groupId: activeGroup.id,
           }),
         });
 
@@ -290,43 +293,80 @@ export default function ManageUsersPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
+          {/* Back Button */}
           <Button
             startIcon={<ArrowBackIcon />}
             onClick={() => router.push('/browse')}
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 2,
+              textTransform: 'none',
+              color: 'black',
+              '&:hover': {
+                bgcolor: 'transparent',
+                color: 'black',
+                opacity: 0.7,
+              },
+            }}
           >
             Back to Recipes
           </Button>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Box>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
               Manage Users
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<PersonAddIcon />}
-              onClick={() => setInviteDialogOpen(true)}
-            >
-              Invite User
-            </Button>
+            <Typography variant="body1" color="text.secondary">
+              {groupName}
+            </Typography>
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            {groupName}
-          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddIcon />}
+            onClick={() => setInviteDialogOpen(true)}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              color: 'white',
+              px: 3,
+              py: 1.25,
+              boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
+              '&:hover': {
+                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.35)',
+              },
+            }}
+          >
+            Invite User
+          </Button>
+          </Box>
         </Box>
 
         {/* Members Table */}
-        <TableContainer component={Paper}>
+        <TableContainer
+          sx={{
+            bgcolor: 'white',
+            borderRadius: '8px',
+            border: '1px solid',
+            borderColor: 'divider',
+            overflow: 'hidden',
+          }}
+        >
           <Table>
             <TableHead>
-              <TableRow>
-                <TableCell>Email</TableCell>
-                <TableCell>Role</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Invited</TableCell>
-                <TableCell align="right">Actions</TableCell>
+              <TableRow
+                sx={{
+                  bgcolor: 'grey.50',
+                }}
+              >
+                <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                <TableCell sx={{ fontWeight: 600 }}>Invited</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -340,7 +380,14 @@ export default function ManageUsersPage() {
                 </TableRow>
               ) : (
                 members.map((member) => (
-                  <TableRow key={member.id}>
+                  <TableRow
+                    key={member.id}
+                    sx={{
+                      '&:hover': {
+                        bgcolor: 'grey.50',
+                      },
+                    }}
+                  >
                     <TableCell>
                       {member.email}
                       {member.user_id === user!.id && (
