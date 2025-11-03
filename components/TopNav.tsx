@@ -34,24 +34,10 @@ export default function TopNav() {
   const { user, signOut } = useAuth();
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [isGroupOwner, setIsGroupOwner] = useState(false);
 
-  // Check if user is a group owner
-  useEffect(() => {
-    async function checkOwnership() {
-      if (!user) return;
-
-      const { data } = await supabase
-        .from('recipe_groups')
-        .select('id')
-        .eq('owner_id', user.id)
-        .limit(1);
-
-      setIsGroupOwner(!!data && data.length > 0);
-    }
-
-    checkOwnership();
-  }, [user]);
+  // Check if user is a group owner - use activeGroup.isOwn from GroupContext
+  // This is more reliable than querying separately since GroupContext already has this info
+  const isGroupOwner = activeGroup?.isOwn === true || groups.some(g => g.isOwn === true);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
