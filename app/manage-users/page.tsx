@@ -113,20 +113,30 @@ export default function ManageUsersPage() {
     setLoading(true);
   }, [pathname]); // Trigger on pathname change (when navigating to /manage-users)
 
-  // Fetch group and members when activeGroup changes OR pathname changes
+  // Fetch group and members - runs when:
+  // 1. User becomes available
+  // 2. Groups finish loading (groupsLoading: true → false)
+  // 3. Active group changes or becomes available
+  // 4. Pathname changes (navigation)
   useEffect(() => {
-    // Only fetch if we have all required data
-    if (user && activeGroup && !groupsLoading) {
+    // Wait for auth and groups to finish loading
+    if (!user || groupsLoading) {
+      console.log('Waiting for user or groups to load...', { user: !!user, groupsLoading });
+      return;
+    }
+
+    // If we have an active group, fetch members
+    if (activeGroup) {
       console.log('Triggering fetchGroupAndMembers - activeGroup:', activeGroup.id, 'pathname:', pathname);
       fetchGroupAndMembers();
-    } else if (user && !groupsLoading && !activeGroup) {
+    } else {
       // No active group - show empty state
       console.log('No active group, showing empty state');
       setLoading(false);
       setMembers([]);
       setGroupName('');
     }
-  }, [user, activeGroup?.id, groupsLoading, fetchGroupAndMembers, pathname]); // Add pathname to force reload on navigation
+  }, [user, activeGroup?.id, groupsLoading, fetchGroupAndMembers, pathname]); // All dependencies trigger re-evaluation
 
   // Real-time subscription to member changes
   useEffect(() => {
