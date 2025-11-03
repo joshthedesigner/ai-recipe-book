@@ -26,8 +26,11 @@ const GroupContext = createContext<GroupContextType | undefined>(undefined);
 const STORAGE_KEY = 'activeGroupId';
 
 /**
- * Simplified GroupContext - no complex timeouts or race condition handling
- * Simply waits for user, loads groups, handles errors gracefully
+ * Simple GroupContext:
+ * - Watches user from AuthContext
+ * - Loads groups when user is available
+ * - Clears groups when user is null
+ * - No complex listeners, timeouts, or race conditions
  */
 export function GroupProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -38,7 +41,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   // Load groups for current user
   const loadGroups = useCallback(async (userId: string) => {
     try {
-      console.log('GroupContext: Starting to load groups for user:', userId);
+      console.log('GroupContext: Loading groups for user:', userId);
       setLoading(true);
       
       const startTime = Date.now();
@@ -50,7 +53,6 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       setGroups(userGroups);
 
       // Get active group from localStorage or default to owned group
-      // Only access localStorage on client-side (after hydration)
       let storedGroupId: string | null = null;
       if (typeof window !== 'undefined') {
         try {
@@ -61,13 +63,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       }
 
       let active: Group | null = null;
-
       if (storedGroupId) {
-        // Try to find the stored group in user's groups
         active = userGroups.find(g => g.id === storedGroupId) || null;
       }
-
-      // If stored group not found or not set, default to owned group, then first group
       if (!active) {
         active = userGroups.find(g => g.isOwn) || userGroups[0] || null;
       }
@@ -114,10 +112,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
   }, [user, loadGroups]);
 
-  // Track if we're currently loading to prevent duplicate loads
-  const [isLoadingGroups, setIsLoadingGroups] = useState(false);
-
-  // Main effect: Load groups when user becomes available
+  // Single effect: Watch user from AuthContext and load groups accordingly
   useEffect(() => {
     if (typeof window === 'undefined') {
       setLoading(false);
@@ -126,13 +121,11 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     // Wait for auth to finish loading
     if (authLoading) {
-      console.log('GroupContext: Waiting for auth to load...');
       return;
     }
 
-    // If no user after auth loads, clear state
+    // No user - clear state
     if (!user) {
-      console.log('GroupContext: No user, clearing state');
       setGroups([]);
       setActiveGroup(null);
       setLoading(false);
@@ -146,53 +139,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // User is available - load groups (only if not already loading)
-    if (!isLoadingGroups) {
-      console.log('GroupContext: User available, loading groups:', user.id);
-      setIsLoadingGroups(true);
-      loadGroups(user.id).finally(() => {
-        setIsLoadingGroups(false);
-      });
-    }
-  }, [user, authLoading, loadGroups, isLoadingGroups]);
-
-  // Listen for auth state changes - this handles sign-in/sign-out
-  // This is the PRIMARY way we detect sign-ins (since getSession() times out)
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('GroupContext: Auth state changed:', event, session?.user ? 'has user' : 'no user');
-        
-        if (event === 'SIGNED_OUT' || !session?.user) {
-          setGroups([]);
-          setActiveGroup(null);
-          setLoading(false);
-          setIsLoadingGroups(false);
-          if (typeof window !== 'undefined') {
-            try {
-              localStorage.removeItem(STORAGE_KEY);
-            } catch (error) {
-              console.warn('Error removing from localStorage:', error);
-            }
-          }
-        } else if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session?.user) {
-          // Reload groups when user signs in or session is restored
-          // This is critical because getSession() times out in production
-          if (!isLoadingGroups) {
-            console.log('GroupContext: User signed in/restored, loading groups:', session.user.id);
-            setIsLoadingGroups(true);
-            await loadGroups(session.user.id).finally(() => {
-              setIsLoadingGroups(false);
-            });
-          }
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [loadGroups, isLoadingGroups]);
+    // User is available - load groups
+    loadGroups(user.id);
+  }, [user, authLoading, loadGroups]);
 
   return (
     <GroupContext.Provider
@@ -216,4 +165,3 @@ export function useGroup() {
   }
   return context;
 }
-
