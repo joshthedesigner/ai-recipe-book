@@ -147,10 +147,11 @@ export async function getUserGroups(
     }
 
     // Get member groups (excluding groups user owns)
-    // Include joined_at to prioritize recently joined groups
-    const { data: memberGroups, error: memberError } = await supabase
+    // Split query to avoid RLS issues with nested joins
+    // First get member records
+    const { data: memberRecords, error: memberError } = await supabase
       .from('group_members')
-      .select('group_id, role, joined_at, recipe_groups(id, name)')
+      .select('group_id, role, joined_at')
       .eq('user_id', userId)
       .eq('status', 'active');
 
@@ -159,18 +160,39 @@ export async function getUserGroups(
       throw memberError;
     }
 
-    if (memberGroups) {
-      for (const member of memberGroups) {
-        const group = member.recipe_groups as any;
-        if (group && !ownedGroupIds.has(group.id)) {
-          // Only add if user doesn't own this group (to avoid duplicates)
-          groups.push({
-            id: group.id,
-            name: group.name,
-            role: member.role as UserRole,
-            isOwn: false,
-            joinedAt: member.joined_at || null,
-          });
+    // Then fetch group details for each member group
+    if (memberRecords && memberRecords.length > 0) {
+      const memberGroupIds = memberRecords
+        .map(m => m.group_id)
+        .filter(id => !ownedGroupIds.has(id)); // Exclude groups user owns
+
+      if (memberGroupIds.length > 0) {
+        const { data: memberGroupsData, error: groupsError } = await supabase
+          .from('recipe_groups')
+          .select('id, name')
+          .in('id', memberGroupIds);
+
+        if (groupsError) {
+          console.error('Error fetching member group details:', groupsError);
+          throw groupsError;
+        }
+
+        // Combine member records with group details
+        if (memberGroupsData) {
+          const memberMap = new Map(memberRecords.map(m => [m.group_id, m]));
+          
+          for (const group of memberGroupsData) {
+            const member = memberMap.get(group.id);
+            if (member) {
+              groups.push({
+                id: group.id,
+                name: group.name,
+                role: member.role as UserRole,
+                isOwn: false,
+                joinedAt: member.joined_at || null,
+              });
+            }
+          }
         }
       }
     }
