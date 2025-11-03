@@ -37,6 +37,8 @@ import { supabase } from '@/db/supabaseClient';
 import { GroupMember } from '@/types';
 
 export default function ManageUsersPage() {
+  console.log('🔵 ManageUsersPage: Component mounted/rendered', { pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR' });
+  
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
@@ -53,6 +55,16 @@ export default function ManageUsersPage() {
   const [memberToDelete, setMemberToDelete] = useState<GroupMember | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  console.log('🔵 ManageUsersPage: State values', { 
+    hasUser: !!user, 
+    authLoading, 
+    hasActiveGroup: !!activeGroup, 
+    activeGroupId: activeGroup?.id,
+    groupsLoading,
+    loading,
+    pathname 
+  });
+
   // Auth protection
   useEffect(() => {
     if (!authLoading && !user) {
@@ -60,53 +72,63 @@ export default function ManageUsersPage() {
     }
   }, [user, authLoading, router]);
 
-  const fetchGroupAndMembers = useCallback(async () => {
-    // Get current activeGroup from context at call time (not closure)
-    const currentGroup = activeGroup;
-    if (!currentGroup) {
-      console.warn('Cannot fetch members: no active group');
+  const fetchGroupAndMembers = useCallback(async (groupId?: string, groupName?: string, isOwn?: boolean) => {
+    console.log('🟢 fetchGroupAndMembers: Called', { groupId, groupName, isOwn, activeGroupId: activeGroup?.id });
+    
+    // Use provided params or fall back to activeGroup from context
+    const currentGroupId = groupId || activeGroup?.id;
+    const currentGroupName = groupName || activeGroup?.name;
+    const currentIsOwn = isOwn !== undefined ? isOwn : activeGroup?.isOwn;
+    
+    if (!currentGroupId) {
+      console.warn('⚠️ fetchGroupAndMembers: No group ID available');
+      setLoading(false);
+      return;
+    }
+
+    // Verify user owns this group (for manage-users page, only owners can manage)
+    if (currentIsOwn === false) {
+      console.warn('⚠️ fetchGroupAndMembers: User does not own this group, redirecting');
+      showToast('You can only manage groups you own', 'error');
+      router.push('/browse');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      console.log('Fetching members for group:', currentGroup.id);
-
-      // Use activeGroup from context
-      const groupId = currentGroup.id;
+      console.log('🟢 fetchGroupAndMembers: Fetching members for group:', currentGroupId);
       
-      // Verify user owns this group (for manage-users page, only owners can manage)
-      if (!currentGroup.isOwn) {
-        showToast('You can only manage groups you own', 'error');
-        router.push('/browse');
-        return;
+      if (currentGroupName) {
+        setGroupName(currentGroupName);
       }
-
-      setGroupName(currentGroup.name);
 
       // Get group members
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
         .select('*')
-        .eq('group_id', groupId)
+        .eq('group_id', currentGroupId)
         .order('joined_at', { ascending: false });
 
-      if (membersError) throw membersError;
+      if (membersError) {
+        throw membersError;
+      }
 
-      console.log('Loaded members:', membersData?.length || 0);
+      console.log('✅ fetchGroupAndMembers: Loaded members:', membersData?.length || 0);
       setMembers(membersData || []);
     } catch (error) {
-      console.error('Error fetching members:', error);
+      console.error('❌ fetchGroupAndMembers: Error fetching members:', error);
       showToast('Failed to load members', 'error');
       setMembers([]);
     } finally {
       setLoading(false);
+      console.log('🟢 fetchGroupAndMembers: Completed, loading set to false');
     }
-  }, [activeGroup, router, showToast]);
+  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, router, showToast]);
 
   // Reset state when component mounts OR when navigating to this page
   useEffect(() => {
+    console.log('🟡 Reset effect: Running', { pathname });
     // Reset state when navigating to this page to ensure fresh data
     setMembers([]);
     setGroupName('');
@@ -119,24 +141,47 @@ export default function ManageUsersPage() {
   // 3. Active group changes or becomes available
   // 4. Pathname changes (navigation)
   useEffect(() => {
+    console.log('🟡 Fetch effect: Running', { 
+      hasUser: !!user, 
+      groupsLoading, 
+      hasActiveGroup: !!activeGroup,
+      activeGroupId: activeGroup?.id,
+      pathname 
+    });
+
     // Wait for auth and groups to finish loading
-    if (!user || groupsLoading) {
-      console.log('Waiting for user or groups to load...', { user: !!user, groupsLoading });
+    if (!user) {
+      console.log('⏳ Fetch effect: Waiting for user');
+      return;
+    }
+
+    if (groupsLoading === true) {
+      console.log('⏳ Fetch effect: Waiting for groups to load');
+      return;
+    }
+
+    // If groupsLoading is undefined, it might be a timing issue - wait a bit
+    if (groupsLoading === undefined) {
+      console.log('⏳ Fetch effect: groupsLoading is undefined, waiting...');
       return;
     }
 
     // If we have an active group, fetch members
-    if (activeGroup) {
-      console.log('Triggering fetchGroupAndMembers - activeGroup:', activeGroup.id, 'pathname:', pathname);
-      fetchGroupAndMembers();
+    if (activeGroup?.id) {
+      console.log('✅ Fetch effect: Has active group, calling fetchGroupAndMembers', {
+        groupId: activeGroup.id,
+        groupName: activeGroup.name,
+        isOwn: activeGroup.isOwn
+      });
+      fetchGroupAndMembers(activeGroup.id, activeGroup.name, activeGroup.isOwn);
     } else {
       // No active group - show empty state
-      console.log('No active group, showing empty state');
+      console.log('⚠️ Fetch effect: No active group, showing empty state');
       setLoading(false);
       setMembers([]);
       setGroupName('');
     }
-  }, [user, activeGroup?.id, groupsLoading, fetchGroupAndMembers, pathname]); // All dependencies trigger re-evaluation
+  }, [user, activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, groupsLoading, fetchGroupAndMembers, pathname]); // All dependencies trigger re-evaluation
 
   // Real-time subscription to member changes
   useEffect(() => {
@@ -153,8 +198,8 @@ export default function ManageUsersPage() {
           filter: `group_id=eq.${activeGroup.id}`,
         },
         (payload) => {
-          console.log('Member status changed:', payload);
-          fetchGroupAndMembers();
+          console.log('🟣 Real-time subscription: Member status changed:', payload);
+          fetchGroupAndMembers(activeGroup.id, activeGroup.name, activeGroup.isOwn);
         }
       )
       .subscribe();
@@ -162,7 +207,7 @@ export default function ManageUsersPage() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [activeGroup?.id, fetchGroupAndMembers]);
+  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, fetchGroupAndMembers]);
 
   const handleInviteUser = async () => {
     if (!inviteEmail || !activeGroup?.id) return;
