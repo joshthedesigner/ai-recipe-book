@@ -98,6 +98,7 @@ export default function BrowsePage() {
 
   // Fetch recipes from API
   const fetchRecipes = useCallback(async () => {
+    console.log('🔵 fetchRecipes CALLED', new Date().toISOString());
     if (!activeGroup) return;
     
     try {
@@ -145,6 +146,14 @@ export default function BrowsePage() {
 
   // Eager loading: Fetch recipes when active group changes
   useEffect(() => {
+    console.log('🟠 useEffect TRIGGERED', {
+      user: !!user,
+      activeGroupId: activeGroup?.id,
+      authLoading,
+      groupsLoading,
+      fetchRecipesRef: fetchRecipes.toString().slice(0, 50),
+    });
+    
     if (!user || authLoading || groupsLoading) return;
 
     if (activeGroup) {
@@ -339,10 +348,12 @@ export default function BrowsePage() {
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
+    console.log('🟢 handleRecipeAdded CALLED', new Date().toISOString());
     showToast('Recipe saved successfully', 'success');
     
     // Wait for database, then refresh
     setTimeout(() => {
+      console.log('🟢 handleRecipeAdded setTimeout FIRED', new Date().toISOString());
       fetchRecipes();
     }, 2000);
   };
