@@ -174,11 +174,24 @@ export async function getUserGroups(
         .map(m => m.group_id)
         .filter(id => !ownedGroupIds.has(id)); // Exclude groups user owns
 
+      console.log('getUserGroups: Fetching group details for:', {
+        memberGroupIds: memberGroupIds,
+        ownedGroupIds: Array.from(ownedGroupIds),
+        allMemberRecordIds: memberRecords.map(m => m.group_id)
+      });
+
       if (memberGroupIds.length > 0) {
         const { data: memberGroupsData, error: groupsError } = await supabase
           .from('recipe_groups')
           .select('id, name')
           .in('id', memberGroupIds);
+
+        console.log('getUserGroups: Group details query result:', {
+          count: memberGroupsData?.length || 0,
+          groups: memberGroupsData,
+          error: groupsError,
+          requestedIds: memberGroupIds
+        });
 
         if (groupsError) {
           console.error('Error fetching member group details:', groupsError);
