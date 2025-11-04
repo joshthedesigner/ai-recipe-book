@@ -163,9 +163,10 @@ export default function BrowsePage() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, activeGroup?.id, authLoading, groupsLoading]);
+  }, [user?.id, activeGroup?.id, authLoading, groupsLoading]);
   // fetchRecipes intentionally omitted from deps - we only want to refetch when group ID changes,
   // not when the callback recreates due to activeGroup object reference changing in GroupContext
+  // user?.id (not user) prevents re-fetch on session validation while maintaining login/logout behavior
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
