@@ -158,8 +158,9 @@ export default function BrowsePage() {
       });
 
       if (data.success) {
-        // WARNING: If countMismatch is true, we're overwriting an optimistic update with stale data
-        if (countMismatch) {
+        // WARNING: If countMismatch is true AND we have existing recipes, we might be overwriting an optimistic update
+        // Only protect if we actually have recipes in state (not initial load)
+        if (countMismatch && currentRecipeCount > 0) {
           console.warn(`[${fetchId}] ⚠️ WARNING: Fetch overwriting optimistic update!`, {
             currentStateCount: currentRecipeCount,
             fetchedCount: fetchedRecipeCount,
@@ -175,7 +176,7 @@ export default function BrowsePage() {
             setRecipes(data.recipes || []);
           }
         } else {
-          // Normal case: no mismatch, safe to update
+          // Normal case: no mismatch OR initial load (currentRecipeCount === 0), safe to update
           setRecipes(data.recipes || []);
         }
         
