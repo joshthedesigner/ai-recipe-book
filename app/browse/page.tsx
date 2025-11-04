@@ -177,6 +177,7 @@ export default function BrowsePage() {
   }, [user, activeGroup, authLoading, groupsLoading, fetchRecipes]);
 
   // Real-time subscription to recipe changes
+  // Matches pattern used in manage-users page for consistency
   useEffect(() => {
     if (!activeGroup?.id) return;
 
@@ -191,33 +192,12 @@ export default function BrowsePage() {
           filter: `group_id=eq.${activeGroup.id}`,
         },
         (payload) => {
-          console.log('Recipe change detected:', payload.eventType, payload);
-          
-          // Update state directly from payload (no fetch needed - eliminates race conditions)
-          if (payload.eventType === 'INSERT' && payload.new) {
-            // Add new recipe to state (with deduplication)
-            setRecipes((prev) => {
-              // Check if already exists (avoid duplicates from manual updates)
-              if (prev.some(r => r.id === payload.new.id)) {
-                return prev;
-              }
-              // Add new recipe and maintain sort order (newest first by default)
-              const newRecipes = [...prev, payload.new as Recipe];
-              return newRecipes.sort((a, b) => {
-                const aTime = new Date(a.created_at || 0).getTime();
-                const bTime = new Date(b.created_at || 0).getTime();
-                return bTime - aTime; // Newest first
-              });
-            });
-          } else if (payload.eventType === 'DELETE' && payload.old) {
-            // Remove deleted recipe from state
-            setRecipes((prev) => prev.filter(r => r.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE' && payload.new) {
-            // Update recipe in state
-            setRecipes((prev) => 
-              prev.map(r => r.id === payload.new.id ? (payload.new as Recipe) : r)
-            );
-          }
+          console.log('Recipe change detected:', payload.eventType);
+          // Add delay to allow database replication to complete before fetching
+          // This prevents race conditions where fetch returns stale data
+          setTimeout(() => {
+            fetchRecipes(true);
+          }, 300);
         }
       )
       .subscribe();
@@ -225,7 +205,7 @@ export default function BrowsePage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeGroup?.id]);
+  }, [activeGroup?.id, fetchRecipes]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -408,8 +388,8 @@ export default function BrowsePage() {
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
-    // Refresh recipe list when a new recipe is added (force refresh to bypass cache)
-    fetchRecipes(true);
+    // Real-time subscription will handle refresh with delay to avoid race conditions
+    // No manual fetch needed - keeps pattern consistent with manage-users page
   };
 
   return (
