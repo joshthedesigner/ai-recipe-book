@@ -59,7 +59,6 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [lastSavedRecipeId, setLastSavedRecipeId] = useState<string | null>(null);
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -98,128 +97,37 @@ export default function BrowsePage() {
   ).sort();
 
   // Define fetchRecipes before using it in useEffect
-  const fetchRecipes = useCallback(async (forceRefresh = false) => {
+  const fetchRecipes = useCallback(async () => {
     if (!activeGroup) {
       console.warn('Cannot fetch recipes: no active group');
       return;
     }
     
-    const fetchStartTime = Date.now();
-    const fetchId = Math.random().toString(36).substr(2, 9);
-    
     try {
       setLoading(true);
-      console.log(`[${fetchId}] 🔵 fetchRecipes START`, {
-        forceRefresh,
-        groupId: activeGroup.id,
-        timestamp: new Date().toISOString(),
-        expectingRecipeId: lastSavedRecipeId, // Track if we're expecting a specific recipe
-      });
-      
+      console.log('Fetching recipes for group:', activeGroup.id);
       // Fetch recipes for the active group
-      // Add cache-busting timestamp when forceRefresh is true
-      const url = forceRefresh
-        ? `/api/recipes?groupId=${activeGroup.id}&_t=${Date.now()}`
-        : `/api/recipes?groupId=${activeGroup.id}`;
-      
-      console.log(`[${fetchId}] 🔵 fetchRecipes REQUEST`, { url });
-      
-      const response = await fetch(url, {
-        cache: forceRefresh ? 'no-store' : 'default',
-      });
-      
-      const requestTime = Date.now() - fetchStartTime;
+      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
       const data = await response.json();
-      const responseTime = Date.now() - fetchStartTime;
-      
-      // CRITICAL: Check if the saved recipe is in the response
-      const savedRecipeInResponse = lastSavedRecipeId 
-        ? data.recipes?.some((r: any) => r.id === lastSavedRecipeId)
-        : null;
-      
-      // Also check current state to detect if fetch is overwriting optimistic updates
-      const currentRecipeCount = recipes.length;
-      const fetchedRecipeCount = data.recipes?.length || 0;
-      const countMismatch = currentRecipeCount !== fetchedRecipeCount;
-      const expectingSavedRecipe = !!lastSavedRecipeId;
-      const savedRecipeStale = expectingSavedRecipe && !savedRecipeInResponse;
-      
-      console.log(`[${fetchId}] ✅ fetchRecipes RESPONSE`, {
-        requestTime: `${requestTime}ms`,
-        totalTime: `${responseTime}ms`,
-        recipeCount: data.recipes?.length || 0,
-        recipeIds: data.recipes?.map((r: any) => r.id) || [],
-        savedRecipeId: lastSavedRecipeId,
-        savedRecipeInResponse: savedRecipeInResponse,
-        expectingSavedRecipe: expectingSavedRecipe,
-        savedRecipeStale: savedRecipeStale,
-        IS_STALE_DATA: savedRecipeStale, // 🔴 Confirms read replica lag for saves
-        currentStateCount: currentRecipeCount,
-        fetchedCount: fetchedRecipeCount,
-        countMismatch: countMismatch, // 🔴 Detects if fetch overwrites optimistic updates
-        cacheHeader: response.headers.get('cache-control'),
-        timestamp: new Date().toISOString(),
-      });
+
+      console.log('Recipes API response:', data);
 
       if (data.success) {
-        // PROTECTION LOGIC: Prevent overwriting optimistic updates with stale data
-        
-        // Case 1: We're expecting a saved recipe but it's not in response (stale data from read replica lag)
-        if (savedRecipeStale && currentRecipeCount > 0) {
-          console.warn(`[${fetchId}] ⚠️ STALE DATA: Saved recipe ${lastSavedRecipeId} not in response - preserving state`, {
-            savedRecipeId: lastSavedRecipeId,
-            currentStateCount: currentRecipeCount,
-            fetchedCount: fetchedRecipeCount,
-          });
-          // Don't update - the recipe will appear in a later fetch once read replica catches up
-          // Keep current state to avoid removing the optimistic update
-        }
-        // Case 2: Count mismatch AND we have existing recipes (optimistic delete being overwritten)
-        else if (countMismatch && currentRecipeCount > 0) {
-          console.warn(`[${fetchId}] ⚠️ WARNING: Fetch overwriting optimistic update!`, {
-            currentStateCount: currentRecipeCount,
-            fetchedCount: fetchedRecipeCount,
-            action: currentRecipeCount < fetchedRecipeCount ? 'DELETE overwritten (recipe reappeared)' : 'SAVE overwritten (recipe missing)',
-          });
-          // Don't overwrite if we have optimistic delete (state count is less than fetched)
-          // This prevents deleted recipes from reappearing
-          if (currentRecipeCount < fetchedRecipeCount) {
-            console.log(`[${fetchId}] 🛡️ Preserving optimistic delete - not overwriting state`);
-            // Don't update recipes - keep the optimistic delete
-          } else {
-            // For saves with count mismatch, we still want to update to get the latest data
-            setRecipes(data.recipes || []);
-          }
-        }
-        // Case 3: Normal case - safe to update (no optimistic updates, or saved recipe IS in response)
-        else {
-          // Update recipes - either no optimistic state or saved recipe confirmed in response
-          if (expectingSavedRecipe && savedRecipeInResponse) {
-            console.log(`[${fetchId}] ✅ Saved recipe ${lastSavedRecipeId} confirmed in response - updating state`);
-          }
-          setRecipes(data.recipes || []);
-        }
-        
-        console.log(`[${fetchId}] ✅ fetchRecipes COMPLETE - Loaded ${data.recipes?.length || 0} recipes`);
-        
-        // If saved recipe is now in response, clear the tracking
-        if (savedRecipeInResponse && lastSavedRecipeId) {
-          console.log(`[${fetchId}] ✅ Saved recipe ${lastSavedRecipeId} is now in response - clearing tracker`);
-          setLastSavedRecipeId(null);
-        }
+        setRecipes(data.recipes || []);
+        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
       } else {
-        console.error(`[${fetchId}] ❌ fetchRecipes ERROR:`, data.error);
+        console.error('Recipes API error:', data.error);
         showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
         setRecipes([]);
       }
     } catch (error) {
-      console.error(`[${fetchId}] ❌ fetchRecipes EXCEPTION:`, error);
+      console.error('Error fetching recipes:', error);
       showToast('Unable to connect to server. Please check your connection.', 'error');
       setRecipes([]);
     } finally {
       setLoading(false);
     }
-  }, [activeGroup, showToast, lastSavedRecipeId]); // Add lastSavedRecipeId to dependencies
+  }, [activeGroup, showToast]);
 
   // Auth protection: redirect to login if not authenticated
   useEffect(() => {
@@ -247,7 +155,7 @@ export default function BrowsePage() {
     checkPermissions();
   }, [user, activeGroup]);
 
-  // Fetch recipes on mount and when active group changes
+  // Eager loading: Fetch recipes when active group changes
   useEffect(() => {
     // Wait for all contexts to be ready
     if (!user || authLoading || groupsLoading) {
@@ -255,65 +163,19 @@ export default function BrowsePage() {
     }
 
     if (activeGroup) {
-      fetchRecipes();
+      console.log('🔄 Active group changed - fetching recipes', {
+        groupId: activeGroup.id,
+        groupName: activeGroup.name,
+      });
+      // Always fetch fresh data when switching groups (eager loading pattern)
+      fetchRecipes(true);
     } else {
       // User has no groups - show empty state
       console.warn('No active group found for user');
       setRecipes([]);
       setLoading(false);
     }
-  }, [user, activeGroup, authLoading, groupsLoading, fetchRecipes]);
-
-  // Real-time subscription to recipe changes
-  // Matches pattern used in manage-users page for consistency
-  useEffect(() => {
-    if (!activeGroup?.id) return;
-
-    console.log('🟣 Real-time subscription: Setting up for group:', activeGroup.id);
-
-    const channel = supabase
-      .channel('recipes_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'recipes',
-          filter: `group_id=eq.${activeGroup.id}`,
-        },
-        (payload) => {
-          const eventTime = Date.now();
-          const eventId = Math.random().toString(36).substr(2, 9);
-          
-          const newRecord = payload.new as { id?: string; title?: string } | null;
-          const oldRecord = payload.old as { id?: string; title?: string } | null;
-          
-          console.log(`[${eventId}] 🟣 Real-time EVENT`, {
-            eventType: payload.eventType,
-            recipeId: newRecord?.id || oldRecord?.id,
-            recipeTitle: newRecord?.title || oldRecord?.title,
-            timestamp: new Date().toISOString(),
-            payload: payload,
-          });
-          
-          // Add delay to allow database replication to complete before fetching
-          // This prevents race conditions where fetch returns stale data
-          setTimeout(() => {
-            const delayTime = Date.now() - eventTime;
-            console.log(`[${eventId}] 🟣 Real-time TRIGGER - Calling fetchRecipes after ${delayTime}ms delay`);
-            fetchRecipes(true);
-          }, 300);
-        }
-      )
-      .subscribe((status) => {
-        console.log('🟣 Real-time subscription STATUS:', status);
-      });
-
-    return () => {
-      console.log('🟣 Real-time subscription: Cleaning up');
-      supabase.removeChannel(channel);
-    };
-  }, [activeGroup?.id, fetchRecipes]);
+  }, [user, activeGroup?.id, authLoading, groupsLoading, fetchRecipes]); // Depend on activeGroup.id specifically
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -443,14 +305,6 @@ export default function BrowsePage() {
   const handleDeleteConfirm = async () => {
     if (!recipeToDelete?.id) return;
 
-    const deleteStartTime = Date.now();
-    const deletedRecipeId = recipeToDelete.id;
-    
-    console.log('🔴 DELETE RECIPE START', {
-      recipeId: deletedRecipeId,
-      timestamp: new Date().toISOString(),
-    });
-
     setDeletingRecipe(true);
 
     try {
@@ -459,25 +313,10 @@ export default function BrowsePage() {
       });
 
       const data = await response.json();
-      const deleteTime = Date.now() - deleteStartTime;
 
       if (data.success) {
-        console.log('🔴 DELETE RECIPE SUCCESS', {
-          recipeId: deletedRecipeId,
-          deleteTime: `${deleteTime}ms`,
-          timestamp: new Date().toISOString(),
-        });
-        
-        // Remove the deleted recipe from state (optimistic update)
-        setRecipes((prev) => {
-          const filtered = prev.filter((recipe) => recipe.id !== recipeToDelete.id);
-          console.log('🔴 Optimistic delete update', {
-            beforeCount: prev.length,
-            afterCount: filtered.length,
-            deletedRecipeId: deletedRecipeId,
-          });
-          return filtered;
-        });
+        // Remove the deleted recipe from state
+        setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeToDelete.id));
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
         // Close detail modal if it's open for this recipe
@@ -518,30 +357,9 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
-  const handleRecipeAdded = (savedRecipeId?: string) => {
-    const addTime = Date.now();
-    
-    if (savedRecipeId) {
-      setLastSavedRecipeId(savedRecipeId);
-      console.log('🟢 handleRecipeAdded CALLED', {
-        timestamp: new Date().toISOString(),
-        groupId: activeGroup?.id,
-        savedRecipeId: savedRecipeId,
-      });
-    } else {
-      console.log('🟢 handleRecipeAdded CALLED (no recipe ID)', {
-        timestamp: new Date().toISOString(),
-        groupId: activeGroup?.id,
-      });
-    }
-    
-    // Manual refresh after save as fallback (real-time may not be enabled in Supabase)
-    // Add delay to allow database replication to complete
-    setTimeout(() => {
-      const delayTime = Date.now() - addTime;
-      console.log(`🟢 handleRecipeAdded - Triggering manual refresh after ${delayTime}ms delay`);
-      fetchRecipes(true);
-    }, 500); // Slightly longer delay than real-time to ensure DB replication
+  const handleRecipeAdded = () => {
+    // Refresh recipe list when a new recipe is added
+    fetchRecipes();
   };
 
   return (
