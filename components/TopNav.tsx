@@ -100,7 +100,6 @@ export default function TopNav() {
               display: 'flex',
               alignItems: 'center',
               textDecoration: 'none',
-              flexGrow: 1,
               cursor: 'pointer',
             }}
           >
@@ -122,7 +121,7 @@ export default function TopNav() {
 
           {/* Group Switcher - Only show if user has multiple groups */}
           {user && groups.length > 1 && !groupsLoading && (
-            <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ ml: 3, display: 'flex', alignItems: 'center' }}>
               <Select
                 value={activeGroup?.id || ''}
                 onChange={(e) => switchGroup(e.target.value)}
@@ -165,7 +164,7 @@ export default function TopNav() {
           )}
 
           {/* User Menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
             {user && (
               <>
                 <IconButton 
@@ -213,8 +212,15 @@ export default function TopNav() {
                     <ListItemText
                       primary={getUserName()}
                       secondary={user.email}
-                      primaryTypographyProps={{ variant: 'body2', fontWeight: 600 }}
-                      secondaryTypographyProps={{ variant: 'caption' }}
+                      primaryTypographyProps={{ 
+                        variant: 'body1', 
+                        fontWeight: 600,
+                        sx: { fontSize: '16px', color: '#000000' }
+                      }}
+                      secondaryTypographyProps={{ 
+                        variant: 'caption',
+                        sx: { color: '#000000' }
+                      }}
                     />
                   </MenuItem>
                   <Divider />
