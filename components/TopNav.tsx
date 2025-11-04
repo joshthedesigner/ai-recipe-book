@@ -20,7 +20,6 @@ import {
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
-import PeopleIcon from '@mui/icons-material/People';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useRouter } from 'next/navigation';
@@ -51,10 +50,6 @@ export default function TopNav() {
     await signOut();
   };
 
-  const handleManageUsers = () => {
-    handleMenuClose();
-    router.push('/manage-users');
-  };
 
   // Get user initials for avatar
   const getUserInitials = () => {
@@ -223,14 +218,6 @@ export default function TopNav() {
                     />
                   </MenuItem>
                   <Divider />
-                  {isGroupOwner && (
-                    <MenuItem onClick={handleManageUsers}>
-                      <ListItemIcon>
-                        <PeopleIcon fontSize="small" />
-                      </ListItemIcon>
-                      <ListItemText primary="Manage Users" />
-                    </MenuItem>
-                  )}
                   <MenuItem onClick={handleSignOut}>
                     <ListItemIcon>
                       <LogoutIcon fontSize="small" />

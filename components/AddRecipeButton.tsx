@@ -1,5 +1,4 @@
 import { Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 
 interface AddRecipeButtonProps {
   onClick: () => void;
@@ -9,7 +8,6 @@ export default function AddRecipeButton({ onClick }: AddRecipeButtonProps) {
   return (
     <Button
       variant="contained"
-      startIcon={<AddIcon />}
       onClick={onClick}
       sx={{
         borderRadius: 0,
