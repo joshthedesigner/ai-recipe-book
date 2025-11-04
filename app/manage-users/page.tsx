@@ -53,7 +53,7 @@ export default function ManageUsersPage() {
   const [groupName, setGroupName] = useState('');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'read' | 'write'>('write');
+  const [inviteRole, setInviteRole] = useState<'read' | 'write'>('read');
   const [inviting, setInviting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [memberToDelete, setMemberToDelete] = useState<GroupMember | null>(null);
@@ -250,12 +250,13 @@ export default function ManageUsersPage() {
       }
 
       // Create invite in database
+      // Always use 'read' role - users can only have write access in their own recipe books
       const { error } = await supabase
         .from('group_members')
         .insert({
           group_id: activeGroup.id,
           email: inviteEmail.toLowerCase(),
-          role: inviteRole,
+          role: 'read',
           status: 'pending',
           invited_by: user!.id,
         });
@@ -269,7 +270,7 @@ export default function ManageUsersPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             inviteeEmail: inviteEmail.toLowerCase(),
-            role: inviteRole,
+            role: 'read',
             groupId: activeGroup.id,
           }),
         });
@@ -292,7 +293,7 @@ export default function ManageUsersPage() {
 
       setInviteDialogOpen(false);
       setInviteEmail('');
-      setInviteRole('write');
+      setInviteRole('read');
       fetchGroupAndMembers();
     } catch (error) {
       console.error('Error inviting user:', error);
@@ -303,20 +304,9 @@ export default function ManageUsersPage() {
   };
 
   const handleUpdateRole = async (memberId: string, newRole: 'read' | 'write') => {
-    try {
-      const { error } = await supabase
-        .from('group_members')
-        .update({ role: newRole })
-        .eq('id', memberId);
-
-      if (error) throw error;
-
-      showToast('Role updated successfully', 'success');
-      fetchGroupAndMembers();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      showToast('Failed to update role', 'error');
-    }
+    // Disabled: Users can only have write access in their own recipe books
+    showToast('Role cannot be changed. Users can only have write access in their own recipe books.', 'info');
+    return;
   };
 
   const handleDeleteClick = (member: GroupMember) => {
@@ -474,7 +464,7 @@ export default function ManageUsersPage() {
                       ) : (
                         <Select
                           value={member.role}
-                          onChange={(e) => handleUpdateRole(member.id, e.target.value as 'read' | 'write')}
+                          disabled
                           size="small"
                           sx={{ minWidth: 120 }}
                         >
@@ -523,13 +513,16 @@ export default function ManageUsersPage() {
           <FormControl fullWidth>
             <InputLabel>Permission Level</InputLabel>
             <Select
-              value={inviteRole}
+              value="read"
               label="Permission Level"
-              onChange={(e) => setInviteRole(e.target.value as 'read' | 'write')}
+              disabled
             >
               <MenuItem value="read">Read (View Only)</MenuItem>
               <MenuItem value="write">Write (View + Add Recipes)</MenuItem>
             </Select>
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+              Invited users will have read-only access
+            </Typography>
           </FormControl>
         </DialogContent>
         <DialogActions>

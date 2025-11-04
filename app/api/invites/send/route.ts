@@ -19,12 +19,15 @@ export async function POST(request: NextRequest) {
     const { inviteeEmail, role, groupId } = await request.json();
 
     // Validate required fields
-    if (!inviteeEmail || !role || !groupId) {
+    if (!inviteeEmail || !groupId) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       );
     }
+
+    // Force role to 'read' - users can only have write access in their own recipe books
+    const enforcedRole = 'read' as 'read' | 'write';
 
     // Get authenticated user
     const supabase = createClient();
@@ -82,7 +85,7 @@ export async function POST(request: NextRequest) {
     const emailData = {
       inviterName,
       groupName: group.name,
-      role: role as 'read' | 'write',
+      role: enforcedRole,
       inviteeEmail,
       signupUrl,
     };
