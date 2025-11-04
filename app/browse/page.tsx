@@ -137,6 +137,11 @@ export default function BrowsePage() {
         ? data.recipes?.some((r: any) => r.id === lastSavedRecipeId)
         : null;
       
+      // Also check current state to detect if fetch is overwriting optimistic updates
+      const currentRecipeCount = recipes.length;
+      const fetchedRecipeCount = data.recipes?.length || 0;
+      const countMismatch = currentRecipeCount !== fetchedRecipeCount;
+      
       console.log(`[${fetchId}] ✅ fetchRecipes RESPONSE`, {
         requestTime: `${requestTime}ms`,
         totalTime: `${responseTime}ms`,
@@ -144,13 +149,36 @@ export default function BrowsePage() {
         recipeIds: data.recipes?.map((r: any) => r.id) || [],
         savedRecipeId: lastSavedRecipeId,
         savedRecipeInResponse: savedRecipeInResponse,
-        IS_STALE_DATA: lastSavedRecipeId ? !savedRecipeInResponse : null, // 🔴 THIS CONFIRMS THE PROBLEM
+        IS_STALE_DATA: lastSavedRecipeId ? !savedRecipeInResponse : null, // 🔴 Confirms read replica lag for saves
+        currentStateCount: currentRecipeCount,
+        fetchedCount: fetchedRecipeCount,
+        countMismatch: countMismatch, // 🔴 Detects if fetch overwrites optimistic updates
         cacheHeader: response.headers.get('cache-control'),
         timestamp: new Date().toISOString(),
       });
 
       if (data.success) {
-        setRecipes(data.recipes || []);
+        // WARNING: If countMismatch is true, we're overwriting an optimistic update with stale data
+        if (countMismatch) {
+          console.warn(`[${fetchId}] ⚠️ WARNING: Fetch overwriting optimistic update!`, {
+            currentStateCount: currentRecipeCount,
+            fetchedCount: fetchedRecipeCount,
+            action: currentRecipeCount < fetchedRecipeCount ? 'DELETE overwritten (recipe reappeared)' : 'SAVE overwritten (recipe missing)',
+          });
+          // Don't overwrite if we have optimistic delete (state count is less than fetched)
+          // This prevents deleted recipes from reappearing
+          if (currentRecipeCount < fetchedRecipeCount) {
+            console.log(`[${fetchId}] 🛡️ Preserving optimistic delete - not overwriting state`);
+            // Don't update recipes - keep the optimistic delete
+          } else {
+            // For saves, we still want to update to get the latest data
+            setRecipes(data.recipes || []);
+          }
+        } else {
+          // Normal case: no mismatch, safe to update
+          setRecipes(data.recipes || []);
+        }
+        
         console.log(`[${fetchId}] ✅ fetchRecipes COMPLETE - Loaded ${data.recipes?.length || 0} recipes`);
         
         // If saved recipe is now in response, clear the tracking
@@ -394,6 +422,14 @@ export default function BrowsePage() {
   const handleDeleteConfirm = async () => {
     if (!recipeToDelete?.id) return;
 
+    const deleteStartTime = Date.now();
+    const deletedRecipeId = recipeToDelete.id;
+    
+    console.log('🔴 DELETE RECIPE START', {
+      recipeId: deletedRecipeId,
+      timestamp: new Date().toISOString(),
+    });
+
     setDeletingRecipe(true);
 
     try {
@@ -402,10 +438,25 @@ export default function BrowsePage() {
       });
 
       const data = await response.json();
+      const deleteTime = Date.now() - deleteStartTime;
 
       if (data.success) {
-        // Remove the deleted recipe from state
-        setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeToDelete.id));
+        console.log('🔴 DELETE RECIPE SUCCESS', {
+          recipeId: deletedRecipeId,
+          deleteTime: `${deleteTime}ms`,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // Remove the deleted recipe from state (optimistic update)
+        setRecipes((prev) => {
+          const filtered = prev.filter((recipe) => recipe.id !== recipeToDelete.id);
+          console.log('🔴 Optimistic delete update', {
+            beforeCount: prev.length,
+            afterCount: filtered.length,
+            deletedRecipeId: deletedRecipeId,
+          });
+          return filtered;
+        });
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
         // Close detail modal if it's open for this recipe
