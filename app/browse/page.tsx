@@ -141,6 +141,8 @@ export default function BrowsePage() {
       const currentRecipeCount = recipes.length;
       const fetchedRecipeCount = data.recipes?.length || 0;
       const countMismatch = currentRecipeCount !== fetchedRecipeCount;
+      const expectingSavedRecipe = !!lastSavedRecipeId;
+      const savedRecipeStale = expectingSavedRecipe && !savedRecipeInResponse;
       
       console.log(`[${fetchId}] ✅ fetchRecipes RESPONSE`, {
         requestTime: `${requestTime}ms`,
@@ -149,7 +151,9 @@ export default function BrowsePage() {
         recipeIds: data.recipes?.map((r: any) => r.id) || [],
         savedRecipeId: lastSavedRecipeId,
         savedRecipeInResponse: savedRecipeInResponse,
-        IS_STALE_DATA: lastSavedRecipeId ? !savedRecipeInResponse : null, // 🔴 Confirms read replica lag for saves
+        expectingSavedRecipe: expectingSavedRecipe,
+        savedRecipeStale: savedRecipeStale,
+        IS_STALE_DATA: savedRecipeStale, // 🔴 Confirms read replica lag for saves
         currentStateCount: currentRecipeCount,
         fetchedCount: fetchedRecipeCount,
         countMismatch: countMismatch, // 🔴 Detects if fetch overwrites optimistic updates
@@ -158,9 +162,20 @@ export default function BrowsePage() {
       });
 
       if (data.success) {
-        // WARNING: If countMismatch is true AND we have existing recipes, we might be overwriting an optimistic update
-        // Only protect if we actually have recipes in state (not initial load)
-        if (countMismatch && currentRecipeCount > 0) {
+        // PROTECTION LOGIC: Prevent overwriting optimistic updates with stale data
+        
+        // Case 1: We're expecting a saved recipe but it's not in response (stale data from read replica lag)
+        if (savedRecipeStale && currentRecipeCount > 0) {
+          console.warn(`[${fetchId}] ⚠️ STALE DATA: Saved recipe ${lastSavedRecipeId} not in response - preserving state`, {
+            savedRecipeId: lastSavedRecipeId,
+            currentStateCount: currentRecipeCount,
+            fetchedCount: fetchedRecipeCount,
+          });
+          // Don't update - the recipe will appear in a later fetch once read replica catches up
+          // Keep current state to avoid removing the optimistic update
+        }
+        // Case 2: Count mismatch AND we have existing recipes (optimistic delete being overwritten)
+        else if (countMismatch && currentRecipeCount > 0) {
           console.warn(`[${fetchId}] ⚠️ WARNING: Fetch overwriting optimistic update!`, {
             currentStateCount: currentRecipeCount,
             fetchedCount: fetchedRecipeCount,
@@ -172,11 +187,16 @@ export default function BrowsePage() {
             console.log(`[${fetchId}] 🛡️ Preserving optimistic delete - not overwriting state`);
             // Don't update recipes - keep the optimistic delete
           } else {
-            // For saves, we still want to update to get the latest data
+            // For saves with count mismatch, we still want to update to get the latest data
             setRecipes(data.recipes || []);
           }
-        } else {
-          // Normal case: no mismatch OR initial load (currentRecipeCount === 0), safe to update
+        }
+        // Case 3: Normal case - safe to update (no optimistic updates, or saved recipe IS in response)
+        else {
+          // Update recipes - either no optimistic state or saved recipe confirmed in response
+          if (expectingSavedRecipe && savedRecipeInResponse) {
+            console.log(`[${fetchId}] ✅ Saved recipe ${lastSavedRecipeId} confirmed in response - updating state`);
+          }
           setRecipes(data.recipes || []);
         }
         
