@@ -16,10 +16,12 @@ import {
   CircularProgress,
   Chip,
   IconButton,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
+import PeopleIcon from '@mui/icons-material/People';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -358,7 +360,7 @@ export default function BrowsePage() {
     // Wait for database, then refresh
     setTimeout(() => {
       console.log('🟢 handleRecipeAdded setTimeout FIRED', new Date().toISOString());
-      fetchRecipes();
+    fetchRecipes();
     }, 2000);
   };
 
@@ -377,7 +379,18 @@ export default function BrowsePage() {
               Browse and search your saved recipes
             </Typography>
           </Box>
-          {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+            {activeGroup?.isOwn && (
+              <Button
+                variant="outlined"
+                startIcon={<PeopleIcon />}
+                onClick={() => router.push('/manage-users')}
+              >
+                Manage Users
+              </Button>
+            )}
+          </Box>
         </Box>
 
         {/* Search and Filters */}
