@@ -59,6 +59,7 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [lastSavedRecipeId, setLastSavedRecipeId] = useState<string | null>(null);
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -112,6 +113,7 @@ export default function BrowsePage() {
         forceRefresh,
         groupId: activeGroup.id,
         timestamp: new Date().toISOString(),
+        expectingRecipeId: lastSavedRecipeId, // Track if we're expecting a specific recipe
       });
       
       // Fetch recipes for the active group
@@ -130,11 +132,19 @@ export default function BrowsePage() {
       const data = await response.json();
       const responseTime = Date.now() - fetchStartTime;
       
+      // CRITICAL: Check if the saved recipe is in the response
+      const savedRecipeInResponse = lastSavedRecipeId 
+        ? data.recipes?.some((r: any) => r.id === lastSavedRecipeId)
+        : null;
+      
       console.log(`[${fetchId}] ✅ fetchRecipes RESPONSE`, {
         requestTime: `${requestTime}ms`,
         totalTime: `${responseTime}ms`,
         recipeCount: data.recipes?.length || 0,
         recipeIds: data.recipes?.map((r: any) => r.id) || [],
+        savedRecipeId: lastSavedRecipeId,
+        savedRecipeInResponse: savedRecipeInResponse,
+        IS_STALE_DATA: lastSavedRecipeId ? !savedRecipeInResponse : null, // 🔴 THIS CONFIRMS THE PROBLEM
         cacheHeader: response.headers.get('cache-control'),
         timestamp: new Date().toISOString(),
       });
@@ -142,6 +152,12 @@ export default function BrowsePage() {
       if (data.success) {
         setRecipes(data.recipes || []);
         console.log(`[${fetchId}] ✅ fetchRecipes COMPLETE - Loaded ${data.recipes?.length || 0} recipes`);
+        
+        // If saved recipe is now in response, clear the tracking
+        if (savedRecipeInResponse && lastSavedRecipeId) {
+          console.log(`[${fetchId}] ✅ Saved recipe ${lastSavedRecipeId} is now in response - clearing tracker`);
+          setLastSavedRecipeId(null);
+        }
       } else {
         console.error(`[${fetchId}] ❌ fetchRecipes ERROR:`, data.error);
         showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
@@ -154,7 +170,7 @@ export default function BrowsePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeGroup, showToast]);
+  }, [activeGroup, showToast, lastSavedRecipeId]); // Add lastSavedRecipeId to dependencies
 
   // Auth protection: redirect to login if not authenticated
   useEffect(() => {
@@ -430,12 +446,22 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
-  const handleRecipeAdded = () => {
+  const handleRecipeAdded = (savedRecipeId?: string) => {
     const addTime = Date.now();
-    console.log('🟢 handleRecipeAdded CALLED', {
-      timestamp: new Date().toISOString(),
-      groupId: activeGroup?.id,
-    });
+    
+    if (savedRecipeId) {
+      setLastSavedRecipeId(savedRecipeId);
+      console.log('🟢 handleRecipeAdded CALLED', {
+        timestamp: new Date().toISOString(),
+        groupId: activeGroup?.id,
+        savedRecipeId: savedRecipeId,
+      });
+    } else {
+      console.log('🟢 handleRecipeAdded CALLED (no recipe ID)', {
+        timestamp: new Date().toISOString(),
+        groupId: activeGroup?.id,
+      });
+    }
     
     // Manual refresh after save as fallback (real-time may not be enabled in Supabase)
     // Add delay to allow database replication to complete
