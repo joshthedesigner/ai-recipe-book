@@ -21,7 +21,6 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
-import PeopleIcon from '@mui/icons-material/People';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -383,9 +382,14 @@ export default function BrowsePage() {
             {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
             {activeGroup?.isOwn && (
               <Button
-                variant="outlined"
-                startIcon={<PeopleIcon />}
+                variant="text"
                 onClick={() => router.push('/manage-users')}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': {
+                    backgroundColor: 'action.hover'
+                  }
+                }}
               >
                 Manage Users
               </Button>

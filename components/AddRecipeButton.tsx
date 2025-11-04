@@ -18,9 +18,9 @@ export default function AddRecipeButton({ onClick }: AddRecipeButtonProps) {
         color: 'white',
         px: 3,
         py: 1.25,
-        boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
+        boxShadow: 'none',
         '&:hover': {
-          boxShadow: '0 4px 12px rgba(25, 118, 210, 0.35)',
+          boxShadow: 'none',
         },
       }}
     >
