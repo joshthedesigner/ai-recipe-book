@@ -431,12 +431,19 @@ export default function BrowsePage() {
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
+    const addTime = Date.now();
     console.log('🟢 handleRecipeAdded CALLED', {
       timestamp: new Date().toISOString(),
       groupId: activeGroup?.id,
     });
-    // Real-time subscription will handle refresh with delay to avoid race conditions
-    // No manual fetch needed - keeps pattern consistent with manage-users page
+    
+    // Manual refresh after save as fallback (real-time may not be enabled in Supabase)
+    // Add delay to allow database replication to complete
+    setTimeout(() => {
+      const delayTime = Date.now() - addTime;
+      console.log(`🟢 handleRecipeAdded - Triggering manual refresh after ${delayTime}ms delay`);
+      fetchRecipes(true);
+    }, 500); // Slightly longer delay than real-time to ensure DB replication
   };
 
   return (
