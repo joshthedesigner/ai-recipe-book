@@ -168,7 +168,7 @@ export default function BrowsePage() {
         groupName: activeGroup.name,
       });
       // Always fetch fresh data when switching groups (eager loading pattern)
-      fetchRecipes(true);
+      fetchRecipes();
     } else {
       // User has no groups - show empty state
       console.warn('No active group found for user');
@@ -305,6 +305,7 @@ export default function BrowsePage() {
   const handleDeleteConfirm = async () => {
     if (!recipeToDelete?.id) return;
 
+    const deletedRecipeId = recipeToDelete.id;
     setDeletingRecipe(true);
 
     try {
@@ -315,16 +316,38 @@ export default function BrowsePage() {
       const data = await response.json();
 
       if (data.success) {
-        // Remove the deleted recipe from state
-        setRecipes((prev) => prev.filter((recipe) => recipe.id !== recipeToDelete.id));
+        console.log('🔴 DELETE RECIPE SUCCESS', {
+          recipeId: deletedRecipeId,
+          timestamp: new Date().toISOString(),
+        });
+        
+        // OPTIMISTIC UPDATE: Remove the deleted recipe from state immediately
+        setRecipes((prev) => {
+          const filtered = prev.filter((recipe) => recipe.id !== recipeToDelete.id);
+          console.log('🔴 Optimistic delete - removed from UI', {
+            beforeCount: prev.length,
+            afterCount: filtered.length,
+            deletedRecipeId: deletedRecipeId,
+          });
+          return filtered;
+        });
+        
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
+        
         // Close detail modal if it's open for this recipe
         if (selectedRecipe?.id === recipeToDelete.id) {
           setModalOpen(false);
           setSelectedRecipe(null);
         }
+        
         showToast('Recipe deleted successfully', 'success');
+        
+        // Background sync to confirm (handles edge cases like failed deletes)
+        setTimeout(() => {
+          console.log('🔴 Background sync - refreshing recipes');
+          fetchRecipes();
+        }, 1500);
       } else {
         showToast('Failed to delete recipe: ' + (data.error || 'Unknown error'), 'error');
       }
@@ -357,9 +380,36 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
-  const handleRecipeAdded = () => {
-    // Refresh recipe list when a new recipe is added
-    fetchRecipes();
+  const handleRecipeAdded = (savedRecipe?: Recipe) => {
+    console.log('🟢 handleRecipeAdded CALLED', {
+      timestamp: new Date().toISOString(),
+      groupId: activeGroup?.id,
+      savedRecipe: savedRecipe?.id,
+    });
+    
+    // OPTIMISTIC UPDATE: Add recipe to UI immediately
+    if (savedRecipe) {
+      setRecipes((prev) => {
+        // Check if recipe already exists (avoid duplicates)
+        const exists = prev.some(r => r.id === savedRecipe.id);
+        if (exists) {
+          console.log('🟢 Recipe already in state, skipping duplicate');
+          return prev;
+        }
+        console.log('🟢 Adding recipe optimistically to UI', {
+          recipeId: savedRecipe.id,
+          title: savedRecipe.title,
+        });
+        // Add new recipe at the beginning (most recent first)
+        return [savedRecipe, ...prev];
+      });
+    }
+    
+    // Background sync to confirm (handles edge cases like failed saves)
+    setTimeout(() => {
+      console.log('🟢 Background sync - refreshing recipes');
+      fetchRecipes();
+    }, 1500);
   };
 
   return (
