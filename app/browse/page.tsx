@@ -220,10 +220,13 @@ export default function BrowsePage() {
           const eventTime = Date.now();
           const eventId = Math.random().toString(36).substr(2, 9);
           
+          const newRecord = payload.new as { id?: string; title?: string } | null;
+          const oldRecord = payload.old as { id?: string; title?: string } | null;
+          
           console.log(`[${eventId}] 🟣 Real-time EVENT`, {
             eventType: payload.eventType,
-            recipeId: payload.new?.id || payload.old?.id,
-            recipeTitle: payload.new?.title || payload.old?.title,
+            recipeId: newRecord?.id || oldRecord?.id,
+            recipeTitle: newRecord?.title || oldRecord?.title,
             timestamp: new Date().toISOString(),
             payload: payload,
           });
