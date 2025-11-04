@@ -106,19 +106,70 @@ export default function ManageUsersPage() {
         setGroupName(currentGroupName);
       }
 
-      // Get group members
-      const { data: membersData, error: membersError } = await supabase
-        .from('group_members')
-        .select('*')
-        .eq('group_id', currentGroupId)
-        .order('joined_at', { ascending: false });
+      // For owners: Use SECURITY DEFINER function to bypass RLS limitation
+      // This allows owners to see all members (including pending invites) without RLS recursion
+      // For members: Direct query works (they can only see their own status)
+      let membersData: any[] = [];
+      
+      if (currentIsOwn && user?.id) {
+        // Owner query: Use database function to bypass RLS
+        console.log('🔵 [DIAG] About to call RPC function', {
+          function: 'get_group_members_for_owner',
+          group_uuid: currentGroupId,
+          user_id: user.id,
+          isOwn: currentIsOwn,
+          condition: 'currentIsOwn && user?.id',
+          currentIsOwn: currentIsOwn,
+          hasUserId: !!user?.id
+        });
+        
+        const { data, error: membersError } = await supabase
+          .rpc('get_group_members_for_owner', {
+            group_uuid: currentGroupId
+          });
 
-      if (membersError) {
-        throw membersError;
+        console.log('🔵 [DIAG] RPC response:', {
+          hasData: !!data,
+          dataType: Array.isArray(data) ? 'array' : typeof data,
+          dataLength: data?.length || 0,
+          sampleData: data?.slice(0, 2), // First 2 items
+          hasError: !!membersError,
+          error: membersError ? {
+            code: membersError.code,
+            message: membersError.message,
+            details: membersError.details,
+            hint: membersError.hint
+          } : null
+        });
+
+        if (membersError) {
+          console.error('❌ [DIAG] RPC function error:', membersError);
+          throw membersError;
+        }
+
+        // Function returns data already sorted by joined_at DESC, invited_at DESC
+        membersData = data || [];
+        console.log('🔵 [DIAG] Final membersData to set:', {
+          length: membersData.length,
+          emails: membersData.map(m => m.email).slice(0, 5) // First 5 emails
+        });
+      } else {
+        // Regular member query (fallback - shouldn't happen on manage-users page)
+        const { data, error: membersError } = await supabase
+          .from('group_members')
+          .select('*')
+          .eq('group_id', currentGroupId)
+          .order('joined_at', { ascending: false });
+
+        if (membersError) {
+          throw membersError;
+        }
+
+        membersData = data || [];
       }
 
       console.log('✅ fetchGroupAndMembers: Loaded members:', membersData?.length || 0);
-      setMembers(membersData || []);
+      setMembers(membersData);
     } catch (error) {
       console.error('❌ fetchGroupAndMembers: Error fetching members:', error);
       showToast('Failed to load members', 'error');
@@ -127,7 +178,7 @@ export default function ManageUsersPage() {
       setLoading(false);
       console.log('🟢 fetchGroupAndMembers: Completed, loading set to false');
     }
-  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, router, showToast]);
+  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, user?.id, router, showToast]);
 
   // Reset state when component mounts OR when navigating to this page
   useEffect(() => {
@@ -288,7 +339,7 @@ export default function ManageUsersPage() {
       setInviteDialogOpen(false);
       setInviteEmail('');
       setInviteRole('write');
-      fetchGroupAndMembers();
+      fetchGroupAndMembers(activeGroup.id, activeGroup.name, activeGroup.isOwn);
     } catch (error) {
       console.error('Error inviting user:', error);
       showToast('Failed to send invitation', 'error');

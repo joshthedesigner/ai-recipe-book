@@ -44,7 +44,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'", // Material-UI requires unsafe-inline
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co https://api.openai.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
               "frame-ancestors 'self'",
             ].join('; ')
           }
