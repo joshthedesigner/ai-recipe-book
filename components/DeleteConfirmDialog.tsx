@@ -5,11 +5,11 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
   Typography,
   Box,
   CircularProgress,
 } from '@mui/material';
+import AppButton from './AppButton';
 import WarningIcon from '@mui/icons-material/Warning';
 
 interface DeleteConfirmDialogProps {
@@ -58,24 +58,23 @@ export default function DeleteConfirmDialog({
       </DialogContent>
       
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button
+        <AppButton
+          variant="secondary"
           onClick={onCancel}
-          variant="outlined"
-          color="inherit"
           disabled={loading}
         >
           Cancel
-        </Button>
-        <Button
+        </AppButton>
+        <AppButton
+          variant="primary"
           onClick={onConfirm}
-          variant="contained"
-          color="error"
           autoFocus
           disabled={loading}
           startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
+          sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
         >
           {loading ? 'Deleting...' : 'Delete'}
-        </Button>
+        </AppButton>
       </DialogActions>
     </Dialog>
   );

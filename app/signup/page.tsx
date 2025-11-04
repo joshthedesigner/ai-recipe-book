@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   TextField,
-  Button,
   Typography,
   Paper,
   Alert,
@@ -18,6 +17,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import AppButton from '@/components/AppButton';
 
 export default function SignupPage() {
   const { signUp } = useAuth();
@@ -219,16 +219,16 @@ export default function SignupPage() {
               sx={{ mb: 3 }}
             />
 
-            <Button
+            <AppButton
               fullWidth
-              variant="contained"
+              variant="primary"
               size="large"
               type="submit"
               disabled={loading}
               sx={{ mb: 2 }}
             >
               {loading ? 'Creating account...' : 'Sign Up'}
-            </Button>
+            </AppButton>
           </form>
 
           {/* Sign In Link */}

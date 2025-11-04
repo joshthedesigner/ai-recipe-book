@@ -1,4 +1,4 @@
-import { Button } from '@mui/material';
+import AppButton from './AppButton';
 
 interface AddRecipeButtonProps {
   onClick: () => void;
@@ -6,24 +6,9 @@ interface AddRecipeButtonProps {
 
 export default function AddRecipeButton({ onClick }: AddRecipeButtonProps) {
   return (
-    <Button
-      variant="contained"
-      onClick={onClick}
-      sx={{
-        borderRadius: 0,
-        textTransform: 'none',
-        fontWeight: 600,
-        color: 'white',
-        px: 3,
-        py: 1.25,
-        boxShadow: 'none',
-        '&:hover': {
-          boxShadow: 'none',
-        },
-      }}
-    >
+    <AppButton variant="primary" onClick={onClick}>
       Add Recipe
-    </Button>
+    </AppButton>
   );
 }
 

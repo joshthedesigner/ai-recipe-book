@@ -33,6 +33,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TopNav from '@/components/TopNav';
+import AppButton from '@/components/AppButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -408,25 +409,13 @@ export default function ManageUsersPage() {
               {groupName}
             </Typography>
           </Box>
-          <Button
-            variant="contained"
+          <AppButton
+            variant="primary"
             startIcon={<PersonAddIcon />}
             onClick={() => setInviteDialogOpen(true)}
-            sx={{
-              borderRadius: '8px',
-              textTransform: 'none',
-              fontWeight: 600,
-              color: 'white',
-              px: 3,
-              py: 1.25,
-              boxShadow: '0 2px 8px rgba(25, 118, 210, 0.25)',
-              '&:hover': {
-                boxShadow: '0 4px 12px rgba(25, 118, 210, 0.35)',
-              },
-            }}
           >
             Invite User
-          </Button>
+          </AppButton>
           </Box>
         </Box>
 
@@ -547,9 +536,9 @@ export default function ManageUsersPage() {
           <Button onClick={() => setInviteDialogOpen(false)} disabled={inviting}>
             Cancel
           </Button>
-          <Button onClick={handleInviteUser} variant="contained" disabled={inviting || !inviteEmail}>
+          <AppButton variant="primary" onClick={handleInviteUser} disabled={inviting || !inviteEmail}>
             {inviting ? <CircularProgress size={24} /> : 'Send Invite'}
-          </Button>
+          </AppButton>
         </DialogActions>
       </Dialog>
 
@@ -565,9 +554,14 @@ export default function ManageUsersPage() {
           <Button onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm} color="error" variant="contained" disabled={deleting}>
+          <AppButton 
+            variant="primary" 
+            onClick={handleDeleteConfirm} 
+            disabled={deleting}
+            sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
+          >
             {deleting ? <CircularProgress size={24} /> : 'Remove'}
-          </Button>
+          </AppButton>
         </DialogActions>
       </Dialog>
     </Box>

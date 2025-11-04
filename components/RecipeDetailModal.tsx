@@ -17,6 +17,7 @@ import {
   Button,
   CircularProgress,
 } from '@mui/material';
+import AppButton from './AppButton';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
@@ -205,15 +206,22 @@ export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: R
           {!confirmDelete ? (
             <>
               <Box />
-              <Button
-                variant="outlined"
-                color="error"
+              <AppButton
+                variant="secondary"
                 startIcon={<DeleteIcon />}
                 onClick={() => setConfirmDelete(true)}
                 disabled={deleting}
+                sx={{ 
+                  color: 'error.main', 
+                  borderColor: 'error.main',
+                  '&:hover': { 
+                    borderColor: 'error.dark',
+                    backgroundColor: 'rgba(211, 47, 47, 0.04)'
+                  } 
+                }}
               >
                 Delete Recipe
-              </Button>
+              </AppButton>
             </>
           ) : (
             <>
@@ -221,24 +229,24 @@ export default function RecipeDetailModal({ recipe, open, onClose, onDelete }: R
                 Are you sure? This cannot be undone.
               </Typography>
               <Box sx={{ display: 'flex', gap: 1 }}>
-                <Button
-                  variant="outlined"
+                <AppButton
+                  variant="secondary"
                   onClick={() => setConfirmDelete(false)}
                   disabled={deleting}
                   size="small"
                 >
                   Cancel
-                </Button>
-                <Button
-                  variant="contained"
-                  color="error"
+                </AppButton>
+                <AppButton
+                  variant="primary"
                   onClick={handleDelete}
                   disabled={deleting}
                   startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
                   size="small"
+                  sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
                 >
                   {deleting ? 'Deleting...' : 'Yes, Delete'}
-                </Button>
+                </AppButton>
               </Box>
             </>
           )}

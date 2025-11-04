@@ -5,7 +5,6 @@ import {
   Box,
   Container,
   TextField,
-  Button,
   Typography,
   Alert,
   Link as MuiLink,
@@ -17,6 +16,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import AppButton from '@/components/AppButton';
 
 export default function LoginPage() {
   const { signIn } = useAuth();
@@ -105,16 +105,16 @@ export default function LoginPage() {
             sx={{ mb: 3 }}
           />
 
-          <Button
+          <AppButton
             fullWidth
-            variant="contained"
+            variant="primary"
             size="large"
             type="submit"
             disabled={loading}
             sx={{ mb: 2 }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
-          </Button>
+          </AppButton>
         </form>
 
         {/* Sign Up Link */}

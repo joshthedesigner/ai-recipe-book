@@ -8,8 +8,8 @@ import {
   IconButton,
   CircularProgress,
   Typography,
-  Button,
 } from '@mui/material';
+import AppButton from './AppButton';
 import SendIcon from '@mui/icons-material/Send';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -570,34 +570,32 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 gap: 2,
               }}
             >
-              <Button
-                variant="contained"
-                color="success"
+              <AppButton
+                variant="primary"
                 startIcon={<CheckIcon />}
                 onClick={handleConfirmRecipe}
                 sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
+                  bgcolor: 'success.main',
+                  '&:hover': { bgcolor: 'success.dark' },
                 }}
               >
                 Yes, Save Recipe
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
+              </AppButton>
+              <AppButton
+                variant="secondary"
                 startIcon={<CloseIcon />}
                 onClick={handleCancelRecipe}
                 sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
+                  color: 'error.main',
+                  borderColor: 'error.main',
+                  '&:hover': {
+                    borderColor: 'error.dark',
+                    backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                  },
                 }}
               >
                 No, Cancel
-              </Button>
+              </AppButton>
             </Box>
           )}
 
@@ -611,34 +609,20 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                 gap: 2,
               }}
             >
-              <Button
-                variant="contained"
-                color="primary"
+              <AppButton
+                variant="primary"
                 startIcon={<CheckIcon />}
                 onClick={handleTranslateYes}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
               >
                 Yes, Translate
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
+              </AppButton>
+              <AppButton
+                variant="secondary"
                 startIcon={<CloseIcon />}
                 onClick={handleTranslateNo}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: 3,
-                }}
               >
                 No, Skip
-              </Button>
+              </AppButton>
             </Box>
           )}
 

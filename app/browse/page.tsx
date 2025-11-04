@@ -16,7 +16,6 @@ import {
   CircularProgress,
   Chip,
   IconButton,
-  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -27,6 +26,7 @@ import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import RecipeDetailModal from '@/components/RecipeDetailModal';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import AddRecipeButton from '@/components/AddRecipeButton';
+import AppButton from '@/components/AppButton';
 import RecipeSidebar from '@/components/RecipeSidebar';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -379,24 +379,15 @@ export default function BrowsePage() {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-            {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
-            {activeGroup?.isOwn && (
-              <Button
-                variant="outlined"
-                onClick={() => router.push('/manage-users')}
-                sx={{ 
-                  color: '#1A1A1A',
-                  borderColor: '#1A1A1A',
-                  borderRadius: 0,
-                  '&:hover': {
-                    borderColor: '#1A1A1A',
-                    backgroundColor: 'rgba(26, 26, 26, 0.04)'
-                  }
-                }}
-              >
-                Manage Users
-              </Button>
-            )}
+                      {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+          {activeGroup?.isOwn && (
+            <AppButton
+              variant="secondary"
+              onClick={() => router.push('/manage-users')}
+            >
+              Manage Users
+            </AppButton>
+          )}
           </Box>
         </Box>
 
