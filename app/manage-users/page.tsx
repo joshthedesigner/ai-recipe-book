@@ -40,6 +40,8 @@ import { supabase } from '@/db/supabaseClient';
 import { GroupMember } from '@/types';
 
 export default function ManageUsersPage() {
+  console.log('🔵 ManageUsersPage: Component mounted/rendered', { pathname: typeof window !== 'undefined' ? window.location.pathname : 'SSR' });
+  
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading } = useAuth();
@@ -56,6 +58,16 @@ export default function ManageUsersPage() {
   const [memberToDelete, setMemberToDelete] = useState<GroupMember | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  console.log('🔵 ManageUsersPage: State values', { 
+    hasUser: !!user, 
+    authLoading, 
+    hasActiveGroup: !!activeGroup, 
+    activeGroupId: activeGroup?.id,
+    groupsLoading,
+    loading,
+    pathname 
+  });
+
   // Auth protection
   useEffect(() => {
     if (!authLoading && !user) {
@@ -64,18 +76,22 @@ export default function ManageUsersPage() {
   }, [user, authLoading, router]);
 
   const fetchGroupAndMembers = useCallback(async (groupId?: string, groupName?: string, isOwn?: boolean) => {
+    console.log('🟢 fetchGroupAndMembers: Called', { groupId, groupName, isOwn, activeGroupId: activeGroup?.id });
+    
     // Use provided params or fall back to activeGroup from context
     const currentGroupId = groupId || activeGroup?.id;
     const currentGroupName = groupName || activeGroup?.name;
     const currentIsOwn = isOwn !== undefined ? isOwn : activeGroup?.isOwn;
     
     if (!currentGroupId) {
+      console.warn('⚠️ fetchGroupAndMembers: No group ID available');
       setLoading(false);
       return;
     }
 
     // Verify user owns this group (for manage-users page, only owners can manage)
     if (currentIsOwn === false) {
+      console.warn('⚠️ fetchGroupAndMembers: User does not own this group, redirecting');
       showToast('You can only manage groups you own', 'error');
       router.push('/browse');
       setLoading(false);
@@ -84,56 +100,38 @@ export default function ManageUsersPage() {
 
     try {
       setLoading(true);
+      console.log('🟢 fetchGroupAndMembers: Fetching members for group:', currentGroupId);
       
       if (currentGroupName) {
         setGroupName(currentGroupName);
       }
 
-      // For owners: Use SECURITY DEFINER function to bypass RLS limitation
-      // This allows owners to see all members (including pending invites) without RLS recursion
-      // For members: Direct query works (they can only see their own status)
-      let membersData: any[] = [];
-      
-      if (currentIsOwn && user?.id) {
-        // Owner query: Use database function to bypass RLS
-        const { data, error: membersError } = await supabase
-          .rpc('get_group_members_for_owner', {
-            group_uuid: currentGroupId
-          });
+      // Get group members
+      const { data: membersData, error: membersError } = await supabase
+        .from('group_members')
+        .select('*')
+        .eq('group_id', currentGroupId)
+        .order('joined_at', { ascending: false });
 
-        if (membersError) {
-          throw membersError;
-        }
-
-        // Function returns data already sorted by joined_at DESC, invited_at DESC
-        membersData = data || [];
-      } else {
-        // Regular member query (fallback - shouldn't happen on manage-users page)
-        const { data, error: membersError } = await supabase
-          .from('group_members')
-          .select('*')
-          .eq('group_id', currentGroupId)
-          .order('joined_at', { ascending: false });
-
-        if (membersError) {
-          throw membersError;
-        }
-
-        membersData = data || [];
+      if (membersError) {
+        throw membersError;
       }
 
-      setMembers(membersData);
+      console.log('✅ fetchGroupAndMembers: Loaded members:', membersData?.length || 0);
+      setMembers(membersData || []);
     } catch (error) {
-      console.error('Error fetching members:', error);
+      console.error('❌ fetchGroupAndMembers: Error fetching members:', error);
       showToast('Failed to load members', 'error');
       setMembers([]);
     } finally {
       setLoading(false);
+      console.log('🟢 fetchGroupAndMembers: Completed, loading set to false');
     }
-  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, user?.id, router, showToast]);
+  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, router, showToast]);
 
   // Reset state when component mounts OR when navigating to this page
   useEffect(() => {
+    console.log('🟡 Reset effect: Running', { pathname });
     // Reset state when navigating to this page to ensure fresh data
     setMembers([]);
     setGroupName('');
@@ -146,25 +144,42 @@ export default function ManageUsersPage() {
   // 3. Active group changes or becomes available
   // 4. Pathname changes (navigation)
   useEffect(() => {
+    console.log('🟡 Fetch effect: Running', { 
+      hasUser: !!user, 
+      groupsLoading, 
+      hasActiveGroup: !!activeGroup,
+      activeGroupId: activeGroup?.id,
+      pathname 
+    });
+
     // Wait for auth and groups to finish loading
     if (!user) {
+      console.log('⏳ Fetch effect: Waiting for user');
       return;
     }
 
     if (groupsLoading === true) {
+      console.log('⏳ Fetch effect: Waiting for groups to load');
       return;
     }
 
     // If groupsLoading is undefined, it might be a timing issue - wait a bit
     if (groupsLoading === undefined) {
+      console.log('⏳ Fetch effect: groupsLoading is undefined, waiting...');
       return;
     }
 
     // If we have an active group, fetch members
     if (activeGroup?.id) {
+      console.log('✅ Fetch effect: Has active group, calling fetchGroupAndMembers', {
+        groupId: activeGroup.id,
+        groupName: activeGroup.name,
+        isOwn: activeGroup.isOwn
+      });
       fetchGroupAndMembers(activeGroup.id, activeGroup.name, activeGroup.isOwn);
     } else {
       // No active group - show empty state
+      console.log('⚠️ Fetch effect: No active group, showing empty state');
       setLoading(false);
       setMembers([]);
       setGroupName('');
@@ -273,7 +288,7 @@ export default function ManageUsersPage() {
       setInviteDialogOpen(false);
       setInviteEmail('');
       setInviteRole('write');
-      fetchGroupAndMembers(activeGroup.id, activeGroup.name, activeGroup.isOwn);
+      fetchGroupAndMembers();
     } catch (error) {
       console.error('Error inviting user:', error);
       showToast('Failed to send invitation', 'error');
@@ -305,17 +320,15 @@ export default function ManageUsersPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!memberToDelete || !activeGroup?.id) return;
+    if (!memberToDelete) return;
 
     try {
       setDeleting(true);
 
-      // Use RPC function to delete member (bypasses RLS for owners)
       const { error } = await supabase
-        .rpc('delete_group_member_for_owner', {
-          member_uuid: memberToDelete.id,
-          group_uuid: activeGroup.id
-        });
+        .from('group_members')
+        .delete()
+        .eq('id', memberToDelete.id);
 
       if (error) throw error;
 
@@ -323,9 +336,9 @@ export default function ManageUsersPage() {
       setDeleteDialogOpen(false);
       setMemberToDelete(null);
       fetchGroupAndMembers();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error deleting member:', error);
-      showToast(error?.message || 'Failed to remove user', 'error');
+      showToast('Failed to remove user', 'error');
     } finally {
       setDeleting(false);
     }

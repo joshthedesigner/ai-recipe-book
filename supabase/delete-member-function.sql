@@ -59,3 +59,4 @@ GRANT EXECUTE ON FUNCTION delete_group_member_for_owner(UUID, UUID) TO authentic
 COMMENT ON FUNCTION delete_group_member_for_owner(UUID, UUID) IS 
   'Deletes a member from a group. Only accessible to group owners. Bypasses RLS to allow owners to delete any member.';
 
+
