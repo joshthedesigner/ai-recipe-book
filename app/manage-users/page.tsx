@@ -371,15 +371,17 @@ export default function ManageUsersPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!memberToDelete) return;
+    if (!memberToDelete || !activeGroup?.id) return;
 
     try {
       setDeleting(true);
 
+      // Use RPC function to delete member (bypasses RLS for owners)
       const { error } = await supabase
-        .from('group_members')
-        .delete()
-        .eq('id', memberToDelete.id);
+        .rpc('delete_group_member_for_owner', {
+          member_uuid: memberToDelete.id,
+          group_uuid: activeGroup.id
+        });
 
       if (error) throw error;
 
@@ -387,9 +389,9 @@ export default function ManageUsersPage() {
       setDeleteDialogOpen(false);
       setMemberToDelete(null);
       fetchGroupAndMembers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting member:', error);
-      showToast('Failed to remove user', 'error');
+      showToast(error?.message || 'Failed to remove user', 'error');
     } finally {
       setDeleting(false);
     }
