@@ -103,29 +103,52 @@ export default function BrowsePage() {
       return;
     }
     
+    const fetchStartTime = Date.now();
+    const fetchId = Math.random().toString(36).substr(2, 9);
+    
     try {
       setLoading(true);
-      console.log('Fetching recipes for group:', activeGroup.id);
+      console.log(`[${fetchId}] 🔵 fetchRecipes START`, {
+        forceRefresh,
+        groupId: activeGroup.id,
+        timestamp: new Date().toISOString(),
+      });
+      
       // Fetch recipes for the active group
       // Add cache-busting timestamp when forceRefresh is true
       const url = forceRefresh
         ? `/api/recipes?groupId=${activeGroup.id}&_t=${Date.now()}`
         : `/api/recipes?groupId=${activeGroup.id}`;
-      const response = await fetch(url);
+      
+      console.log(`[${fetchId}] 🔵 fetchRecipes REQUEST`, { url });
+      
+      const response = await fetch(url, {
+        cache: forceRefresh ? 'no-store' : 'default',
+      });
+      
+      const requestTime = Date.now() - fetchStartTime;
       const data = await response.json();
-
-      console.log('Recipes API response:', data);
+      const responseTime = Date.now() - fetchStartTime;
+      
+      console.log(`[${fetchId}] ✅ fetchRecipes RESPONSE`, {
+        requestTime: `${requestTime}ms`,
+        totalTime: `${responseTime}ms`,
+        recipeCount: data.recipes?.length || 0,
+        recipeIds: data.recipes?.map((r: any) => r.id) || [],
+        cacheHeader: response.headers.get('cache-control'),
+        timestamp: new Date().toISOString(),
+      });
 
       if (data.success) {
         setRecipes(data.recipes || []);
-        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
+        console.log(`[${fetchId}] ✅ fetchRecipes COMPLETE - Loaded ${data.recipes?.length || 0} recipes`);
       } else {
-        console.error('Recipes API error:', data.error);
+        console.error(`[${fetchId}] ❌ fetchRecipes ERROR:`, data.error);
         showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
         setRecipes([]);
       }
     } catch (error) {
-      console.error('Error fetching recipes:', error);
+      console.error(`[${fetchId}] ❌ fetchRecipes EXCEPTION:`, error);
       showToast('Unable to connect to server. Please check your connection.', 'error');
       setRecipes([]);
     } finally {
@@ -181,6 +204,8 @@ export default function BrowsePage() {
   useEffect(() => {
     if (!activeGroup?.id) return;
 
+    console.log('🟣 Real-time subscription: Setting up for group:', activeGroup.id);
+
     const channel = supabase
       .channel('recipes_changes')
       .on(
@@ -192,17 +217,32 @@ export default function BrowsePage() {
           filter: `group_id=eq.${activeGroup.id}`,
         },
         (payload) => {
-          console.log('Recipe change detected:', payload.eventType);
+          const eventTime = Date.now();
+          const eventId = Math.random().toString(36).substr(2, 9);
+          
+          console.log(`[${eventId}] 🟣 Real-time EVENT`, {
+            eventType: payload.eventType,
+            recipeId: payload.new?.id || payload.old?.id,
+            recipeTitle: payload.new?.title || payload.old?.title,
+            timestamp: new Date().toISOString(),
+            payload: payload,
+          });
+          
           // Add delay to allow database replication to complete before fetching
           // This prevents race conditions where fetch returns stale data
           setTimeout(() => {
+            const delayTime = Date.now() - eventTime;
+            console.log(`[${eventId}] 🟣 Real-time TRIGGER - Calling fetchRecipes after ${delayTime}ms delay`);
             fetchRecipes(true);
           }, 300);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('🟣 Real-time subscription STATUS:', status);
+      });
 
     return () => {
+      console.log('🟣 Real-time subscription: Cleaning up');
       supabase.removeChannel(channel);
     };
   }, [activeGroup?.id, fetchRecipes]);
@@ -388,6 +428,10 @@ export default function BrowsePage() {
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
+    console.log('🟢 handleRecipeAdded CALLED', {
+      timestamp: new Date().toISOString(),
+      groupId: activeGroup?.id,
+    });
     // Real-time subscription will handle refresh with delay to avoid race conditions
     // No manual fetch needed - keeps pattern consistent with manage-users page
   };
