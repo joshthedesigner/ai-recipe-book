@@ -191,9 +191,33 @@ export default function BrowsePage() {
           filter: `group_id=eq.${activeGroup.id}`,
         },
         (payload) => {
-          console.log('Recipe change detected:', payload.eventType);
-          // Refresh recipes when any change occurs (force refresh to bypass cache)
-          fetchRecipes(true);
+          console.log('Recipe change detected:', payload.eventType, payload);
+          
+          // Update state directly from payload (no fetch needed - eliminates race conditions)
+          if (payload.eventType === 'INSERT' && payload.new) {
+            // Add new recipe to state (with deduplication)
+            setRecipes((prev) => {
+              // Check if already exists (avoid duplicates from manual updates)
+              if (prev.some(r => r.id === payload.new.id)) {
+                return prev;
+              }
+              // Add new recipe and maintain sort order (newest first by default)
+              const newRecipes = [...prev, payload.new as Recipe];
+              return newRecipes.sort((a, b) => {
+                const aTime = new Date(a.created_at || 0).getTime();
+                const bTime = new Date(b.created_at || 0).getTime();
+                return bTime - aTime; // Newest first
+              });
+            });
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            // Remove deleted recipe from state
+            setRecipes((prev) => prev.filter(r => r.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            // Update recipe in state
+            setRecipes((prev) => 
+              prev.map(r => r.id === payload.new.id ? (payload.new as Recipe) : r)
+            );
+          }
         }
       )
       .subscribe();
@@ -201,7 +225,7 @@ export default function BrowsePage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeGroup?.id, fetchRecipes]);
+  }, [activeGroup?.id]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
