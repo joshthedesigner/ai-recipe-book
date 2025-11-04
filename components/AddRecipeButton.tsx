@@ -12,7 +12,7 @@ export default function AddRecipeButton({ onClick }: AddRecipeButtonProps) {
       startIcon={<AddIcon />}
       onClick={onClick}
       sx={{
-        borderRadius: '8px',
+        borderRadius: 0,
         textTransform: 'none',
         fontWeight: 600,
         color: 'white',

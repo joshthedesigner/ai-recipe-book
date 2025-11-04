@@ -387,6 +387,7 @@ export default function BrowsePage() {
                 sx={{ 
                   color: '#1A1A1A',
                   borderColor: '#1A1A1A',
+                  borderRadius: 0,
                   '&:hover': {
                     borderColor: '#1A1A1A',
                     backgroundColor: 'rgba(26, 26, 26, 0.04)'
