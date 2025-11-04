@@ -97,7 +97,7 @@ export default function BrowsePage() {
   ).sort();
 
   // Define fetchRecipes before using it in useEffect
-  const fetchRecipes = useCallback(async () => {
+  const fetchRecipes = useCallback(async (forceRefresh = false) => {
     if (!activeGroup) {
       console.warn('Cannot fetch recipes: no active group');
       return;
@@ -107,7 +107,11 @@ export default function BrowsePage() {
       setLoading(true);
       console.log('Fetching recipes for group:', activeGroup.id);
       // Fetch recipes for the active group
-      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
+      // Add cache-busting timestamp when forceRefresh is true
+      const url = forceRefresh
+        ? `/api/recipes?groupId=${activeGroup.id}&_t=${Date.now()}`
+        : `/api/recipes?groupId=${activeGroup.id}`;
+      const response = await fetch(url);
       const data = await response.json();
 
       console.log('Recipes API response:', data);
@@ -171,6 +175,33 @@ export default function BrowsePage() {
       setLoading(false);
     }
   }, [user, activeGroup, authLoading, groupsLoading, fetchRecipes]);
+
+  // Real-time subscription to recipe changes
+  useEffect(() => {
+    if (!activeGroup?.id) return;
+
+    const channel = supabase
+      .channel('recipes_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'recipes',
+          filter: `group_id=eq.${activeGroup.id}`,
+        },
+        (payload) => {
+          console.log('Recipe change detected:', payload.eventType);
+          // Refresh recipes when any change occurs (force refresh to bypass cache)
+          fetchRecipes(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeGroup?.id, fetchRecipes]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -353,8 +384,8 @@ export default function BrowsePage() {
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
-    // Refresh recipe list when a new recipe is added
-    fetchRecipes();
+    // Refresh recipe list when a new recipe is added (force refresh to bypass cache)
+    fetchRecipes(true);
   };
 
   return (
