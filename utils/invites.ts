@@ -56,23 +56,21 @@ export async function activatePendingInvites(
 
     console.log(`Found ${pendingInvites.length} pending invite(s)`);
 
-    // Activate each invite
+    // Activate each invite using RPC function (bypasses RLS)
     const errors: string[] = [];
     let activated = 0;
 
     for (const invite of pendingInvites) {
-      const { error: updateError } = await supabase
-        .from('group_members')
-        .update({
-          user_id: userId,
-          status: 'active',
-          joined_at: new Date().toISOString(),
-        })
-        .eq('id', invite.id);
+      const { error: rpcError } = await supabase
+        .rpc('activate_user_invite', {
+          invite_uuid: invite.id,
+          user_uuid: userId,
+          user_email: email
+        });
 
-      if (updateError) {
-        console.error(`Error activating invite ${invite.id}:`, updateError);
-        errors.push(updateError.message);
+      if (rpcError) {
+        console.error(`Error activating invite ${invite.id}:`, rpcError);
+        errors.push(rpcError.message);
       } else {
         console.log(`Activated invite ${invite.id} for group ${invite.group_id}`);
         activated++;
