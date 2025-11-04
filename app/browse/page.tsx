@@ -382,12 +382,14 @@ export default function BrowsePage() {
             {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
             {activeGroup?.isOwn && (
               <Button
-                variant="text"
+                variant="outlined"
                 onClick={() => router.push('/manage-users')}
                 sx={{ 
-                  color: 'text.secondary',
+                  color: '#1A1A1A',
+                  borderColor: '#1A1A1A',
                   '&:hover': {
-                    backgroundColor: 'action.hover'
+                    borderColor: '#1A1A1A',
+                    backgroundColor: 'rgba(26, 26, 26, 0.04)'
                   }
                 }}
               >
