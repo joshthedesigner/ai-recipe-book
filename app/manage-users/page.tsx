@@ -324,15 +324,17 @@ export default function ManageUsersPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!memberToDelete) return;
+    if (!memberToDelete || !activeGroup) return;
 
     try {
       setDeleting(true);
 
+      // Use RPC function to bypass RLS for owner deletions
       const { error } = await supabase
-        .from('group_members')
-        .delete()
-        .eq('id', memberToDelete.id);
+        .rpc('delete_group_member_for_owner', {
+          member_uuid: memberToDelete.id,
+          group_uuid: activeGroup.id
+        });
 
       if (error) throw error;
 
