@@ -155,6 +155,14 @@ export async function getUserGroups(
       .eq('user_id', userId)
       .eq('status', 'active');
 
+    // Add diagnostic logging
+    console.log('getUserGroups: Member records query result:', { 
+      count: memberRecords?.length || 0, 
+      records: memberRecords,
+      error: memberError,
+      userId: userId
+    });
+
     if (memberError) {
       console.error('Error fetching member groups:', memberError);
       throw memberError;
