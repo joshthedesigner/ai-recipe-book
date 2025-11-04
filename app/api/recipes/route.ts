@@ -14,21 +14,12 @@ import { hasGroupAccess } from '@/utils/permissions';
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
-  const requestId = Math.random().toString(36).substr(2, 9);
-  const requestStartTime = Date.now();
-  
   try {
-    console.log(`[${requestId}] 🔵 API GET /api/recipes START`, {
-      url: request.url,
-      timestamp: new Date().toISOString(),
-    });
-    
     const supabase = createClient();
 
     // Verify authentication - recipe access requires authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      console.log(`[${requestId}] ❌ API AUTH FAILED`);
       return NextResponse.json(
         {
           success: false,
@@ -113,10 +104,6 @@ export async function GET(request: NextRequest) {
           { status: 403 }
         );
       }
-    } else {
-      // If no groupId provided, return recipes without group_id (legacy) OR user's own recipes
-      // This handles backward compatibility for recipes created before groups were added
-      console.log('No groupId provided, fetching legacy recipes (no group_id)');
     }
 
     // Build query - exclude embedding vector for performance (6KB per recipe!)
@@ -149,12 +136,9 @@ export async function GET(request: NextRequest) {
     query = query.range(offset, offset + limit - 1);
 
     // Execute query
-    const queryStartTime = Date.now();
     const { data, error, count } = await query;
-    const queryTime = Date.now() - queryStartTime;
 
     if (error) {
-      console.error(`[${requestId}] ❌ API QUERY ERROR:`, error);
       return NextResponse.json(
         {
           success: false,
@@ -163,17 +147,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const totalTime = Date.now() - requestStartTime;
-    
-    console.log(`[${requestId}] ✅ API GET /api/recipes COMPLETE`, {
-      queryTime: `${queryTime}ms`,
-      totalTime: `${totalTime}ms`,
-      recipeCount: data?.length || 0,
-      recipeIds: data?.map((r: any) => r.id) || [],
-      groupId,
-      timestamp: new Date().toISOString(),
-    });
 
     return NextResponse.json(
       {
@@ -186,17 +159,10 @@ export async function GET(request: NextRequest) {
           hasMore: data && data.length === limit,
         },
       },
-      { 
-        status: 200,
-        headers: {
-          'Cache-Control': 'private, max-age=60', // Cache for 1 minute
-        },
-      }
+      { status: 200 }
     );
 
   } catch (error) {
-    console.error(`[${requestId}] ❌ API EXCEPTION:`, error);
-    
     return NextResponse.json(
       {
         success: false,

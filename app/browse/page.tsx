@@ -96,33 +96,23 @@ export default function BrowsePage() {
     )
   ).sort();
 
-  // Define fetchRecipes before using it in useEffect
+  // Fetch recipes from API
   const fetchRecipes = useCallback(async () => {
-    if (!activeGroup) {
-      console.warn('Cannot fetch recipes: no active group');
-      return;
-    }
+    if (!activeGroup) return;
     
     try {
       setLoading(true);
-      console.log('Fetching recipes for group:', activeGroup.id);
-      // Fetch recipes for the active group
       const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
       const data = await response.json();
 
-      console.log('Recipes API response:', data);
-
       if (data.success) {
         setRecipes(data.recipes || []);
-        console.log(`Loaded ${data.recipes?.length || 0} recipes`);
       } else {
-        console.error('Recipes API error:', data.error);
-        showToast(data.error || 'Failed to load recipes. Please try again.', 'error');
+        showToast(data.error || 'Failed to load recipes', 'error');
         setRecipes([]);
       }
     } catch (error) {
-      console.error('Error fetching recipes:', error);
-      showToast('Unable to connect to server. Please check your connection.', 'error');
+      showToast('Unable to connect to server', 'error');
       setRecipes([]);
     } finally {
       setLoading(false);
@@ -144,10 +134,8 @@ export default function BrowsePage() {
       try {
         setGroupId(activeGroup.id);
         const hasPermission = await canUserAddRecipes(supabase, user.id, activeGroup.id);
-        console.log('User can add recipes to active group:', hasPermission);
         setCanAddRecipes(hasPermission);
       } catch (error) {
-        console.error('Error checking permissions:', error);
         setCanAddRecipes(false);
       }
     }
@@ -157,25 +145,15 @@ export default function BrowsePage() {
 
   // Eager loading: Fetch recipes when active group changes
   useEffect(() => {
-    // Wait for all contexts to be ready
-    if (!user || authLoading || groupsLoading) {
-      return;
-    }
+    if (!user || authLoading || groupsLoading) return;
 
     if (activeGroup) {
-      console.log('🔄 Active group changed - fetching recipes', {
-        groupId: activeGroup.id,
-        groupName: activeGroup.name,
-      });
-      // Always fetch fresh data when switching groups (eager loading pattern)
       fetchRecipes();
     } else {
-      // User has no groups - show empty state
-      console.warn('No active group found for user');
       setRecipes([]);
       setLoading(false);
     }
-  }, [user, activeGroup?.id, authLoading, groupsLoading, fetchRecipes]); // Depend on activeGroup.id specifically
+  }, [user, activeGroup?.id, authLoading, groupsLoading, fetchRecipes]);
 
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
@@ -305,7 +283,6 @@ export default function BrowsePage() {
   const handleDeleteConfirm = async () => {
     if (!recipeToDelete?.id) return;
 
-    const deletedRecipeId = recipeToDelete.id;
     setDeletingRecipe(true);
 
     try {
@@ -316,26 +293,9 @@ export default function BrowsePage() {
       const data = await response.json();
 
       if (data.success) {
-        console.log('🔴 DELETE RECIPE SUCCESS', {
-          recipeId: deletedRecipeId,
-          timestamp: new Date().toISOString(),
-        });
-        
-        // OPTIMISTIC UPDATE: Remove the deleted recipe from state immediately
-        setRecipes((prev) => {
-          const filtered = prev.filter((recipe) => recipe.id !== recipeToDelete.id);
-          console.log('🔴 Optimistic delete - removed from UI', {
-            beforeCount: prev.length,
-            afterCount: filtered.length,
-            deletedRecipeId: deletedRecipeId,
-          });
-          return filtered;
-        });
-        
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
         
-        // Close detail modal if it's open for this recipe
         if (selectedRecipe?.id === recipeToDelete.id) {
           setModalOpen(false);
           setSelectedRecipe(null);
@@ -343,17 +303,15 @@ export default function BrowsePage() {
         
         showToast('Recipe deleted successfully', 'success');
         
-        // Background sync to confirm (handles edge cases like failed deletes)
+        // Wait for database, then refresh
         setTimeout(() => {
-          console.log('🔴 Background sync - refreshing recipes');
           fetchRecipes();
-        }, 1500);
+        }, 2000);
       } else {
-        showToast('Failed to delete recipe: ' + (data.error || 'Unknown error'), 'error');
+        showToast('Failed to delete recipe', 'error');
       }
     } catch (error) {
-      console.error('Error deleting recipe:', error);
-      showToast('Failed to delete recipe. Please try again.', 'error');
+      showToast('Failed to delete recipe', 'error');
     } finally {
       setDeletingRecipe(false);
     }
@@ -380,36 +338,13 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
 
-  const handleRecipeAdded = (savedRecipe?: Recipe) => {
-    console.log('🟢 handleRecipeAdded CALLED', {
-      timestamp: new Date().toISOString(),
-      groupId: activeGroup?.id,
-      savedRecipe: savedRecipe?.id,
-    });
+  const handleRecipeAdded = () => {
+    showToast('Recipe saved successfully', 'success');
     
-    // OPTIMISTIC UPDATE: Add recipe to UI immediately
-    if (savedRecipe) {
-      setRecipes((prev) => {
-        // Check if recipe already exists (avoid duplicates)
-        const exists = prev.some(r => r.id === savedRecipe.id);
-        if (exists) {
-          console.log('🟢 Recipe already in state, skipping duplicate');
-          return prev;
-        }
-        console.log('🟢 Adding recipe optimistically to UI', {
-          recipeId: savedRecipe.id,
-          title: savedRecipe.title,
-        });
-        // Add new recipe at the beginning (most recent first)
-        return [savedRecipe, ...prev];
-      });
-    }
-    
-    // Background sync to confirm (handles edge cases like failed saves)
+    // Wait for database, then refresh
     setTimeout(() => {
-      console.log('🟢 Background sync - refreshing recipes');
       fetchRecipes();
-    }, 1500);
+    }, 2000);
   };
 
   return (

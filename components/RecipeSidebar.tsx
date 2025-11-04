@@ -33,7 +33,7 @@ interface Message {
 interface RecipeSidebarProps {
   open: boolean;
   onClose: () => void;
-  onRecipeAdded?: (savedRecipe?: Recipe) => void; // Pass the full recipe object for optimistic updates
+  onRecipeAdded?: () => void;
 }
 
 const INITIAL_MESSAGE: Message = {
@@ -218,19 +218,9 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
 
         setMessages((prev) => [...prev, assistantMessage]);
         setPendingRecipe(null);
-        showToast('Recipe saved successfully! 🎉', 'success');
         
-        // Extract full recipe from response for optimistic update
-        const savedRecipe = data.response?.recipe || null;
-        
-        console.log('🟢 Recipe saved successfully', {
-          savedRecipeId: savedRecipe?.id,
-          responseHasRecipe: !!savedRecipe,
-        });
-        
-        // Notify parent with the full saved recipe for optimistic update
-        if (onRecipeAdded && savedRecipe) {
-          onRecipeAdded(savedRecipe);
+        if (onRecipeAdded) {
+          onRecipeAdded();
         }
       } else {
         throw new Error(data.error || 'Failed to save recipe');

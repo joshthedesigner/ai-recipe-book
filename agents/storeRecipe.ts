@@ -191,16 +191,6 @@ export async function saveConfirmedRecipe(
     }
 
     // Save to database
-    const saveStartTime = Date.now();
-    const saveId = Math.random().toString(36).substr(2, 9);
-    
-    console.log(`[${saveId}] 🟢 SAVING RECIPE TO DATABASE`, {
-      userId,
-      groupId: activeGroupId,
-      title: recipe.title,
-      timestamp: new Date().toISOString(),
-    });
-    
     const { data, error } = await supabase
       .from('recipes')
       .insert({
@@ -220,22 +210,13 @@ export async function saveConfirmedRecipe(
       .select()
       .single();
 
-    const saveTime = Date.now() - saveStartTime;
-
     if (error) {
-      console.error(`[${saveId}] ❌ SAVE RECIPE ERROR:`, error);
       return {
         success: false,
         message: `Database error: ${error.message}`,
         error: error.message,
       };
     }
-
-    console.log(`[${saveId}] ✅ RECIPE SAVED`, {
-      recipeId: data?.id,
-      saveTime: `${saveTime}ms`,
-      timestamp: new Date().toISOString(),
-    });
 
     const summary = generateRecipeSummary(data);
 
@@ -569,16 +550,6 @@ export async function storeRecipe(
       };
     }
     
-    const saveStartTime = Date.now();
-    const saveId = Math.random().toString(36).substr(2, 9);
-    
-    console.log(`[${saveId}] 🟢 SAVING RECIPE TO DATABASE (storeRecipe)`, {
-      userId,
-      groupId: activeGroupId,
-      title: extractedRecipe.title,
-      timestamp: new Date().toISOString(),
-    });
-    
     const { data, error} = await supabase
       .from('recipes')
       .insert({
@@ -598,22 +569,13 @@ export async function storeRecipe(
       .select()
       .single();
 
-    const saveTime = Date.now() - saveStartTime;
-
     if (error) {
-      console.error(`[${saveId}] ❌ SAVE RECIPE ERROR (storeRecipe):`, error);
       return {
         success: false,
         message: `Database error: ${error.message}. This might happen if the recipe is too large or has invalid data.`,
         error: error.message,
       };
     }
-
-    console.log(`[${saveId}] ✅ RECIPE SAVED (storeRecipe)`, {
-      recipeId: data?.id,
-      saveTime: `${saveTime}ms`,
-      timestamp: new Date().toISOString(),
-    });
 
     // Step 5: Generate human-readable summary
     const summary = generateRecipeSummary(data);
