@@ -106,12 +106,12 @@ export default function ManageUsersPage() {
         setGroupName(currentGroupName);
       }
 
-      // Get group members
+      // Get group members using RPC function to bypass RLS
+      // This allows owners to see all members (active, pending, read, write)
       const { data: membersData, error: membersError } = await supabase
-        .from('group_members')
-        .select('*')
-        .eq('group_id', currentGroupId)
-        .order('joined_at', { ascending: false });
+        .rpc('get_group_members_for_owner', {
+          group_uuid: currentGroupId
+        });
 
       if (membersError) {
         throw membersError;
@@ -127,7 +127,7 @@ export default function ManageUsersPage() {
       setLoading(false);
       console.log('🟢 fetchGroupAndMembers: Completed, loading set to false');
     }
-  }, [activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, router, showToast]);
+  }, [activeGroup, router, showToast]);
 
   // Reset state when component mounts OR when navigating to this page
   useEffect(() => {
@@ -184,7 +184,11 @@ export default function ManageUsersPage() {
       setMembers([]);
       setGroupName('');
     }
-  }, [user, activeGroup?.id, activeGroup?.name, activeGroup?.isOwn, groupsLoading, fetchGroupAndMembers, pathname]); // All dependencies trigger re-evaluation
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, activeGroup?.id, groupsLoading, pathname]);
+  // fetchGroupAndMembers intentionally omitted - prevents cascade when callback recreates
+  // activeGroup?.name and activeGroup?.isOwn omitted - not needed as triggers since we pass them as args
+  // Using user?.id instead of user to prevent re-fetch on session validation
 
   // Real-time subscription to member changes
   useEffect(() => {
