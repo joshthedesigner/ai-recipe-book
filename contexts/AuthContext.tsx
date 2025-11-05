@@ -127,17 +127,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // Activate any pending invites for this user
-      if (data.user) {
-        const result = await activatePendingInvites(supabase, data.user.id, data.user.email || '');
-        if (result.activated > 0) {
-          console.log(`Activated ${result.activated} pending invite(s)`);
-          // Trigger GroupContext refresh to pick up newly activated groups
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('groups-refresh'));
-          }
-        }
-      }
+      // Note: Pending invites are activated by the onAuthStateChange handler
+      // No need to call activatePendingInvites here - it will be called automatically
 
       router.push('/browse');
       return { error: null };

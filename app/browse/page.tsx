@@ -379,7 +379,7 @@ export default function BrowsePage() {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-                      {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+          {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
           {activeGroup?.isOwn && (
             <AppButton
               variant="secondary"
