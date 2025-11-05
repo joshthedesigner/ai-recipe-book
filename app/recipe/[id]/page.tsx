@@ -209,7 +209,7 @@ export default function RecipeDetailPage() {
           <Box
             sx={{
               width: { xs: '100%', md: '66.67%' },
-              height: 356,
+              height: 425,
               borderRadius: 2,
               overflow: 'hidden',
               mb: 3,
