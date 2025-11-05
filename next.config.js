@@ -2,6 +2,18 @@
 const nextConfig = {
   // Note: API route size limits are handled in route handlers, not here
   
+  // Fix file watching issues on macOS
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.watchOptions = {
+        poll: 2000, // Check for changes every 2 seconds
+        aggregateTimeout: 300, // Delay before rebuilding
+        ignored: /node_modules/, // Don't watch node_modules
+      };
+    }
+    return config;
+  },
+  
   // Security headers
   async headers() {
     return [
