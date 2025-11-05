@@ -48,7 +48,6 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState('created_at');
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterMainIngredient, setFilterMainIngredient] = useState('');
-  const [filterContributor, setFilterContributor] = useState('');
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
@@ -70,7 +69,6 @@ export default function BrowsePage() {
   const MAIN_INGREDIENT_TYPES = ['fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'vegetarian', 'vegan'];
 
   // Get unique cuisines and contributors for filter dropdowns
-  const allContributors = Array.from(new Set(recipes.map(r => r.contributor_name))).sort();
   
   // Extract cuisine types from tags
   const allCuisines = Array.from(
@@ -169,7 +167,7 @@ export default function BrowsePage() {
   // Apply filters whenever recipes, search, or filters change
   useEffect(() => {
     applyFilters();
-  }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient, filterContributor]);
+  }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient]);
 
   // Load initial batch of displayed recipes when filtered recipes change
   useEffect(() => {
@@ -257,10 +255,6 @@ export default function BrowsePage() {
       );
     }
 
-    // Contributor filter
-    if (filterContributor) {
-      filtered = filtered.filter((recipe) => recipe.contributor_name === filterContributor);
-    }
 
     // Sort
     filtered.sort((a, b) => {
@@ -332,11 +326,10 @@ export default function BrowsePage() {
     setSearchQuery('');
     setFilterCuisine('');
     setFilterMainIngredient('');
-    setFilterContributor('');
     setSortBy('created_at');
   };
 
-  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterContributor || sortBy !== 'created_at';
+  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || sortBy !== 'created_at';
 
   const handleRecipeAdded = () => {
     console.log('🟢 handleRecipeAdded CALLED', new Date().toISOString());
@@ -414,7 +407,6 @@ export default function BrowsePage() {
                     <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
                       <MenuItem value="created_at">Date Added (Newest)</MenuItem>
                       <MenuItem value="title">Title (A-Z)</MenuItem>
-                      <MenuItem value="contributor_name">Contributor (A-Z)</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -449,24 +441,6 @@ export default function BrowsePage() {
                       {allMainIngredients.map((ingredient) => (
                         <MenuItem key={ingredient} value={ingredient}>
                           {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
-                    <InputLabel>Contributor</InputLabel>
-                    <Select
-                      value={filterContributor}
-                      label="Contributor"
-                      onChange={(e) => setFilterContributor(e.target.value)}
-                    >
-                      <MenuItem value="">All Contributors</MenuItem>
-                      {allContributors.map((contributor) => (
-                        <MenuItem key={contributor} value={contributor}>
-                          {contributor}
                         </MenuItem>
                       ))}
                     </Select>

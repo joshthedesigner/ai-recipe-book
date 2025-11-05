@@ -18,6 +18,7 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText as MenuItemText,
+  Grid,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -135,7 +136,7 @@ export default function RecipeDetailPage() {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <TopNav />
-        <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+        <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
           <Typography variant="h5">Recipe not found</Typography>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -153,7 +154,7 @@ export default function RecipeDetailPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Back Button */}
         <Button
           startIcon={<ArrowBackIcon />}
@@ -172,26 +173,43 @@ export default function RecipeDetailPage() {
           Back to Recipes
         </Button>
 
-        {/* Title Row */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
-            {recipe.title}
-          </Typography>
+        {/* Title and Tags */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
+              {recipe.title}
+            </Typography>
+            
+            <IconButton
+              onClick={handleMenuClick}
+              size="small"
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Box>
           
-          <IconButton
-            onClick={handleMenuClick}
-            size="small"
-          >
-            <MoreVertIcon />
-          </IconButton>
+          {/* Tags */}
+          {recipe.tags && recipe.tags.length > 0 && (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {recipe.tags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  size="medium"
+                  color="primary"
+                  variant="outlined"
+                />
+              ))}
+            </Box>
+          )}
         </Box>
 
         {/* Hero Image */}
         {recipe.image_url && (
           <Box
             sx={{
-              width: '100%',
-              height: 400,
+              width: { xs: '100%', md: '66.67%' },
+              height: 356,
               borderRadius: 2,
               overflow: 'hidden',
               mb: 3,
@@ -210,9 +228,9 @@ export default function RecipeDetailPage() {
           </Box>
         )}
 
-        {/* Source Link and Tags Row */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-          {recipe.source_url ? (
+        {/* Source Link */}
+        {recipe.source_url && (
+          <Box sx={{ mb: 4 }}>
             <Button
               href={recipe.source_url}
               target="_blank"
@@ -223,7 +241,6 @@ export default function RecipeDetailPage() {
                 fontSize: '1.5rem',
                 fontWeight: 400,
                 p: 0,
-                whiteSpace: 'nowrap',
                 '&:hover': {
                   bgcolor: 'transparent',
                   textDecoration: 'underline',
@@ -232,90 +249,106 @@ export default function RecipeDetailPage() {
             >
               {getSourceName(recipe.source_url)}
             </Button>
-          ) : (
-            <Box />
-          )}
-          
-          {recipe.tags && recipe.tags.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end' }}>
-              {recipe.tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  size="medium"
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
+          </Box>
+        )}
 
         <Divider sx={{ mb: 4 }} />
 
-        {/* Ingredients */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-            Ingredients
-          </Typography>
-          <List sx={{ pl: 2 }}>
-            {recipe.ingredients.map((ingredient, index) => (
-              <ListItem
-                key={index}
-                sx={{
-                  py: 0.5,
-                  px: 0,
-                  display: 'list-item',
-                  listStyleType: 'disc',
-                  listStylePosition: 'outside',
-                  ml: 2,
-                }}
-              >
-                <ListItemText
-                  primary={ingredient}
-                  primaryTypographyProps={{ variant: 'body1' }}
-                />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-
-        <Divider sx={{ mb: 4 }} />
-
-        {/* Instructions */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-            Instructions
-          </Typography>
-          <List sx={{ pl: 2 }}>
-            {recipe.steps.map((step, index) => (
-              <ListItem
-                key={index}
-                sx={{
-                  py: 1,
-                  px: 0,
-                  alignItems: 'flex-start',
-                }}
-              >
-                <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                  <Typography
-                    variant="h6"
+        {/* Ingredients and Instructions - Two Column Layout */}
+        <Grid container spacing={4}>
+          {/* Ingredients - 1/3 width */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ pr: { xs: 0, md: 6 }, maxWidth: '100%' }}>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+                Ingredients
+              </Typography>
+              <List sx={{ pl: 2, maxWidth: '100%' }}>
+                {recipe.ingredients.map((ingredient, index) => (
+                  <ListItem
+                    key={index}
                     sx={{
-                      fontWeight: 600,
-                      color: 'primary.main',
-                      minWidth: 30,
+                      py: 0.5,
+                      px: 0,
+                      display: 'list-item',
+                      listStyleType: 'disc',
+                      listStylePosition: 'outside',
+                      ml: 2,
+                      maxWidth: '100%',
                     }}
                   >
-                    {index + 1}.
-                  </Typography>
-                  <Typography variant="body1" sx={{ flex: 1 }}>
-                    {step}
-                  </Typography>
-                </Box>
-              </ListItem>
-            ))}
-          </List>
-        </Box>
+                    <Typography
+                      variant="body1"
+                      component="div"
+                      sx={{ 
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        hyphens: 'auto',
+                        maxWidth: '100%',
+                      }}
+                    >
+                      {ingredient}
+                    </Typography>
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </Grid>
+
+          {/* Divider between columns - hidden on mobile */}
+          <Divider 
+            orientation="vertical" 
+            flexItem 
+            sx={{ 
+              display: { xs: 'none', md: 'block' },
+              mx: -2,
+            }} 
+          />
+
+          {/* Instructions - 2/3 width */}
+          <Grid item xs={12} md={8}>
+            <Box sx={{ pl: { xs: 0, md: 4 } }}>
+              <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+                Instructions
+              </Typography>
+              <List sx={{ pl: 2 }}>
+                {recipe.steps.map((step, index) => (
+                  <ListItem
+                    key={index}
+                    sx={{
+                      py: 1,
+                      px: 0,
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          color: 'primary.main',
+                          minWidth: 30,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {index + 1}.
+                      </Typography>
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          flex: 1,
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                        }}
+                      >
+                        {step}
+                      </Typography>
+                    </Box>
+                  </ListItem>
+                ))}
+              </List>
+            </Box>
+          </Grid>
+        </Grid>
 
         {/* Cookbook Info */}
         {recipe.cookbook_name && (
