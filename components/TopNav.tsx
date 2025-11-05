@@ -120,7 +120,10 @@ export default function TopNav() {
             <Box sx={{ ml: 3, display: 'flex', alignItems: 'center' }}>
               <Select
                 value={activeGroup?.id || ''}
-                onChange={(e) => switchGroup(e.target.value)}
+                onChange={(e) => {
+                  switchGroup(e.target.value);
+                  router.push('/browse');
+                }}
                 size="small"
                 sx={{
                   minWidth: 220,
@@ -137,21 +140,21 @@ export default function TopNav() {
                       <Typography variant="body2" sx={{ flexGrow: 1, mr: 1 }}>
                         {group.name}
                       </Typography>
-                      <Chip
-                        label={group.isOwn ? 'Owner' : group.role}
-                        size="small"
-                        color={group.isOwn ? 'primary' : 'default'}
-                        sx={{ 
-                          height: 20, 
-                          fontSize: '0.7rem',
-                          fontWeight: 500,
-                          ...(group.isOwn && {
+                      {group.isOwn && (
+                        <Chip
+                          label="Owner"
+                          size="small"
+                          color="primary"
+                          sx={{ 
+                            height: 20, 
+                            fontSize: '0.7rem',
+                            fontWeight: 500,
                             '& .MuiChip-label': {
                               color: 'white',
                             },
-                          }),
-                        }}
-                      />
+                          }}
+                        />
+                      )}
                     </Box>
                   </MenuItem>
                 ))}
