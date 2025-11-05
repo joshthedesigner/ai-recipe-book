@@ -11,7 +11,6 @@ import {
   InputAdornment,
   IconButton,
 } from '@mui/material';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import Link from 'next/link';
@@ -53,7 +52,9 @@ export default function LoginPage() {
       <Container maxWidth="sm">
         {/* Logo & Title */}
         <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <RestaurantIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
+          <Box sx={{ mb: 2 }}>
+            <img src="/logo.svg" alt="RecipeBook Logo" style={{ width: '80px', height: 'auto' }} />
+          </Box>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
             RecipeBook
           </Typography>

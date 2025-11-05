@@ -70,16 +70,23 @@ export default function LandingPage() {
             }}
           >
             {/* Logo */}
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                color: 'text.primary',
-                fontWeight: 600,
-              }}
-            >
-              RecipeBook
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <img 
+                src="/logo.svg" 
+                alt="RecipeBook Logo" 
+                style={{ width: '32px', height: 'auto' }}
+              />
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  color: 'text.primary',
+                  fontWeight: 600,
+                }}
+              >
+                RecipeBook
+              </Typography>
+            </Box>
 
             {/* CTA Buttons */}
             <Box sx={{ display: 'flex', gap: 2 }}>

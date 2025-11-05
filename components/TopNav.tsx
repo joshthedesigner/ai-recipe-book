@@ -96,10 +96,16 @@ export default function TopNav() {
             style={{
               display: 'flex',
               alignItems: 'center',
+              gap: '12px',
               textDecoration: 'none',
               cursor: 'pointer',
             }}
           >
+            <img 
+              src="/logo.svg" 
+              alt="RecipeBook Logo" 
+              style={{ width: '32px', height: 'auto' }}
+            />
             <Typography
               variant="h6"
               component="div"
