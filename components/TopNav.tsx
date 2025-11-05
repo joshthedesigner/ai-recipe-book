@@ -126,7 +126,7 @@ export default function TopNav() {
                 }}
                 size="small"
                 sx={{
-                  width: 280,
+                  width: 330,
                   '& .MuiSelect-select': {
                     py: 1,
                     display: 'flex',
