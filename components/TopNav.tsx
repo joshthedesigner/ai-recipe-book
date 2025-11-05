@@ -126,35 +126,64 @@ export default function TopNav() {
                 }}
                 size="small"
                 sx={{
-                  minWidth: 220,
+                  width: 280,
                   '& .MuiSelect-select': {
                     py: 1,
                     display: 'flex',
                     alignItems: 'center',
                   },
                 }}
+                renderValue={(selected) => {
+                  const group = groups.find(g => g.id === selected);
+                  return (
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <Typography variant="body2" sx={{ mr: 1.5 }}>
+                        {group?.name || ''}
+                      </Typography>
+                      <Box sx={{ width: 52, display: 'flex', justifyContent: 'flex-start' }}>
+                        {group?.isOwn && (
+                          <Chip
+                            label="Owner"
+                            size="small"
+                            color="primary"
+                            sx={{ 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              fontWeight: 500,
+                              '& .MuiChip-label': {
+                                color: 'white',
+                              },
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  );
+                }}
               >
                 {groups.map((group) => (
                   <MenuItem key={group.id} value={group.id}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" sx={{ flexGrow: 1, mr: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                      <Typography variant="body2" sx={{ mr: 1.5 }}>
                         {group.name}
                       </Typography>
-                      {group.isOwn && (
-                        <Chip
-                          label="Owner"
-                          size="small"
-                          color="primary"
-                          sx={{ 
-                            height: 20, 
-                            fontSize: '0.7rem',
-                            fontWeight: 500,
-                            '& .MuiChip-label': {
-                              color: 'white',
-                            },
-                          }}
-                        />
-                      )}
+                      <Box sx={{ width: 52, display: 'flex', justifyContent: 'flex-start' }}>
+                        {group.isOwn && (
+                          <Chip
+                            label="Owner"
+                            size="small"
+                            color="primary"
+                            sx={{ 
+                              height: 20, 
+                              fontSize: '0.7rem',
+                              fontWeight: 500,
+                              '& .MuiChip-label': {
+                                color: 'white',
+                              },
+                            }}
+                          />
+                        )}
+                      </Box>
                     </Box>
                   </MenuItem>
                 ))}
