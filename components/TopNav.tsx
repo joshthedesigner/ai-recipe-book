@@ -15,13 +15,10 @@ import {
   Divider,
   Select,
   Chip,
-  InputAdornment,
 } from '@mui/material';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,7 +100,6 @@ export default function TopNav() {
               cursor: 'pointer',
             }}
           >
-            <RestaurantIcon sx={{ mr: 1.5, color: 'primary.main' }} />
             <Typography
               variant="h6"
               component="div"
@@ -134,11 +130,6 @@ export default function TopNav() {
                     alignItems: 'center',
                   },
                 }}
-                startAdornment={
-                  <InputAdornment position="start">
-                    <MenuBookIcon fontSize="small" sx={{ color: 'text.secondary', mr: 1 }} />
-                  </InputAdornment>
-                }
               >
                 {groups.map((group) => (
                   <MenuItem key={group.id} value={group.id}>
@@ -154,6 +145,11 @@ export default function TopNav() {
                           height: 20, 
                           fontSize: '0.7rem',
                           fontWeight: 500,
+                          ...(group.isOwn && {
+                            '& .MuiChip-label': {
+                              color: 'white',
+                            },
+                          }),
                         }}
                       />
                     </Box>
