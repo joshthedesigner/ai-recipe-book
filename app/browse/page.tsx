@@ -116,10 +116,10 @@ export default function BrowsePage() {
     }
   }, [activeGroup, showToast]);
 
-  // Auth protection: redirect to login if not authenticated
+  // Auth protection: redirect to home if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login');
+      router.push('/');
     }
   }, [user, authLoading, router]);
 

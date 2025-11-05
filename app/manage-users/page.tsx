@@ -72,7 +72,7 @@ export default function ManageUsersPage() {
   // Auth protection
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login');
+      router.push('/');
     }
   }, [user, authLoading, router]);
 

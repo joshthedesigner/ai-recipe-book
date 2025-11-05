@@ -12,9 +12,11 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user) {
+        // User is logged in, redirect to browse
         router.push('/browse');
       } else {
-        router.push('/login');
+        // User is not logged in, redirect to landing page
+        router.push('/landing');
       }
     }
   }, [user, loading, router]);

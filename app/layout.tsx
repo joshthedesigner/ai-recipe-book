@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
-import { AppRouterCacheProvider } from '@mui/material-nextjs/v14-appRouter';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import theme from './theme';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ToastProvider } from '@/contexts/ToastContext';
-import { GroupProvider } from '@/contexts/GroupContext';
+import { Providers } from './providers';
 
 export const metadata: Metadata = {
   title: 'RecipeBook',
@@ -20,20 +14,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AppRouterCacheProvider>
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <AuthProvider>
-              <GroupProvider>
-                <ToastProvider>
-                  {children}
-                </ToastProvider>
-              </GroupProvider>
-            </AuthProvider>
-          </ThemeProvider>
-        </AppRouterCacheProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
-

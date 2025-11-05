@@ -13,15 +13,15 @@ export default function AppButton({ variant = 'primary', sx, ...props }: AppButt
         variant="outlined"
         {...props}
         sx={{
-          borderRadius: 0,
+          borderRadius: '0.5rem',
           textTransform: 'none',
           fontWeight: 600,
-          color: '#1A1A1A',
-          borderColor: '#1A1A1A',
+          color: 'hsl(24, 20%, 15%)',
+          borderColor: 'hsl(24, 20%, 15%)',
           px: 3,
           py: 1.25,
           '&:hover': {
-            borderColor: '#1A1A1A',
+            borderColor: 'hsl(24, 20%, 15%)',
             backgroundColor: 'rgba(26, 26, 26, 0.04)',
           },
           ...sx,
@@ -36,15 +36,17 @@ export default function AppButton({ variant = 'primary', sx, ...props }: AppButt
       variant="contained"
       {...props}
       sx={{
-        borderRadius: 0,
+        borderRadius: '0.5rem',
         textTransform: 'none',
         fontWeight: 600,
         color: 'white',
+        bgcolor: 'hsl(24, 85%, 55%)',
         px: 3,
         py: 1.25,
         boxShadow: 'none',
         '&:hover': {
           boxShadow: 'none',
+          bgcolor: 'hsl(24, 85%, 50%)',
         },
         ...sx,
       }}
