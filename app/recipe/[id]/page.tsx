@@ -172,6 +172,20 @@ export default function RecipeDetailPage() {
           Back to Recipes
         </Button>
 
+        {/* Title Row */}
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
+            {recipe.title}
+          </Typography>
+          
+          <IconButton
+            onClick={handleMenuClick}
+            size="small"
+          >
+            <MoreVertIcon />
+          </IconButton>
+        </Box>
+
         {/* Hero Image */}
         {recipe.image_url && (
           <Box
@@ -180,7 +194,7 @@ export default function RecipeDetailPage() {
               height: 400,
               borderRadius: 2,
               overflow: 'hidden',
-              mb: 4,
+              mb: 3,
               position: 'relative',
             }}
           >
@@ -196,22 +210,9 @@ export default function RecipeDetailPage() {
           </Box>
         )}
 
-        {/* Title and Tags */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
-              {recipe.title}
-            </Typography>
-            
-            <IconButton
-              onClick={handleMenuClick}
-              size="small"
-            >
-              <MoreVertIcon />
-            </IconButton>
-          </Box>
-          
-          {recipe.source_url && (
+        {/* Source Link and Tags Row */}
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+          {recipe.source_url ? (
             <Button
               href={recipe.source_url}
               target="_blank"
@@ -222,7 +223,7 @@ export default function RecipeDetailPage() {
                 fontSize: '1.5rem',
                 fontWeight: 400,
                 p: 0,
-                mb: 2,
+                whiteSpace: 'nowrap',
                 '&:hover': {
                   bgcolor: 'transparent',
                   textDecoration: 'underline',
@@ -231,10 +232,12 @@ export default function RecipeDetailPage() {
             >
               {getSourceName(recipe.source_url)}
             </Button>
+          ) : (
+            <Box />
           )}
           
           {recipe.tags && recipe.tags.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'flex-end' }}>
               {recipe.tags.map((tag) => (
                 <Chip
                   key={tag}
@@ -245,12 +248,6 @@ export default function RecipeDetailPage() {
                 />
               ))}
             </Box>
-          )}
-
-          {recipe.contributor_name && (
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Added by {recipe.contributor_name}
-            </Typography>
           )}
         </Box>
 
