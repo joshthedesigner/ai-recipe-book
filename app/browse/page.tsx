@@ -57,7 +57,6 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [navigatingToRecipe, setNavigatingToRecipe] = useState(false);
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -279,7 +278,6 @@ export default function BrowsePage() {
   };
 
   const handleCardClick = (recipe: Recipe) => {
-    setNavigatingToRecipe(true);
     router.push(`/recipe/${recipe.id}`);
   };
 
@@ -494,7 +492,7 @@ export default function BrowsePage() {
 
 
         {/* Loading State */}
-        {(loading || navigatingToRecipe) && (
+        {loading && (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
