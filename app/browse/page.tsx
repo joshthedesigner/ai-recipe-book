@@ -23,7 +23,6 @@ import ClearIcon from '@mui/icons-material/Clear';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
-import RecipeDetailModal from '@/components/RecipeDetailModal';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import AddRecipeButton from '@/components/AddRecipeButton';
 import AppButton from '@/components/AppButton';
@@ -50,8 +49,6 @@ export default function BrowsePage() {
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterMainIngredient, setFilterMainIngredient] = useState('');
   const [filterContributor, setFilterContributor] = useState('');
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
@@ -60,6 +57,7 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
+  const [navigatingToRecipe, setNavigatingToRecipe] = useState(false);
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -281,8 +279,8 @@ export default function BrowsePage() {
   };
 
   const handleCardClick = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setModalOpen(true);
+    setNavigatingToRecipe(true);
+    router.push(`/recipe/${recipe.id}`);
   };
 
   const handleDeleteClick = (recipeId: string) => {
@@ -310,10 +308,6 @@ export default function BrowsePage() {
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
         
-        if (selectedRecipe?.id === recipeToDelete.id) {
-          setModalOpen(false);
-          setSelectedRecipe(null);
-        }
         
         showToast('Recipe deleted successfully', 'success');
         
@@ -334,12 +328,6 @@ export default function BrowsePage() {
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setRecipeToDelete(null);
-  };
-
-  const handleDeleteRecipe = (recipeId: string) => {
-    // This is called from the RecipeDetailModal
-    // We can reuse the same flow
-    handleDeleteClick(recipeId);
   };
 
   const clearFilters = () => {
@@ -506,7 +494,7 @@ export default function BrowsePage() {
 
 
         {/* Loading State */}
-        {loading && (
+        {(loading || navigatingToRecipe) && (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
@@ -591,14 +579,6 @@ export default function BrowsePage() {
           </>
         )}
       </Container>
-
-      {/* Recipe Detail Modal */}
-      <RecipeDetailModal
-        recipe={selectedRecipe}
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onDelete={handleDeleteRecipe}
-      />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
