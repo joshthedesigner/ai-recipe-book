@@ -58,7 +58,7 @@ export default function LoginPage() {
             RecipeBook
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Sign in to your family recipe collection
+            Create your recipe legacy. Share it with the people you love.
           </Typography>
         </Box>
 

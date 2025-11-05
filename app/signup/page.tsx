@@ -6,7 +6,6 @@ import {
   Container,
   TextField,
   Typography,
-  Paper,
   Alert,
   Link as MuiLink,
   InputAdornment,
@@ -118,15 +117,14 @@ export default function SignupPage() {
       }}
     >
       <Container maxWidth="sm">
-        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
-          {/* Logo & Title */}
+        {/* Logo & Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <RestaurantIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
               Create Account
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Join your family recipe collection
+              Create your recipe legacy. Share it with the people you love.
             </Typography>
           </Box>
 
@@ -242,7 +240,6 @@ export default function SignupPage() {
               </Link>
             </Typography>
           </Box>
-        </Paper>
       </Container>
     </Box>
   );

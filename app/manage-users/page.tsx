@@ -396,7 +396,7 @@ export default function ManageUsersPage() {
               Manage Users
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              {groupName}
+              Invite your friends and manage their access to your recipe book
             </Typography>
           </Box>
           <AppButton
