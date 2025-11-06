@@ -237,6 +237,33 @@ export default function FriendsPage() {
     }
   };
 
+  // Cancel pending outgoing invite
+  const handleCancelInvite = async (inviteId: string) => {
+    if (!confirm('Are you sure you want to cancel this invite?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/friends/cancel-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Invite cancelled', 'success');
+        loadData(); // Refresh lists
+      } else {
+        showToast(data.error || 'Failed to cancel invite', 'error');
+      }
+    } catch (error) {
+      console.error('Error cancelling invite:', error);
+      showToast('Failed to cancel invite', 'error');
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -381,9 +408,14 @@ export default function FriendsPage() {
                           <Chip label="Sent" size="small" color="default" />
                         </TableCell>
                         <TableCell align="right">
-                          <Typography variant="caption" color="text.secondary">
-                            Awaiting response
-                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleCancelInvite(request.id)}
+                            aria-label="cancel invite"
+                            sx={{ color: 'error.main' }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
                     ))}
