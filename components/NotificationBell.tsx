@@ -191,7 +191,7 @@ export default function NotificationBell() {
         </Box>
 
         {count === 0 ? (
-          <Box sx={{ px: 2, py: 3, textAlign: 'center' }}>
+          <Box sx={{ px: 2, py: 3, textAlign: 'left' }}>
             <Typography variant="body2" color="text.secondary">
               No pending requests
             </Typography>
@@ -256,7 +256,7 @@ export default function NotificationBell() {
             handleClose();
             window.location.href = '/friends';
           }}
-          sx={{ justifyContent: 'center', py: 1.5 }}
+          sx={{ justifyContent: 'flex-start', py: 1.5, px: 2 }}
         >
           <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
             View All Friends
