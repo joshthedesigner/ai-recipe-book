@@ -43,16 +43,21 @@ export async function getUserRole(
 
     // Check if group is owned by a friend (Friends feature)
     // Note: Server-side code uses FRIENDS_FEATURE_ENABLED (no NEXT_PUBLIC_ prefix)
+    console.log('getUserRole: Checking friend access. Feature enabled?', process.env.FRIENDS_FEATURE_ENABLED);
     if (process.env.FRIENDS_FEATURE_ENABLED === 'true') {
       // Reuse groupData from line 21 (already has owner_id)
+      console.log('getUserRole: Group owner:', groupData?.owner_id, 'Current user:', userId);
       if (groupData?.owner_id) {
         // Check if owner is my friend using helper RPC
-        const { data: areFriends } = await supabase.rpc('are_friends', {
+        const { data: areFriends, error: friendError } = await supabase.rpc('are_friends', {
           user1_id: userId,
           user2_id: groupData.owner_id,
         });
 
+        console.log('getUserRole: are_friends result:', areFriends, 'error:', friendError);
+        
         if (areFriends) {
+          console.log('getUserRole: Granting read access to friend group');
           return 'read'; // Friends have read-only access to owned groups
         }
       }
