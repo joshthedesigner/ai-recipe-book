@@ -42,9 +42,9 @@ export async function getUserRole(
     }
 
     // Check if group is owned by a friend (Friends feature)
-    // Note: Server-side code uses FRIENDS_FEATURE_ENABLED (no NEXT_PUBLIC_ prefix)
-    console.log('getUserRole: Checking friend access. Feature enabled?', process.env.FRIENDS_FEATURE_ENABLED);
-    if (process.env.FRIENDS_FEATURE_ENABLED === 'true') {
+    // Note: This function is called from both client and server, so use NEXT_PUBLIC_ prefix
+    console.log('getUserRole: Checking friend access. Feature enabled?', process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED);
+    if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
       // Reuse groupData from line 21 (already has owner_id)
       console.log('getUserRole: Group owner:', groupData?.owner_id, 'Current user:', userId);
       if (groupData?.owner_id) {
