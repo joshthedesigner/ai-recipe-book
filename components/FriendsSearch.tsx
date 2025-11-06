@@ -176,24 +176,39 @@ export default function FriendsSearch() {
           }}
         >
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', p: 2, pl: 2 }}>
               <CircularProgress size={24} />
             </Box>
           ) : filteredFriends.length === 0 ? (
-            <Box sx={{ p: 2, textAlign: 'center' }}>
+            <Box sx={{ p: 2, textAlign: 'left' }}>
               <Typography variant="body2" color="text.secondary">
                 {searchValue ? 'No friends found' : 'No friends yet'}
               </Typography>
             </Box>
           ) : (
-            <List dense>
+            <List dense sx={{ py: 0 }}>
               {filteredFriends.map((friend) => (
                 <ListItem key={friend.friend_id} disablePadding>
-                  <ListItemButton onClick={() => handleFriendClick(friend)}>
+                  <ListItemButton 
+                    onClick={() => handleFriendClick(friend)}
+                    sx={{ 
+                      px: 2,
+                      py: 1.5,
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
                     <ListItemText
                       primary={friend.friend_name}
                       secondary={friend.friend_email}
-                      primaryTypographyProps={{ fontWeight: 500 }}
+                      primaryTypographyProps={{ 
+                        fontWeight: 500,
+                        sx: { textAlign: 'left' }
+                      }}
+                      secondaryTypographyProps={{
+                        sx: { textAlign: 'left' }
+                      }}
                     />
                   </ListItemButton>
                 </ListItem>
