@@ -33,7 +33,17 @@ interface Friend {
   friended_at: string;
 }
 
-export default function FriendsSearch() {
+interface FriendsSearchProps {
+  autoFocus?: boolean;
+  fullWidth?: boolean;
+  onSelect?: () => void;
+}
+
+export default function FriendsSearch({ 
+  autoFocus = false, 
+  fullWidth = false, 
+  onSelect 
+}: FriendsSearchProps = {}) {
   const router = useRouter();
   const { user } = useAuth();
   const { groups, switchGroup } = useGroup();
@@ -87,6 +97,11 @@ export default function FriendsSearch() {
       router.push('/browse'); // Navigate to browse page to show friend's recipes
       setOpen(false);
       setSearchValue('');
+      
+      // Call parent callback (for mobile collapse)
+      if (onSelect) {
+        onSelect();
+      }
     } else {
       console.warn('Could not find group for friend:', friend);
     }
@@ -133,6 +148,7 @@ export default function FriendsSearch() {
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onFocus={handleFocus}
+        autoFocus={autoFocus}
         autoComplete="off"
         inputProps={{
           autoComplete: 'off',
@@ -146,7 +162,7 @@ export default function FriendsSearch() {
           ),
         }}
         sx={{
-          width: 280,
+          width: fullWidth ? '100%' : 280,
           '& .MuiOutlinedInput-root': {
             bgcolor: 'background.paper',
             '&:hover': {
@@ -163,7 +179,12 @@ export default function FriendsSearch() {
         open={open}
         anchorEl={anchorRef.current}
         placement="bottom-start"
-        sx={{ zIndex: 1300, width: anchorRef.current?.offsetWidth }}
+        sx={{ 
+          zIndex: 1300, 
+          width: fullWidth ? '100vw' : anchorRef.current?.offsetWidth,
+          left: fullWidth ? '0 !important' : undefined,
+          right: fullWidth ? 0 : undefined,
+        }}
       >
         <Paper
           ref={popperRef}
