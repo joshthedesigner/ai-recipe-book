@@ -250,9 +250,24 @@ export default function FriendsPage() {
 
   // Navigate to friend's cookbook
   const handleFriendClick = (friendName: string) => {
+    // DEBUG: Log what we're searching for
+    console.log('🔍 DEBUG: handleFriendClick called');
+    console.log('  friendName:', friendName);
+    console.log('  friendName type:', typeof friendName);
+    console.log('  friendName === null:', friendName === null);
+    console.log('  friendName === "null":', friendName === 'null');
+    
     // Find the friend's group by matching the name pattern
     const friendGroupName = `${friendName}'s RecipeBook`;
+    console.log('  searching for group name:', friendGroupName);
+    
+    // DEBUG: Log all available groups
+    console.log('  all groups:', groups);
+    console.log('  friend groups only:', groups.filter(g => g.isFriend));
+    
     const friendGroup = groups.find(g => g.isFriend && g.name === friendGroupName);
+    
+    console.log('  found group:', friendGroup);
     
     if (friendGroup) {
       switchGroup(friendGroup.id);
