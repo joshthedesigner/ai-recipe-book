@@ -150,7 +150,6 @@ export default function LandingPage() {
                     variant="secondary"
                     size="large"
                     onClick={() => router.push('/login')}
-                    sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
                   >
                     Sign In
                   </AppButton>
