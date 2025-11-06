@@ -97,10 +97,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Verify user has access to this group
-      console.log('API /recipes: Checking access for user:', user.id, 'group:', groupId);
-      console.log('API /recipes: FRIENDS_FEATURE_ENABLED =', process.env.FRIENDS_FEATURE_ENABLED);
       const hasAccess = await hasGroupAccess(supabase, user.id, groupId);
-      console.log('API /recipes: hasAccess result:', hasAccess);
       if (!hasAccess) {
         return NextResponse.json(
           { success: false, error: 'You do not have access to this recipe book' },

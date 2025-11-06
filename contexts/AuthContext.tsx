@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { useRouter } from 'next/navigation';
-import { activatePendingInvites } from '@/utils/invites';
 
 interface AuthContextType {
   user: User | null;
@@ -132,23 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sessionLoaded = true;
         setLoading(false);
         
-        // Activate invites when user signs in (handles email confirmation)
-        // Run non-blocking so it doesn't delay user experience
-        if (event === 'SIGNED_IN' && session?.user) {
-          activatePendingInvites(supabase, session.user.id, session.user.email || '')
-            .then((result) => {
-              if (result.activated > 0) {
-                console.log(`Activated ${result.activated} pending invite(s) on sign-in`);
-                // Trigger GroupContext refresh to pick up newly activated groups
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('groups-refresh'));
-                }
-              }
-            })
-            .catch((error) => {
-              console.error('Error activating pending invites:', error);
-            });
-        }
+        // Note: Friends feature handles invites separately via friend_invite query param
       }
     });
 
@@ -172,9 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // Note: Pending invites are activated by the onAuthStateChange handler
-      // No need to call activatePendingInvites here - it will be called automatically
-
       router.push('/browse');
       return { error: null };
     } catch (error) {
@@ -197,9 +177,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         return { error };
       }
-
-      // Note: Pending invites are activated by the database trigger on signup
-      // No need to call activatePendingInvites() here - trigger handles it
 
       // If email confirmation is disabled, sign them in
       if (data.user && data.session) {

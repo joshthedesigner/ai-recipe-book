@@ -15,14 +15,6 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Feature flag check (server-side, no NEXT_PUBLIC_ prefix)
-    if (process.env.FRIENDS_FEATURE_ENABLED !== 'true') {
-      return NextResponse.json(
-        { success: false, error: 'Feature not available' },
-        { status: 404 }
-      );
-    }
-
     // Get authenticated user
     const supabase = createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

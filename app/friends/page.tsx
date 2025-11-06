@@ -67,12 +67,7 @@ export default function FriendsPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [sending, setSending] = useState(false);
 
-  // Feature flag check - redirect if disabled
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED !== 'true') {
-      router.push('/browse');
-    }
-  }, [router]);
+  // Friends feature is always enabled
 
   // Redirect if not authenticated
   useEffect(() => {

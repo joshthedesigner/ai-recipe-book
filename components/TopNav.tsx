@@ -201,9 +201,7 @@ export default function TopNav() {
           {/* User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
             {/* Notification Bell (Friends Feature) */}
-            {user && process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true' && (
-              <NotificationBell />
-            )}
+            {user && <NotificationBell />}
             
             {user && (
               <>
