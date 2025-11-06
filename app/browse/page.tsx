@@ -501,6 +501,15 @@ export default function BrowsePage() {
               px: 3,
             }}
           >
+            <Box
+              sx={{
+                fontSize: '5rem',
+                mb: 3,
+                lineHeight: 1,
+              }}
+            >
+              🎉
+            </Box>
             <Typography 
               variant="h5" 
               sx={{ 
