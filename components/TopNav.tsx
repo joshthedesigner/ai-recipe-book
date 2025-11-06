@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
+import NotificationBell from '@/components/NotificationBell';
 
 export default function TopNav() {
   const router = useRouter();
@@ -198,7 +199,12 @@ export default function TopNav() {
           )}
 
           {/* User Menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+            {/* Notification Bell (Friends Feature) */}
+            {user && process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true' && (
+              <NotificationBell />
+            )}
+            
             {user && (
               <>
                 <IconButton 
