@@ -32,7 +32,6 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PeopleIcon from '@mui/icons-material/People';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -355,16 +354,6 @@ export default function FriendsPage() {
                       primary={friend.friend_name}
                       secondary={`${friend.friend_email} • Friends since ${new Date(friend.friended_at).toLocaleDateString()}`}
                     />
-                    <ListItemSecondaryAction>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<MenuBookIcon />}
-                        onClick={() => router.push(`/browse?friendId=${friend.friend_id}`)}
-                      >
-                        View Recipes
-                      </Button>
-                    </ListItemSecondaryAction>
                   </ListItem>
                 </Box>
               ))}

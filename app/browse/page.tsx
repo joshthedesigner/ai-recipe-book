@@ -56,8 +56,6 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [viewingFriendId, setViewingFriendId] = useState<string | null>(null);
-  const [friendName, setFriendName] = useState<string>('');
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -97,20 +95,12 @@ export default function BrowsePage() {
   // Fetch recipes from API
   const fetchRecipes = useCallback(async () => {
     console.log('🔵 fetchRecipes CALLED', new Date().toISOString());
+    if (!activeGroup) return;
     
     try {
       setLoading(true);
-      let response, data;
-      
-      // Check if viewing friend's recipes
-      if (viewingFriendId) {
-        response = await fetch(`/api/friends/recipes?friendId=${viewingFriendId}`);
-        data = await response.json();
-      } else {
-        if (!activeGroup) return;
-        response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
-        data = await response.json();
-      }
+      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
+      const data = await response.json();
 
       if (data.success) {
         setRecipes(data.recipes || []);
@@ -124,7 +114,7 @@ export default function BrowsePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeGroup, viewingFriendId, showToast]);
+  }, [activeGroup, showToast]);
 
   // Auth protection: redirect to home if not authenticated
   useEffect(() => {
@@ -132,30 +122,6 @@ export default function BrowsePage() {
       router.push('/');
     }
   }, [user, authLoading, router]);
-
-  // Check for friendId query parameter (Friends feature)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const params = new URLSearchParams(window.location.search);
-    const friendId = params.get('friendId');
-    
-    if (friendId) {
-      setViewingFriendId(friendId);
-      // Fetch friend's name
-      fetch('/api/friends/list')
-        .then(r => r.json())
-        .then(d => {
-          const friend = d.friends?.find((f: any) => f.friend_id === friendId);
-          if (friend) {
-            setFriendName(friend.friend_name || friend.friend_email);
-          }
-        });
-    } else {
-      setViewingFriendId(null);
-      setFriendName('');
-    }
-  }, []);
 
   // Check if user has permission to add recipes for active group
   useEffect(() => {
@@ -380,40 +346,20 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* Friend Viewing Banner */}
-      {viewingFriendId && friendName && (
-        <Box sx={{ bgcolor: '#fff3e0', borderBottom: '1px solid #ffb74d', py: 1.5 }}>
-          <Container maxWidth="xl">
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Typography variant="body1">
-                Viewing <strong>{friendName}'s</strong> recipes
-              </Typography>
-              <Button
-                size="small"
-                onClick={() => router.push('/browse')}
-                sx={{ textTransform: 'none' }}
-              >
-                Back to My Recipes
-              </Button>
-            </Box>
-          </Container>
-        </Box>
-      )}
-
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
-              {viewingFriendId ? `${friendName}'s Recipes` : 'Recipe Collection'}
+              Recipe Collection
             </Typography>
             <Typography variant="body1" color="text.secondary">
               Browse and search your saved recipes
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
-          {!viewingFriendId && canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
-          {!viewingFriendId && activeGroup?.isOwn && (
+          {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+          {activeGroup?.isOwn && (
             <AppButton
               variant="secondary"
               onClick={() => router.push('/manage-users')}

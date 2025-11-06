@@ -116,9 +116,9 @@ export async function getUserDefaultGroup(
 export async function getUserGroups(
   supabase: SupabaseClient,
   userId: string
-): Promise<Array<{ id: string; name: string; role: UserRole; isOwn: boolean; joinedAt?: string | null }>> {
+): Promise<Array<{ id: string; name: string; role: UserRole; isOwn: boolean; isFriend?: boolean; joinedAt?: string | null }>> {
   try {
-    const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean; joinedAt?: string | null }> = [];
+    const groups: Array<{ id: string; name: string; role: UserRole; isOwn: boolean; isFriend?: boolean; joinedAt?: string | null }> = [];
 
     // Get owned groups
     const { data: ownedGroups, error: ownedError } = await supabase
@@ -215,6 +215,32 @@ export async function getUserGroups(
             }
           }
         }
+      }
+    }
+
+    // Get friends' owned groups (if Friends feature is enabled)
+    if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
+      try {
+        const { data: friendsGroups, error: friendsError } = await supabase
+          .rpc('get_friends_groups');
+
+        if (!friendsError && friendsGroups) {
+          friendsGroups.forEach((fg: any) => {
+            groups.push({
+              id: fg.group_id,
+              name: `${fg.friend_name || fg.friend_email}'s Cookbook`,
+              role: 'read' as UserRole, // Friends always have read-only access
+              isOwn: false,
+              isFriend: true, // Mark as friend's group
+              joinedAt: fg.friended_at,
+            });
+          });
+          
+          console.log(`getUserGroups: Added ${friendsGroups.length} friend group(s)`);
+        }
+      } catch (friendsError) {
+        // Friends feature is optional - don't fail if it errors
+        console.warn('Error fetching friends groups (feature may be disabled):', friendsError);
       }
     }
 

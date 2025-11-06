@@ -11,6 +11,7 @@ interface Group {
   name: string;
   role: UserRole;
   isOwn: boolean;
+  isFriend?: boolean; // True if this is a friend's group
   joinedAt?: string | null;
 }
 
