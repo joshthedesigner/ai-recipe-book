@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  // Track last auth state to prevent duplicate updates
+  const lastUserId = useRef<string | null>(null);
+  const lastAccessToken = useRef<string | null>(null);
+  
+  // Helper to check if auth state actually changed
+  const shouldUpdateAuth = (session: Session | null): boolean => {
+    const newUserId = session?.user?.id ?? null;
+    const newAccessToken = session?.access_token ?? null;
+    
+    return (
+      newUserId !== lastUserId.current || 
+      newAccessToken !== lastAccessToken.current
+    );
+  };
+  
+  // Helper to update auth state and tracking refs
+  const updateAuthState = (session: Session | null) => {
+    lastUserId.current = session?.user?.id ?? null;
+    lastAccessToken.current = session?.access_token ?? null;
+    setSession(session);
+    setUser(session?.user ?? null);
+  };
 
   useEffect(() => {
     // Only run on client-side
@@ -60,8 +83,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         console.log('AuthContext: Session retrieved:', session ? 'valid' : 'null');
-        setSession(session);
-        setUser(session?.user ?? null);
+        
+        if (shouldUpdateAuth(session)) {
+          updateAuthState(session);
+        } else {
+          console.log('AuthContext: Skipping duplicate auth update (same user and token)');
+        }
+        
         if (timeoutId) clearTimeout(timeoutId);
         sessionLoaded = true;
         setLoading(false);
@@ -78,13 +106,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initSession();
 
     // Listen for auth changes (login, logout, token refresh)
+    // Filter events to only process meaningful changes
+    const RELEVANT_EVENTS = ['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'TOKEN_REFRESHED'];
+    
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session');
+      
+      // Filter out irrelevant events (like INITIAL_SESSION duplicate)
+      if (!RELEVANT_EVENTS.includes(event)) {
+        console.log(`AuthContext: Ignoring ${event} event to prevent duplicate updates`);
+        return;
+      }
+      
       if (mounted) {
-        setSession(session);
-        setUser(session?.user ?? null);
+        // Only update state if user ID or access token changed
+        if (shouldUpdateAuth(session)) {
+          updateAuthState(session);
+        } else {
+          console.log('AuthContext: Skipping duplicate auth update (same user and token)');
+        }
+        
         if (timeoutId) clearTimeout(timeoutId);
         sessionLoaded = true;
         setLoading(false);
@@ -111,6 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      lastUserId.current = null;
+      lastAccessToken.current = null;
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
