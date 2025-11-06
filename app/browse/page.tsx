@@ -356,14 +356,6 @@ export default function BrowsePage() {
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
           {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
-          {activeGroup?.isOwn && (
-            <AppButton
-              variant="secondary"
-              onClick={() => router.push('/friends')}
-            >
-              Your Friends
-            </AppButton>
-          )}
           </Box>
         </Box>
 

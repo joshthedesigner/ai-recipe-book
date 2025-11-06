@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Notification Bell Component
+ * Friends Notification Component
  * 
  * Shows badge count of pending friend requests
  * Dropdown menu with quick accept/reject actions
@@ -23,7 +23,7 @@ import {
   Box,
   Button,
 } from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import PeopleIcon from '@mui/icons-material/People';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import { useAuth } from '@/contexts/AuthContext';
@@ -161,10 +161,10 @@ export default function NotificationBell() {
       <IconButton
         onClick={handleClick}
         sx={{ color: 'text.primary' }}
-        aria-label="notifications"
+        aria-label="friends"
       >
         <Badge badgeContent={count} color="error">
-          <NotificationsIcon />
+          <PeopleIcon />
         </Badge>
       </IconButton>
 

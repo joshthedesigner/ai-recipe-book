@@ -200,7 +200,7 @@ export default function TopNav() {
 
           {/* User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-            {/* Notification Bell (Friends Feature) */}
+            {/* Friends Icon (Friend Requests) */}
             {user && <NotificationBell />}
             
             {user && (
