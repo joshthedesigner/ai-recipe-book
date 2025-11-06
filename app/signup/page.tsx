@@ -163,7 +163,7 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit}>
             <TextField
               fullWidth
-              label="Name"
+              label="Full Name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
