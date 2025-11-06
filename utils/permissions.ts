@@ -42,19 +42,14 @@ export async function getUserRole(
     }
 
     // Check if group is owned by a friend (Friends feature)
-    if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
-      // Get group owner
-      const { data: groupOwner } = await supabase
-        .from('recipe_groups')
-        .select('owner_id')
-        .eq('id', groupId)
-        .single();
-
-      if (groupOwner?.owner_id) {
+    // Note: Server-side code uses FRIENDS_FEATURE_ENABLED (no NEXT_PUBLIC_ prefix)
+    if (process.env.FRIENDS_FEATURE_ENABLED === 'true') {
+      // Reuse groupData from line 21 (already has owner_id)
+      if (groupData?.owner_id) {
         // Check if owner is my friend using helper RPC
         const { data: areFriends } = await supabase.rpc('are_friends', {
           user1_id: userId,
-          user2_id: groupOwner.owner_id,
+          user2_id: groupData.owner_id,
         });
 
         if (areFriends) {
@@ -241,6 +236,7 @@ export async function getUserGroups(
     }
 
     // Get friends' owned groups (if Friends feature is enabled)
+    // Note: Client-side uses NEXT_PUBLIC_ prefix, this runs client-side so use it
     if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
       try {
         const { data: friendsGroups, error: friendsError } = await supabase
