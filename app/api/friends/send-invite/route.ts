@@ -118,13 +118,25 @@ export async function POST(request: NextRequest) {
       baseUrl
     );
 
-    // Check if Resend is configured
-    if (!process.env.RESEND_API_KEY) {
-      console.warn('RESEND_API_KEY not configured. Email not sent.');
+    // Development mode: Log email details instead of sending
+    const acceptLink = `${baseUrl}/friends?friend_invite=${invite.id}`;
+    
+    if (!process.env.RESEND_API_KEY || process.env.NODE_ENV === 'development') {
+      console.log('\n========== FRIEND INVITE EMAIL ==========');
+      console.log('To:', recipientEmail);
+      console.log('From:', senderName);
+      console.log('Subject:', subject);
+      console.log('Accept Link:', acceptLink);
+      console.log('Invite ID:', invite.id);
+      console.log('==========================================\n');
+      console.log('📧 Copy the accept link above and paste in a new browser window to test!');
+      console.log('   (Login as the recipient to accept the invite)\n');
+      
       return NextResponse.json({
         success: true,
-        message: 'Friend request created (email sending not configured)',
+        message: 'Friend request sent! (Dev mode - check server console for accept link)',
         inviteId: invite.id,
+        acceptLink: acceptLink,
       });
     }
 

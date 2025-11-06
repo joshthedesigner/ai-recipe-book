@@ -143,7 +143,12 @@ export default function FriendsPage() {
       const data = await response.json();
 
       if (data.success) {
-        showToast('Friend request sent!', 'success');
+        // Dev mode: Show accept link in console for easy testing
+        if (data.acceptLink) {
+          console.log('🔗 Friend invite accept link:', data.acceptLink);
+          console.log('   Copy this link and open in a new browser window (login as recipient)');
+        }
+        showToast(data.message || 'Friend request sent!', 'success');
         setInviteEmail('');
         loadData(); // Refresh to show in outgoing
       } else {

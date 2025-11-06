@@ -51,36 +51,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get invite details
-    const { data: invite, error: fetchError } = await supabase
-      .from('friends')
-      .select('*')
-      .eq('id', inviteId)
-      .single();
-
-    if (fetchError || !invite) {
-      return NextResponse.json(
-        { success: false, error: 'Invite not found' },
-        { status: 404 }
-      );
-    }
-
-    // Verify invite is for this user
-    if (invite.invited_email.toLowerCase() !== user.email?.toLowerCase()) {
-      return NextResponse.json(
-        { success: false, error: 'This invite is not for you' },
-        { status: 403 }
-      );
-    }
-
-    // Verify invite is still pending
-    if (invite.status !== 'pending') {
-      return NextResponse.json(
-        { success: false, error: `Invite already ${invite.status}` },
-        { status: 400 }
-      );
-    }
-
+    // Note: We skip pre-validation and let the RPC function handle it
+    // The RPC uses SECURITY DEFINER to bypass RLS and validates everything internally
+    
     if (action === 'accept') {
       // Use RPC function to activate (follows existing pattern)
       const { error: rpcError } = await supabase.rpc('activate_friend_invite', {
@@ -103,19 +76,17 @@ export async function POST(request: NextRequest) {
       });
 
     } else {
-      // Reject: just update status
-      const { error: updateError } = await supabase
-        .from('friends')
-        .update({
-          status: 'rejected',
-          responded_at: new Date().toISOString(),
-        })
-        .eq('id', inviteId);
+      // Use RPC function to reject (bypasses RLS like accept)
+      const { error: rpcError } = await supabase.rpc('reject_friend_invite', {
+        invite_uuid: inviteId,
+        user_uuid: user.id,
+        user_email: user.email,
+      });
 
-      if (updateError) {
-        console.error('Error rejecting friend invite:', updateError);
+      if (rpcError) {
+        console.error('Error rejecting friend invite:', rpcError);
         return NextResponse.json(
-          { success: false, error: 'Failed to reject friend request' },
+          { success: false, error: 'Failed to reject friend request', details: rpcError.message },
           { status: 500 }
         );
       }

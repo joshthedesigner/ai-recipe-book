@@ -113,6 +113,54 @@ GRANT EXECUTE ON FUNCTION activate_friend_invite(UUID, UUID, TEXT) TO authentica
 COMMENT ON FUNCTION activate_friend_invite(UUID, UUID, TEXT) IS 
   'Activates a pending friend invite. Only accessible to the user whose email matches the invite. Bypasses RLS to allow users to activate their own invites.';
 
+-- RPC function to reject friend invite
+CREATE OR REPLACE FUNCTION reject_friend_invite(
+  invite_uuid UUID,
+  user_uuid UUID,
+  user_email TEXT
+)
+RETURNS void
+SECURITY DEFINER
+SET search_path = public
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  invite_record RECORD;
+BEGIN
+  SELECT * INTO invite_record
+  FROM friends
+  WHERE id = invite_uuid
+  FOR UPDATE;
+  
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Invite not found';
+  END IF;
+  
+  IF invite_record.status != 'pending' THEN
+    RAISE EXCEPTION 'Invite already processed';
+  END IF;
+  
+  IF LOWER(invite_record.invited_email) != LOWER(user_email) THEN
+    RAISE EXCEPTION 'Email mismatch';
+  END IF;
+  
+  IF user_uuid != auth.uid() THEN
+    RAISE EXCEPTION 'User ID mismatch';
+  END IF;
+  
+  UPDATE friends
+  SET 
+    status = 'rejected',
+    responded_at = NOW()
+  WHERE id = invite_uuid;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION reject_friend_invite(UUID, UUID, TEXT) TO authenticated;
+
+COMMENT ON FUNCTION reject_friend_invite(UUID, UUID, TEXT) IS 
+  'Rejects a pending friend invite. Only accessible to the user whose email matches the invite.';
+
 -- Helper function for querying friends list
 CREATE OR REPLACE FUNCTION get_my_friends()
 RETURNS TABLE (
