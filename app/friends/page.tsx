@@ -17,20 +17,22 @@ import {
   Button,
   Card,
   CardContent,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Divider,
   CircularProgress,
   Alert,
   Paper,
   Chip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
 } from '@mui/material';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import TopNav from '@/components/TopNav';
 import { useAuth } from '@/contexts/AuthContext';
@@ -208,6 +210,33 @@ export default function FriendsPage() {
     }
   };
 
+  // Delete friend (remove friendship)
+  const handleDelete = async (friendId: string) => {
+    if (!confirm('Are you sure you want to remove this friend?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/friends/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Friend removed', 'success');
+        loadData(); // Refresh lists
+      } else {
+        showToast(data.error || 'Failed to remove friend', 'error');
+      }
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      showToast('Failed to remove friend', 'error');
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -268,97 +297,100 @@ export default function FriendsPage() {
         </CardContent>
       </Card>
 
-      {/* Pending Incoming Requests */}
-      {pendingIncoming.length > 0 && (
-        <Paper sx={{ mb: 4, p: 3, bgcolor: '#fff3e0', border: '1px solid #ffb74d' }}>
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-            Pending Friend Requests
-          </Typography>
-          <List>
-            {pendingIncoming.map((request, index) => (
-              <Box key={request.id}>
-                {index > 0 && <Divider />}
-                <ListItem>
-                  <ListItemText
-                    primary={request.senderName}
-                    secondary={request.senderEmail}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton
-                      edge="end"
-                      aria-label="accept"
-                      onClick={() => handleAccept(request.id)}
-                      sx={{ color: 'success.main', mr: 1 }}
-                    >
-                      <CheckIcon />
-                    </IconButton>
-                    <IconButton
-                      edge="end"
-                      aria-label="reject"
-                      onClick={() => handleReject(request.id)}
-                      sx={{ color: 'error.main' }}
-                    >
-                      <CloseIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </Box>
-            ))}
-          </List>
-        </Paper>
-      )}
-
-      {/* Pending Outgoing Requests */}
-      {pendingOutgoing.length > 0 && (
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Sent Requests (Waiting)
-            </Typography>
-            <List>
-              {pendingOutgoing.map((request, index) => (
-                <Box key={request.id}>
-                  {index > 0 && <Divider />}
-                  <ListItem>
-                    <ListItemText
-                      primary={request.invited_email}
-                      secondary={`Sent ${new Date(request.invited_at).toLocaleDateString()}`}
-                    />
-                    <Chip label="Pending" size="small" color="default" />
-                  </ListItem>
-                </Box>
-              ))}
-            </List>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Friends List */}
+      {/* Friends Table - Active and Pending */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PeopleIcon />
-            My Friends ({friends.length})
+            My Friends ({friends.length + pendingIncoming.length})
           </Typography>
           
-          {friends.length === 0 ? (
+          {friends.length === 0 && pendingIncoming.length === 0 && pendingOutgoing.length === 0 ? (
             <Alert severity="info" sx={{ mt: 2 }}>
               No friends yet. Send an invite to get started!
             </Alert>
           ) : (
-            <List>
-              {friends.map((friend, index) => (
-                <Box key={friend.friend_id}>
-                  {index > 0 && <Divider />}
-                  <ListItem>
-                    <ListItemText
-                      primary={friend.friend_name}
-                      secondary={`${friend.friend_email} • Friends since ${new Date(friend.friended_at).toLocaleDateString()}`}
-                    />
-                  </ListItem>
-                </Box>
-              ))}
-            </List>
+            <>
+              <TableContainer sx={{ mt: 2 }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {/* Active Friends */}
+                    {friends.map((friend) => (
+                      <TableRow key={friend.friend_id}>
+                        <TableCell>{friend.friend_name}</TableCell>
+                        <TableCell>{friend.friend_email}</TableCell>
+                        <TableCell>
+                          <Chip label="Active" size="small" color="success" />
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDelete(friend.friend_id)}
+                            aria-label="delete friend"
+                            sx={{ color: 'error.main' }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    {/* Pending Incoming Requests */}
+                    {pendingIncoming.map((request) => (
+                      <TableRow key={request.id} sx={{ bgcolor: '#fff3e0' }}>
+                        <TableCell>{request.senderName}</TableCell>
+                        <TableCell>{request.senderEmail}</TableCell>
+                        <TableCell>
+                          <Chip label="Pending" size="small" color="warning" />
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAccept(request.id)}
+                            aria-label="accept"
+                            sx={{ color: 'success.main', mr: 1 }}
+                          >
+                            <CheckIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleReject(request.id)}
+                            aria-label="reject"
+                            sx={{ color: 'error.main' }}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    {/* Pending Outgoing Requests */}
+                    {pendingOutgoing.map((request) => (
+                      <TableRow key={request.id}>
+                        <TableCell>—</TableCell>
+                        <TableCell>{request.invited_email}</TableCell>
+                        <TableCell>
+                          <Chip label="Sent" size="small" color="default" />
+                        </TableCell>
+                        <TableCell align="right">
+                          <Typography variant="caption" color="text.secondary">
+                            Awaiting response
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
         </CardContent>
       </Card>
