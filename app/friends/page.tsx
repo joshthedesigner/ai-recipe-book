@@ -148,10 +148,21 @@ export default function FriendsPage() {
       if (data.success) {
         // Dev mode: Show accept link in console for easy testing
         if (data.acceptLink) {
-          console.log('🔗 Friend invite accept link:', data.acceptLink);
-          console.log('   Copy this link and open in a new browser window (login as recipient)');
+          console.log('\n========================================');
+          console.log('🔗 FRIEND INVITE LINK (Copy & Paste):');
+          console.log(data.acceptLink);
+          console.log('========================================');
+          console.log('📋 Instructions:');
+          console.log('1. Copy the link above');
+          console.log('2. Open in new browser/incognito window');
+          console.log('3. Login as recipient to accept invite');
+          console.log('========================================\n');
+          
+          // Also show in toast for convenience
+          showToast('Invite sent! Check console for accept link (dev mode)', 'success');
+        } else {
+          showToast(data.message || 'Friend request sent!', 'success');
         }
-        showToast(data.message || 'Friend request sent!', 'success');
         setInviteEmail('');
         loadData(); // Refresh to show in outgoing
       } else {
