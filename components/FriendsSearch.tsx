@@ -129,7 +129,7 @@ export default function FriendsSearch() {
     <Box ref={anchorRef} sx={{ position: 'relative' }}>
       <TextField
         size="small"
-        placeholder="Search friends' cookbooks..."
+        placeholder="Search for your friends"
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onFocus={handleFocus}
