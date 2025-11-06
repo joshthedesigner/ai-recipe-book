@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import NotificationBell from '@/components/NotificationBell';
@@ -23,8 +24,18 @@ import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
 
 export default function DesktopNav() {
+  const router = useRouter();
   const { user } = useAuth();
-  const { loading: groupsLoading } = useGroup();
+  const { groups, loading: groupsLoading, switchGroup } = useGroup();
+
+  const handleHomeClick = () => {
+    // Switch to user's own cookbook
+    const ownGroup = groups.find(g => g.isOwn);
+    if (ownGroup) {
+      switchGroup(ownGroup.id);
+    }
+    router.push('/browse');
+  };
 
   return (
     <AppBar
@@ -94,7 +105,7 @@ export default function DesktopNav() {
           {/* User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
             {/* Home Icon */}
-            <IconButton component={Link} href="/browse">
+            <IconButton onClick={handleHomeClick}>
               <HomeIcon />
             </IconButton>
             

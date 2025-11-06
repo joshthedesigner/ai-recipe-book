@@ -18,6 +18,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeIcon from '@mui/icons-material/Home';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import NotificationBell from '@/components/NotificationBell';
@@ -25,8 +26,9 @@ import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
 
 export default function MobileNav() {
+  const router = useRouter();
   const { user } = useAuth();
-  const { loading: groupsLoading } = useGroup();
+  const { groups, loading: groupsLoading, switchGroup } = useGroup();
   const [searchExpanded, setSearchExpanded] = useState(false);
 
   const handleSearchExpand = () => {
@@ -35,6 +37,15 @@ export default function MobileNav() {
 
   const handleSearchCollapse = () => {
     setSearchExpanded(false);
+  };
+
+  const handleHomeClick = () => {
+    // Switch to user's own cookbook
+    const ownGroup = groups.find(g => g.isOwn);
+    if (ownGroup) {
+      switchGroup(ownGroup.id);
+    }
+    router.push('/browse');
   };
 
   return (
@@ -105,7 +116,7 @@ export default function MobileNav() {
                 {/* Right Side Icons */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
                   {/* Home Icon */}
-                  <IconButton component={Link} href="/browse">
+                  <IconButton onClick={handleHomeClick}>
                     <HomeIcon />
                   </IconButton>
                   
