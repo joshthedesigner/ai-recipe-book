@@ -505,10 +505,22 @@ export default function BrowsePage() {
               variant="h5" 
               sx={{ 
                 fontWeight: 500,
-                color: 'text.secondary',
+                color: 'text.primary',
+                mb: 2,
               }}
             >
               Add your first recipe to get started!
+            </Typography>
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                color: 'text.secondary',
+                maxWidth: 600,
+                mx: 'auto',
+              }}
+            >
+              Your recipe collection is waiting to be filled with delicious discoveries. 
+              Start building your culinary library!
             </Typography>
           </Box>
         )}
