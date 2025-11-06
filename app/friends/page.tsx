@@ -269,12 +269,12 @@ export default function FriendsPage() {
       {/* Invite Friend Form */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
             <PersonAddIcon />
             Invite a Friend
           </Typography>
           <form onSubmit={handleSendInvite}>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
               <TextField
                 fullWidth
                 label="Friend's Email"
@@ -288,7 +288,7 @@ export default function FriendsPage() {
                 type="submit"
                 variant="contained"
                 disabled={sending || !inviteEmail.trim()}
-                sx={{ minWidth: 120 }}
+                sx={{ minWidth: 120, height: 40 }}
               >
                 {sending ? <CircularProgress size={24} /> : 'Send Invite'}
               </Button>
