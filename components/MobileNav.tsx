@@ -57,6 +57,7 @@ export default function MobileNav() {
           bgcolor: '#ffffff',
           borderBottom: '1px solid',
           borderColor: 'divider',
+          borderRadius: 0,
         }}
       >
         <Toolbar 
