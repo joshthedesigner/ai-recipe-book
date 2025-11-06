@@ -25,6 +25,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(friendId)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid friend ID format' },
+        { status: 400 }
+      );
+    }
+
     const supabase = createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -35,18 +44,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Delete the friendship (both rows if they exist)
-    // The friendship is bidirectional, so we need to check both directions
-    const { error: deleteError } = await supabase
-      .from('friends')
-      .delete()
-      .eq('status', 'accepted')
-      .or(`and(user_a_id.eq.${user.id},user_b_id.eq.${friendId}),and(user_a_id.eq.${friendId},user_b_id.eq.${user.id})`);
+    // Delete the friendship using RPC function (prevents SQL injection)
+    // RPC function validates and deletes bidirectional friendship
+    const { error: rpcError } = await supabase.rpc('remove_friend', {
+      friend_uuid: friendId,
+    });
 
-    if (deleteError) {
-      console.error('Error removing friend:', deleteError);
+    if (rpcError) {
+      console.error('Error removing friend:', rpcError);
       return NextResponse.json(
-        { success: false, error: 'Failed to remove friend', details: deleteError.message },
+        { success: false, error: 'Failed to remove friend', details: rpcError.message },
         { status: 500 }
       );
     }

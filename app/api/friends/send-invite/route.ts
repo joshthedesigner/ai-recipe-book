@@ -46,7 +46,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for existing pending invite
+    // Check for existing pending or accepted invite
+    // Use generic error message to prevent email enumeration
     const { data: existingInvite } = await supabase
       .from('friends')
       .select('id, status')
@@ -54,19 +55,11 @@ export async function POST(request: NextRequest) {
       .eq('invited_email', recipientEmail.toLowerCase())
       .single();
 
-    if (existingInvite) {
-      if (existingInvite.status === 'pending') {
-        return NextResponse.json(
-          { success: false, error: 'Friend request already sent to this email' },
-          { status: 400 }
-        );
-      }
-      if (existingInvite.status === 'accepted') {
-        return NextResponse.json(
-          { success: false, error: 'Already friends with this user' },
-          { status: 400 }
-        );
-      }
+    if (existingInvite && (existingInvite.status === 'pending' || existingInvite.status === 'accepted')) {
+      return NextResponse.json(
+        { success: false, error: 'Cannot send friend request to this email' },
+        { status: 400 }
+      );
     }
 
     // Create pending friend invite
