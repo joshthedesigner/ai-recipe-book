@@ -24,6 +24,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import NotificationBell from '@/components/NotificationBell';
+import FriendsSearch from '@/components/FriendsSearch';
 
 export default function TopNav() {
   const router = useRouter();
@@ -122,79 +123,10 @@ export default function TopNav() {
             </Typography>
           </Link>
 
-          {/* Group Switcher - Only show if user has multiple groups */}
-          {user && groups.length > 1 && !groupsLoading && (
+          {/* Friends Search - Navigate to friends' cookbooks */}
+          {user && !groupsLoading && (
             <Box sx={{ ml: 3, display: 'flex', alignItems: 'center' }}>
-              <Select
-                value={activeGroup?.id || ''}
-                onChange={(e) => {
-                  switchGroup(e.target.value);
-                  router.push('/browse');
-                }}
-                size="small"
-                sx={{
-                  width: 330,
-                  '& .MuiSelect-select': {
-                    py: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                  },
-                }}
-                renderValue={(selected) => {
-                  const group = groups.find(g => g.id === selected);
-                  return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <Typography variant="body2" sx={{ mr: 1.5 }}>
-                        {group?.name || ''}
-                      </Typography>
-                      <Box sx={{ width: 52, display: 'flex', justifyContent: 'flex-start' }}>
-                        {group?.isOwn && (
-                          <Chip
-                            label="Owner"
-                            size="small"
-                            color="primary"
-                            sx={{ 
-                              height: 20, 
-                              fontSize: '0.7rem',
-                              fontWeight: 500,
-                              '& .MuiChip-label': {
-                                color: 'white',
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  );
-                }}
-              >
-                {groups.map((group) => (
-                  <MenuItem key={group.id} value={group.id}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <Typography variant="body2" sx={{ mr: 1.5 }}>
-                        {group.name}
-                      </Typography>
-                      <Box sx={{ width: 52, display: 'flex', justifyContent: 'flex-start' }}>
-                        {group.isOwn && (
-                          <Chip
-                            label="Owner"
-                            size="small"
-                            color="primary"
-                            sx={{ 
-                              height: 20, 
-                              fontSize: '0.7rem',
-                              fontWeight: 500,
-                              '& .MuiChip-label': {
-                                color: 'white',
-                              },
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </Box>
-                  </MenuItem>
-                ))}
-              </Select>
+              <FriendsSearch />
             </Box>
           )}
 

@@ -20,6 +20,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -35,7 +36,7 @@ import { useGroup } from '@/contexts/GroupContext';
 export default function BrowsePage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { activeGroup, loading: groupsLoading } = useGroup();
+  const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
@@ -345,17 +346,43 @@ export default function BrowsePage() {
 
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
-              Recipe Collection
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Browse and search your saved recipes
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-          {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+        <Box sx={{ mb: 4 }}>
+          {/* Back button for friend's cookbook */}
+          {activeGroup?.isFriend && (
+            <IconButton
+              onClick={() => {
+                const ownGroup = groups.find(g => g.isOwn);
+                if (ownGroup) {
+                  switchGroup(ownGroup.id);
+                }
+              }}
+              sx={{ 
+                mb: 2,
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+          )}
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+            <Box>
+              <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
+                {activeGroup?.isFriend 
+                  ? `${activeGroup.name}` 
+                  : 'Recipe Collection'}
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                {activeGroup?.isFriend
+                  ? 'Browsing friend\'s cookbook'
+                  : 'Browse and search your saved recipes'}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+            </Box>
           </Box>
         </Box>
 
