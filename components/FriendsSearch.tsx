@@ -42,6 +42,7 @@ export default function FriendsSearch() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
+  const popperRef = useRef<HTMLDivElement>(null);
 
   // Load friends list
   useEffect(() => {
@@ -103,9 +104,17 @@ export default function FriendsSearch() {
   // Close when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(event.target as Node)) {
-        handleClose();
+      const target = event.target as Node;
+      
+      // Don't close if clicking inside the search input or the dropdown
+      if (
+        (anchorRef.current && anchorRef.current.contains(target)) ||
+        (popperRef.current && popperRef.current.contains(target))
+      ) {
+        return;
       }
+      
+      handleClose();
     };
 
     if (open) {
@@ -157,6 +166,7 @@ export default function FriendsSearch() {
         sx={{ zIndex: 1300, width: anchorRef.current?.offsetWidth }}
       >
         <Paper
+          ref={popperRef}
           elevation={8}
           sx={{
             mt: 0.5,
