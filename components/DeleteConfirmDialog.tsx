@@ -18,6 +18,9 @@ interface DeleteConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
+  dialogTitle?: string;
+  message?: string;
+  confirmText?: string;
 }
 
 export default function DeleteConfirmDialog({
@@ -26,7 +29,12 @@ export default function DeleteConfirmDialog({
   onConfirm,
   onCancel,
   loading = false,
+  dialogTitle = 'Delete Recipe?',
+  message,
+  confirmText = 'Delete',
 }: DeleteConfirmDialogProps) {
+  const defaultMessage = `Are you sure you want to delete "${title}"?`;
+  
   return (
     <Dialog
       open={open}
@@ -43,14 +51,14 @@ export default function DeleteConfirmDialog({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <WarningIcon color="error" />
           <Typography variant="h6" component="span">
-            Delete Recipe?
+            {dialogTitle}
           </Typography>
         </Box>
       </DialogTitle>
       
       <DialogContent>
         <Typography variant="body1" gutterBottom>
-          Are you sure you want to delete <strong>"{title}"</strong>?
+          {message || defaultMessage}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           This action cannot be undone.
@@ -73,7 +81,7 @@ export default function DeleteConfirmDialog({
           startIcon={loading ? <CircularProgress size={16} color="inherit" /> : null}
           sx={{ bgcolor: 'error.main', '&:hover': { bgcolor: 'error.dark' } }}
         >
-          {loading ? 'Deleting...' : 'Delete'}
+          {loading ? 'Deleting...' : confirmText}
         </AppButton>
       </DialogActions>
     </Dialog>

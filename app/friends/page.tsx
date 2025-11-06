@@ -35,6 +35,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import TopNav from '@/components/TopNav';
+import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -69,6 +70,10 @@ export default function FriendsPage() {
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [sending, setSending] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteType, setDeleteType] = useState<'friend' | 'invite'>('friend');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Friends feature is always enabled
 
@@ -210,57 +215,74 @@ export default function FriendsPage() {
     }
   };
 
-  // Delete friend (remove friendship)
-  const handleDelete = async (friendId: string) => {
-    if (!confirm('Are you sure you want to remove this friend?')) {
-      return;
-    }
-
-    try {
-      const response = await fetch('/api/friends/remove', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ friendId }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast('Friend removed', 'success');
-        loadData(); // Refresh lists
-      } else {
-        showToast(data.error || 'Failed to remove friend', 'error');
-      }
-    } catch (error) {
-      console.error('Error removing friend:', error);
-      showToast('Failed to remove friend', 'error');
-    }
+  // Open delete dialog for friend
+  const handleDeleteClick = (friendId: string, friendName: string) => {
+    setDeleteTarget({ id: friendId, name: friendName });
+    setDeleteType('friend');
+    setDeleteDialogOpen(true);
   };
 
-  // Cancel pending outgoing invite
-  const handleCancelInvite = async (inviteId: string) => {
-    if (!confirm('Are you sure you want to cancel this invite?')) {
-      return;
-    }
+  // Open delete dialog for pending invite
+  const handleCancelInviteClick = (inviteId: string, inviteEmail: string) => {
+    setDeleteTarget({ id: inviteId, name: inviteEmail });
+    setDeleteType('invite');
+    setDeleteDialogOpen(true);
+  };
+
+  // Cancel delete dialog
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setDeleteTarget(null);
+  };
+
+  // Confirm delete action
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
 
     try {
-      const response = await fetch('/api/friends/cancel-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteId }),
-      });
+      setDeleting(true);
 
-      const data = await response.json();
+      if (deleteType === 'friend') {
+        // Delete friend (remove friendship)
+        const response = await fetch('/api/friends/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ friendId: deleteTarget.id }),
+        });
 
-      if (data.success) {
-        showToast('Invite cancelled', 'success');
-        loadData(); // Refresh lists
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Friend removed', 'success');
+          loadData(); // Refresh lists
+        } else {
+          showToast(data.error || 'Failed to remove friend', 'error');
+        }
       } else {
-        showToast(data.error || 'Failed to cancel invite', 'error');
+        // Cancel pending outgoing invite
+        const response = await fetch('/api/friends/cancel-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inviteId: deleteTarget.id }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          showToast('Invite cancelled', 'success');
+          loadData(); // Refresh lists
+        } else {
+          showToast(data.error || 'Failed to cancel invite', 'error');
+        }
       }
+
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
     } catch (error) {
-      console.error('Error cancelling invite:', error);
-      showToast('Failed to cancel invite', 'error');
+      console.error('Error deleting:', error);
+      showToast(deleteType === 'friend' ? 'Failed to remove friend' : 'Failed to cancel invite', 'error');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -360,7 +382,7 @@ export default function FriendsPage() {
                         <TableCell align="right">
                           <IconButton
                             size="small"
-                            onClick={() => handleDelete(friend.friend_id)}
+                            onClick={() => handleDeleteClick(friend.friend_id, friend.friend_name)}
                             aria-label="delete friend"
                             sx={{ color: 'error.main' }}
                           >
@@ -410,7 +432,7 @@ export default function FriendsPage() {
                         <TableCell align="right">
                           <IconButton
                             size="small"
-                            onClick={() => handleCancelInvite(request.id)}
+                            onClick={() => handleCancelInviteClick(request.id, request.invited_email)}
                             aria-label="cancel invite"
                             sx={{ color: 'error.main' }}
                           >
@@ -426,6 +448,22 @@ export default function FriendsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        title={deleteTarget?.name || ''}
+        dialogTitle={deleteType === 'friend' ? 'Remove Friend?' : 'Cancel Invite?'}
+        message={
+          deleteType === 'friend'
+            ? `Are you sure you want to remove ${deleteTarget?.name} from your friends?`
+            : `Are you sure you want to cancel the invite to ${deleteTarget?.name}?`
+        }
+        confirmText={deleteType === 'friend' ? 'Remove' : 'Cancel Invite'}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        loading={deleting}
+      />
     </Container>
     </Box>
   );
