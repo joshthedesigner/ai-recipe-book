@@ -560,7 +560,7 @@ export default function BrowsePage() {
                     recipe={recipe} 
                     compact 
                     onClick={() => handleCardClick(recipe)}
-                    onDelete={handleDeleteClick}
+                    onDelete={canAddRecipes ? handleDeleteClick : undefined}
                   />
                 </Grid>
               ))}
