@@ -41,6 +41,28 @@ export async function getUserRole(
       return memberData.role as 'read' | 'write';
     }
 
+    // Check if group is owned by a friend (Friends feature)
+    if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
+      // Get group owner
+      const { data: groupOwner } = await supabase
+        .from('recipe_groups')
+        .select('owner_id')
+        .eq('id', groupId)
+        .single();
+
+      if (groupOwner?.owner_id) {
+        // Check if owner is my friend using helper RPC
+        const { data: areFriends } = await supabase.rpc('are_friends', {
+          user1_id: userId,
+          user2_id: groupOwner.owner_id,
+        });
+
+        if (areFriends) {
+          return 'read'; // Friends have read-only access to owned groups
+        }
+      }
+    }
+
     return null;
   } catch (error) {
     console.error('Error getting user role:', error);

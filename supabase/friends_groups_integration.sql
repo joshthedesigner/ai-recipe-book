@@ -48,3 +48,23 @@ GRANT EXECUTE ON FUNCTION get_friends_groups() TO authenticated;
 COMMENT ON FUNCTION get_friends_groups() IS 
   'Returns all owned recipe groups of the current user''s friends for display in group switcher.';
 
+-- Simple helper function to check if two users are friends
+CREATE OR REPLACE FUNCTION are_friends(user1_id UUID, user2_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM friends
+    WHERE status = 'accepted'
+      AND ((user_a_id = user1_id AND user_b_id = user2_id)
+        OR (user_a_id = user2_id AND user_b_id = user1_id))
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION are_friends(UUID, UUID) TO authenticated;
+
+COMMENT ON FUNCTION are_friends(UUID, UUID) IS 
+  'Returns true if the two users are friends (accepted friendship). Simple reusable helper.';
+
