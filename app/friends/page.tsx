@@ -269,12 +269,12 @@ export default function FriendsPage() {
       {/* Invite Friend Form */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+          <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <PersonAddIcon />
             Invite a Friend
           </Typography>
           <form onSubmit={handleSendInvite}>
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 2 }}>
               <TextField
                 fullWidth
                 label="Friend's Email"
