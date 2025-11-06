@@ -30,8 +30,6 @@ import RecipeSidebar from '@/components/RecipeSidebar';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
-import { supabase } from '@/db/supabaseClient';
-import { canUserAddRecipes } from '@/utils/permissions';
 import { useGroup } from '@/contexts/GroupContext';
 
 export default function BrowsePage() {
@@ -124,20 +122,19 @@ export default function BrowsePage() {
   }, [user, authLoading, router]);
 
   // Check if user has permission to add recipes for active group
+  // Use role from GroupContext (already fetched server-side) instead of querying client-side
   useEffect(() => {
-    async function checkPermissions() {
-      if (!user || !activeGroup) return;
-
-      try {
-        setGroupId(activeGroup.id);
-        const hasPermission = await canUserAddRecipes(supabase, user.id, activeGroup.id);
-        setCanAddRecipes(hasPermission);
-      } catch (error) {
-        setCanAddRecipes(false);
-      }
+    if (!user || !activeGroup) {
+      setCanAddRecipes(false);
+      setGroupId(null);
+      return;
     }
 
-    checkPermissions();
+    setGroupId(activeGroup.id);
+    // GroupContext already has the role - just check it!
+    // owner and write can add, read and friend groups cannot
+    const hasPermission = activeGroup.role === 'owner' || activeGroup.role === 'write';
+    setCanAddRecipes(hasPermission);
   }, [user, activeGroup]);
 
   // Eager loading: Fetch recipes when active group changes
