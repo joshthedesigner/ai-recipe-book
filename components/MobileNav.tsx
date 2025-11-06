@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import HomeIcon from '@mui/icons-material/Home';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
@@ -103,6 +104,11 @@ export default function MobileNav() {
 
                 {/* Right Side Icons */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+                  {/* Home Icon */}
+                  <IconButton component={Link} href="/browse">
+                    <HomeIcon />
+                  </IconButton>
+                  
                   {/* Search Icon */}
                   {user && !groupsLoading && (
                     <IconButton onClick={handleSearchExpand}>

@@ -11,8 +11,10 @@ import {
   AppBar,
   Toolbar,
   Typography,
+  IconButton,
   Box,
 } from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
@@ -91,6 +93,11 @@ export default function DesktopNav() {
 
           {/* User Menu */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+            {/* Home Icon */}
+            <IconButton component={Link} href="/browse">
+              <HomeIcon />
+            </IconButton>
+            
             {/* Friends Bell */}
             {user && <NotificationBell />}
             
