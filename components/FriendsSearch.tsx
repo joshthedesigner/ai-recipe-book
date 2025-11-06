@@ -180,10 +180,8 @@ export default function FriendsSearch({
         anchorEl={anchorRef.current}
         placement="bottom-start"
         sx={{ 
-          zIndex: 1300, 
-          width: fullWidth ? '100vw' : anchorRef.current?.offsetWidth,
-          left: fullWidth ? '0 !important' : undefined,
-          right: fullWidth ? 0 : undefined,
+          zIndex: 1300,
+          width: anchorRef.current?.offsetWidth,
         }}
       >
         <Paper
