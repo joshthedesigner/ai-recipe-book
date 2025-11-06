@@ -497,16 +497,45 @@ export default function BrowsePage() {
           <Box
             sx={{
               textAlign: 'center',
-              py: 8,
-              color: 'text.secondary',
+              py: 12,
+              px: 3,
             }}
           >
-            <Typography variant="h6" gutterBottom>
-              No recipes yet
+            <Typography 
+              variant="h3" 
+              sx={{ 
+                fontWeight: 700,
+                mb: 2,
+                color: 'text.primary',
+                fontSize: { xs: '2rem', md: '3rem' }
+              }}
+            >
+              🍳 Let's Cook Something Amazing!
             </Typography>
-            <Typography variant="body2">
-              Start by adding your first recipe in the chat!
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 4, 
+                color: 'text.secondary',
+                fontWeight: 400,
+                maxWidth: 600,
+                mx: 'auto',
+              }}
+            >
+              Your recipe collection is waiting to be filled with delicious discoveries. 
+              Add your first recipe and start building your culinary library!
             </Typography>
+            <AppButton
+              variant="primary"
+              onClick={() => setSidebarOpen(true)}
+              sx={{ 
+                fontSize: '1.1rem',
+                py: 1.5,
+                px: 4,
+              }}
+            >
+              Add Your First Recipe
+            </AppButton>
           </Box>
         )}
 
