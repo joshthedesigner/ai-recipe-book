@@ -8,6 +8,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   TextField,
@@ -33,6 +34,7 @@ interface Friend {
 }
 
 export default function FriendsSearch() {
+  const router = useRouter();
   const { user } = useAuth();
   const { groups, switchGroup } = useGroup();
   const [open, setOpen] = useState(false);
@@ -81,6 +83,7 @@ export default function FriendsSearch() {
     
     if (friendGroup) {
       switchGroup(friendGroup.id);
+      router.push('/browse'); // Navigate to browse page to show friend's recipes
       setOpen(false);
       setSearchValue('');
     } else {
@@ -121,6 +124,11 @@ export default function FriendsSearch() {
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onFocus={handleFocus}
+        autoComplete="off"
+        inputProps={{
+          autoComplete: 'off',
+          'aria-autocomplete': 'none',
+        }}
         InputProps={{
           startAdornment: (
             <InputAdornment position="start">
