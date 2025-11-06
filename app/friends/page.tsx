@@ -38,6 +38,7 @@ import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useGroup } from '@/contexts/GroupContext';
 
 interface Friend {
   friend_id: string;
@@ -63,6 +64,7 @@ export default function FriendsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
+  const { groups, switchGroup } = useGroup();
   
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingIncoming, setPendingIncoming] = useState<PendingRequest[]>([]);
@@ -246,6 +248,20 @@ export default function FriendsPage() {
     setDeleteTarget(null);
   };
 
+  // Navigate to friend's cookbook
+  const handleFriendClick = (friendName: string) => {
+    // Find the friend's group by matching the name pattern
+    const friendGroupName = `${friendName}'s RecipeBook`;
+    const friendGroup = groups.find(g => g.isFriend && g.name === friendGroupName);
+    
+    if (friendGroup) {
+      switchGroup(friendGroup.id);
+      router.push('/browse');
+    } else {
+      showToast('Could not find friend\'s cookbook', 'error');
+    }
+  };
+
   // Confirm delete action
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -385,7 +401,22 @@ export default function FriendsPage() {
                     {/* Active Friends */}
                     {friends.map((friend) => (
                       <TableRow key={friend.friend_id}>
-                        <TableCell>{friend.friend_name}</TableCell>
+                        <TableCell>
+                          <Box
+                            component="span"
+                            onClick={() => handleFriendClick(friend.friend_name)}
+                            sx={{
+                              cursor: 'pointer',
+                              color: 'primary.main',
+                              fontWeight: 500,
+                              '&:hover': {
+                                textDecoration: 'underline',
+                              },
+                            }}
+                          >
+                            {friend.friend_name}
+                          </Box>
+                        </TableCell>
                         <TableCell>{friend.friend_email}</TableCell>
                         <TableCell>
                           <Chip label="Active" size="small" color="success" />
