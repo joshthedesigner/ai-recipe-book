@@ -17,6 +17,8 @@ export async function getUserRole(
   groupId: string
 ): Promise<UserRole> {
   try {
+    console.log('🔍 getUserRole: START - userId:', userId, 'groupId:', groupId);
+    
     // Check if user is the group owner
     const { data: groupData } = await supabase
       .from('recipe_groups')
@@ -24,7 +26,10 @@ export async function getUserRole(
       .eq('id', groupId)
       .single();
 
+    console.log('🔍 getUserRole: groupData:', groupData);
+
     if (groupData?.owner_id === userId) {
+      console.log('✅ getUserRole: User is OWNER');
       return 'owner';
     }
 
@@ -37,31 +42,47 @@ export async function getUserRole(
       .eq('status', 'active')
       .single();
 
+    console.log('🔍 getUserRole: memberData:', memberData);
+
     if (memberData) {
+      console.log('✅ getUserRole: User is MEMBER with role:', memberData.role);
       return memberData.role as 'read' | 'write';
     }
 
     // Check if group is owned by a friend (Friends feature)
     // Note: This is primarily for server-side API route validation
     // Client-side should use activeGroup.role from GroupContext instead
+    console.log('🔍 getUserRole: Checking friend access...');
+    console.log('🔍 getUserRole: NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED =', process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED);
+    
     if (process.env.NEXT_PUBLIC_FRIENDS_FEATURE_ENABLED === 'true') {
       // Reuse groupData from line 21 (already has owner_id)
       if (groupData?.owner_id) {
+        console.log('🔍 getUserRole: Calling are_friends RPC with user1:', userId, 'user2:', groupData.owner_id);
+        
         // Check if owner is my friend using helper RPC
-        const { data: areFriends } = await supabase.rpc('are_friends', {
+        const { data: areFriends, error: rpcError } = await supabase.rpc('are_friends', {
           user1_id: userId,
           user2_id: groupData.owner_id,
         });
         
+        console.log('🔍 getUserRole: are_friends result:', areFriends, 'error:', rpcError);
+        
         if (areFriends) {
+          console.log('✅ getUserRole: User is FRIEND - granting read access');
           return 'read'; // Friends have read-only access to owned groups
         }
+      } else {
+        console.log('⚠️ getUserRole: groupData.owner_id is missing');
       }
+    } else {
+      console.log('⚠️ getUserRole: Friends feature NOT enabled');
     }
 
+    console.log('❌ getUserRole: No access found - returning null');
     return null;
   } catch (error) {
-    console.error('Error getting user role:', error);
+    console.error('❌ Error getting user role:', error);
     return null;
   }
 }
@@ -272,6 +293,7 @@ export async function getUserGroups(
 
 /**
  * Check if user has any access to a group
+ * Relies on RLS policies to enforce access control at the database level
  */
 export async function hasGroupAccess(
   supabase: SupabaseClient,

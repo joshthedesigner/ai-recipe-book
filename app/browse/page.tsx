@@ -125,7 +125,7 @@ export default function BrowsePage() {
   // Use role from GroupContext (already fetched server-side) instead of querying client-side
   useEffect(() => {
     if (!user || !activeGroup) {
-      setCanAddRecipes(false);
+        setCanAddRecipes(false);
       setGroupId(null);
       return;
     }
