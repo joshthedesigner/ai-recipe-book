@@ -32,6 +32,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import PeopleIcon from '@mui/icons-material/People';
+import TopNav from '@/components/TopNav';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -209,8 +210,11 @@ export default function FriendsPage() {
 
   if (authLoading || loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <TopNav />
+        <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
+          <CircularProgress />
+        </Box>
       </Box>
     );
   }
@@ -220,7 +224,9 @@ export default function FriendsPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <TopNav />
+      <Container maxWidth="md" sx={{ py: 4, flex: 1 }}>
       {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
@@ -357,6 +363,7 @@ export default function FriendsPage() {
         </CardContent>
       </Card>
     </Container>
+    </Box>
   );
 }
 
