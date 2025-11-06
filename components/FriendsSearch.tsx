@@ -220,12 +220,8 @@ export default function FriendsSearch({
                   >
                     <ListItemText
                       primary={friend.friend_name}
-                      secondary={friend.friend_email}
                       primaryTypographyProps={{ 
                         fontWeight: 500,
-                        sx: { textAlign: 'left' }
-                      }}
-                      secondaryTypographyProps={{
                         sx: { textAlign: 'left' }
                       }}
                     />
