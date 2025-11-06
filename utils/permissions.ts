@@ -141,14 +141,14 @@ export async function getUserGroups(
         friendsGroups.forEach((fg: any) => {
           groups.push({
             id: fg.group_id,
-            name: `${fg.friend_name || fg.friend_email}'s Cookbook`,
+            name: `${fg.friend_name || fg.friend_email}'s RecipeBook`,
             role: 'read' as UserRole,
             isOwn: false,
             isFriend: true,
             joinedAt: fg.friended_at,
           });
         });
-        
+
         console.log(`getUserGroups: Added ${friendsGroups.length} friend group(s)`);
       }
     } catch (friendsError) {
