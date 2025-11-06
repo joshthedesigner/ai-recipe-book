@@ -93,6 +93,27 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
           },
         }}
       >
+        {/* Menu button positioned absolutely to avoid button nesting */}
+        {onDelete && (
+          <IconButton
+            size="small"
+            onClick={handleMenuClick}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1,
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+        
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           {recipe.image_url ? (
             <CardMedia
@@ -122,20 +143,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
                 {recipe.title}
               </Typography>
-              {onDelete && (
-                <IconButton
-                  size="small"
-                  onClick={handleMenuClick}
-                  sx={{
-                    mt: -0.5,
-                    '&:hover': {
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  <MoreVertIcon fontSize="small" />
-                </IconButton>
-              )}
             </Box>
 
             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
