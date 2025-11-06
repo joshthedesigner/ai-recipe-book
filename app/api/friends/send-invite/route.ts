@@ -90,8 +90,13 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error creating friend invite:', insertError);
+      console.error('Insert error details:', JSON.stringify(insertError, null, 2));
       return NextResponse.json(
-        { success: false, error: 'Failed to create friend request' },
+        { 
+          success: false, 
+          error: 'Failed to create friend request',
+          details: insertError.message || insertError.hint || 'Unknown error'
+        },
         { status: 500 }
       );
     }

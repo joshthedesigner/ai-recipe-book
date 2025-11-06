@@ -45,22 +45,17 @@ CREATE INDEX idx_friends_requester ON friends(requester_id);
 ALTER TABLE friends ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
-CREATE POLICY "Users can view their friendships"
-  ON friends FOR SELECT
+-- Note: Simplified to avoid auth.users subqueries which cause permission issues
+CREATE POLICY "Users can view and manage their friend data"
+  ON friends FOR ALL
   USING (
     requester_id = auth.uid() 
     OR user_a_id = auth.uid() 
     OR user_b_id = auth.uid()
-    OR invited_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+  )
+  WITH CHECK (
+    requester_id = auth.uid()
   );
-
-CREATE POLICY "Users can send invites"
-  ON friends FOR INSERT
-  WITH CHECK (requester_id = auth.uid());
-
-CREATE POLICY "System can update via RPC"
-  ON friends FOR UPDATE
-  USING (true);
 
 -- RPC function to activate friend invite (matches activate_user_invite pattern)
 CREATE OR REPLACE FUNCTION activate_friend_invite(
@@ -154,4 +149,35 @@ GRANT EXECUTE ON FUNCTION get_my_friends() TO authenticated;
 
 COMMENT ON FUNCTION get_my_friends() IS 
   'Returns all accepted friends for the current user.';
+
+-- Helper function to get pending invites for current user's email
+CREATE OR REPLACE FUNCTION get_my_pending_invites()
+RETURNS TABLE (
+  invite_id uuid,
+  sender_id uuid,
+  sender_name text,
+  sender_email text,
+  invited_at timestamptz
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT 
+    f.id AS invite_id,
+    f.requester_id AS sender_id,
+    u.raw_user_meta_data->>'name' AS sender_name,
+    u.email AS sender_email,
+    f.invited_at
+  FROM friends f
+  JOIN auth.users u ON f.requester_id = u.id
+  WHERE f.invited_email = (SELECT email FROM auth.users WHERE id = auth.uid())
+    AND f.status = 'pending'
+  ORDER BY f.invited_at DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_my_pending_invites() TO authenticated;
+
+COMMENT ON FUNCTION get_my_pending_invites() IS 
+  'Returns all pending friend invites sent to the current user''s email.';
 

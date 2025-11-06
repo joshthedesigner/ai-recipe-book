@@ -147,7 +147,11 @@ export default function FriendsPage() {
         setInviteEmail('');
         loadData(); // Refresh to show in outgoing
       } else {
-        showToast(data.error || 'Failed to send friend request', 'error');
+        const errorMsg = data.details 
+          ? `${data.error}: ${data.details}` 
+          : data.error || 'Failed to send friend request';
+        console.error('API Error Response:', data);
+        showToast(errorMsg, 'error');
       }
     } catch (error) {
       console.error('Error sending invite:', error);

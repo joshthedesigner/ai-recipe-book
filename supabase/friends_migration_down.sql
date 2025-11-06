@@ -7,6 +7,7 @@
 -- Run this in Supabase SQL Editor to fully revert
 
 -- Drop functions
+DROP FUNCTION IF EXISTS get_my_pending_invites();
 DROP FUNCTION IF EXISTS get_my_friends();
 DROP FUNCTION IF EXISTS activate_friend_invite(UUID, UUID, TEXT);
 

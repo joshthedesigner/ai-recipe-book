@@ -42,22 +42,9 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching friends:', friendsError);
     }
 
-    // Get pending incoming requests (sent to my email)
+    // Get pending incoming requests using helper function (bypasses RLS)
     const { data: pendingIncoming, error: incomingError } = await supabase
-      .from('friends')
-      .select(`
-        id,
-        requester_id,
-        invited_email,
-        invited_at,
-        requester:requester_id (
-          user_metadata,
-          email
-        )
-      `)
-      .eq('invited_email', user.email?.toLowerCase())
-      .eq('status', 'pending')
-      .order('invited_at', { ascending: false });
+      .rpc('get_my_pending_invites');
 
     if (incomingError) {
       console.error('Error fetching pending incoming:', incomingError);
@@ -75,11 +62,11 @@ export async function GET(request: NextRequest) {
       console.error('Error fetching pending outgoing:', outgoingError);
     }
 
-    // Format incoming requests
+    // Format incoming requests (already formatted by function)
     const formattedIncoming = (pendingIncoming || []).map((invite: any) => ({
-      id: invite.id,
-      senderName: invite.requester?.user_metadata?.name || invite.requester?.email || 'Unknown',
-      senderEmail: invite.requester?.email || 'Unknown',
+      id: invite.invite_id,
+      senderName: invite.sender_name || invite.sender_email || 'Unknown',
+      senderEmail: invite.sender_email || 'Unknown',
       invitedAt: invite.invited_at,
     }));
 
