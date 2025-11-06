@@ -96,7 +96,7 @@ export default function UserAvatarMenu() {
           },
         }}
       >
-        <MenuItem disabled>
+        <MenuItem disableRipple sx={{ cursor: 'default' }}>
           <ListItemIcon>
             <PersonIcon fontSize="small" />
           </ListItemIcon>
