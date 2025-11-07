@@ -475,6 +475,8 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       });
 
       if (storeData.success) {
+        console.log('🟢 Store success! Recipe:', storeData.recipe);
+        
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -488,15 +490,20 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           },
         };
 
+        console.log('🟢 Setting assistant message:', assistantMessage);
         setMessages((prev) => [...prev, assistantMessage]);
 
         // Set pending recipe for confirmation
         if (storeData.recipe) {
+          console.log('🟢 Setting pending recipe for confirmation');
           setPendingRecipe(storeData.recipe);
+        } else {
+          console.warn('⚠️ No recipe in response!');
         }
 
         setPendingCookbookInfo(null);
       } else {
+        console.error('🔴 Store failed:', storeData.error);
         throw new Error(storeData.error || 'Failed to process recipe');
       }
     } catch (error) {
