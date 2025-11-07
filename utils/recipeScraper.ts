@@ -24,11 +24,8 @@ interface ScrapedRecipe {
  * Strip HTML tags and decode HTML entities from a string
  */
 function stripHtml(text: string): string {
-  // Remove HTML tags
-  const withoutTags = text.replace(/<[^>]*>/g, '');
-  
-  // Decode common HTML entities
-  const decoded = withoutTags
+  // FIRST: Decode HTML entities (in case they're encoded like &lt;p&gt;)
+  const decoded = text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
@@ -36,7 +33,10 @@ function stripHtml(text: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ');
   
-  return decoded.trim();
+  // SECOND: Remove HTML tags (now that entities are decoded to actual < >)
+  const withoutTags = decoded.replace(/<[^>]*>/g, '');
+  
+  return withoutTags.trim();
 }
 
 // Lazy-load OpenAI client
