@@ -22,6 +22,7 @@ import { useGroup } from '@/contexts/GroupContext';
 import NotificationBell from '@/components/NotificationBell';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
+import NavButton from '@/components/NavButton';
 
 export default function DesktopNav() {
   const router = useRouter();
@@ -104,13 +105,16 @@ export default function DesktopNav() {
           )}
 
           {/* User Menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-            {/* Home Icon */}
-            <IconButton onClick={handleHomeClick}>
-              <HomeIcon />
-            </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
+            {/* Home */}
+            <NavButton
+              icon={<HomeIcon />}
+              label="Home"
+              onClick={handleHomeClick}
+              size="medium"
+            />
             
-            {/* Friends Bell */}
+            {/* Friends - Keep NotificationBell for now, will enhance later */}
             {user && <NotificationBell />}
             
             {/* User Avatar Menu */}

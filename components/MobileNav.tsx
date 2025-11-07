@@ -24,6 +24,7 @@ import { useGroup } from '@/contexts/GroupContext';
 import NotificationBell from '@/components/NotificationBell';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
+import NavButton from '@/components/NavButton';
 
 export default function MobileNav() {
   const router = useRouter();
@@ -115,17 +116,23 @@ export default function MobileNav() {
                 </Link>
 
                 {/* Right Side Icons */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
-                  {/* Home Icon */}
-                  <IconButton onClick={handleHomeClick}>
-                    <HomeIcon />
-                  </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                  {/* Home */}
+                  <NavButton
+                    icon={<HomeIcon fontSize="small" />}
+                    label="Home"
+                    onClick={handleHomeClick}
+                    size="small"
+                  />
                   
-                  {/* Search Icon */}
+                  {/* Search */}
                   {user && !groupsLoading && (
-                    <IconButton onClick={handleSearchExpand}>
-                      <SearchIcon />
-                    </IconButton>
+                    <NavButton
+                      icon={<SearchIcon fontSize="small" />}
+                      label="Search"
+                      onClick={handleSearchExpand}
+                      size="small"
+                    />
                   )}
                   
                   {/* Friends Bell */}
