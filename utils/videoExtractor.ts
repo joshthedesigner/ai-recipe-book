@@ -71,6 +71,13 @@ If the transcript doesn't contain a recipe, set incomplete:true with a reason.
 
 Return valid JSON only.`;
 
+  // First, log the full transcript so we can review it
+  console.log('\n📜 FULL VIDEO TRANSCRIPT:');
+  console.log('='.repeat(80));
+  console.log(transcript);
+  console.log('='.repeat(80));
+  console.log(`Total transcript length: ${transcript.length} characters\n`);
+
   const response = await client.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
@@ -87,7 +94,38 @@ Return valid JSON only.`;
     throw new Error('No response from OpenAI');
   }
 
-  return JSON.parse(content);
+  const extracted = JSON.parse(content);
+  
+  // Log each extracted ingredient with context from transcript
+  console.log('\n🔍 INGREDIENT EXTRACTION ANALYSIS:');
+  console.log('='.repeat(80));
+  if (extracted.ingredients && Array.isArray(extracted.ingredients)) {
+    extracted.ingredients.forEach((ingredient: string, index: number) => {
+      console.log(`\n${index + 1}. INGREDIENT: "${ingredient}"`);
+      
+      // Find mentions in transcript
+      const ingredientName = ingredient.replace(/^\d+[\s\/-]*(?:cups?|tbsp?|tsp?|tablespoons?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|ml|l)?\s*/i, '').split(',')[0].trim();
+      const searchTerms = ingredientName.split(/\s+/).filter(word => word.length > 3);
+      
+      if (searchTerms.length > 0) {
+        const mainTerm = searchTerms[0];
+        const regex = new RegExp(`.{0,80}${mainTerm}.{0,80}`, 'gi');
+        const matches = transcript.match(regex);
+        
+        if (matches && matches.length > 0) {
+          console.log(`   TRANSCRIPT MENTIONS (${matches.length}):`);
+          matches.forEach((match, i) => {
+            console.log(`   ${i + 1}) "...${match.trim()}..."`);
+          });
+        } else {
+          console.log('   ⚠️ Not found in transcript');
+        }
+      }
+    });
+  }
+  console.log('\n' + '='.repeat(80) + '\n');
+
+  return extracted;
 }
 
 export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<ExtractedRecipe> {
