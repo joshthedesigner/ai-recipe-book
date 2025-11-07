@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     // Build query - exclude embedding vector for performance (6KB per recipe!)
     let query = supabase
       .from('recipes')
-      .select('id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, cookbook_name, cookbook_page, contributor_name, created_at, updated_at');
+      .select('id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at');
 
     // Filter by group_id if provided
     if (groupId) {
