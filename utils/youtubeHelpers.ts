@@ -4,7 +4,7 @@
  * Extract video IDs, captions, and metadata from YouTube URLs
  */
 
-import { YoutubeTranscript } from 'youtube-transcript';
+import { Innertube } from 'youtubei.js';
 
 /**
  * Extract YouTube video ID from various URL formats
@@ -43,38 +43,47 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
     console.log(`🎥 Fetching captions for YouTube video: ${videoId}`);
     console.log(`   Full URL: https://www.youtube.com/watch?v=${videoId}`);
     
-    // Fetch transcript using youtube-transcript library
-    // Try with English language code first
-    let transcript;
-    try {
-      transcript = await YoutubeTranscript.fetchTranscript(videoId, {
-        lang: 'en',
-      });
-    } catch (langError) {
-      console.log('   Failed with lang=en, trying without language restriction...');
-      transcript = await YoutubeTranscript.fetchTranscript(videoId);
-    }
+    // Initialize Innertube (YouTube's internal API)
+    const youtube = await Innertube.create();
     
-    console.log('📝 Transcript result:', {
-      exists: !!transcript,
-      isArray: Array.isArray(transcript),
-      length: transcript?.length,
-      firstSegment: transcript?.[0],
+    // Get video info
+    const info = await youtube.getInfo(videoId);
+    
+    console.log('📹 Video info retrieved:', {
+      title: info.basic_info.title,
+      hasCaptions: !!info.captions,
     });
     
-    if (!transcript || transcript.length === 0) {
-      console.log('❌ No captions found for video:', videoId);
+    // Get transcript/captions
+    const transcriptData = await info.getTranscript();
+    
+    console.log('📝 Transcript data:', {
+      exists: !!transcriptData,
+      hasContent: !!transcriptData?.transcript,
+      segmentCount: transcriptData?.transcript?.content?.body?.initial_segments?.length,
+    });
+    
+    if (!transcriptData || !transcriptData.transcript) {
+      console.log('❌ No transcript available for video:', videoId);
       return null;
     }
     
-    // Combine all transcript segments into full text
-    const fullTranscript = transcript
-      .map(segment => segment.text)
+    // Extract text from transcript segments
+    const segments = transcriptData.transcript.content.body.initial_segments;
+    
+    if (!segments || segments.length === 0) {
+      console.log('❌ No caption segments found');
+      return null;
+    }
+    
+    // Combine all segments into full text
+    const fullTranscript = segments
+      .map((segment: any) => segment.snippet.text.toString())
       .join(' ')
       .trim();
     
     console.log(`✅ Extracted ${fullTranscript.length} characters of captions from YouTube video`);
-    console.log(`   ${transcript.length} caption segments combined`);
+    console.log(`   ${segments.length} caption segments combined`);
     console.log(`   Preview: ${fullTranscript.substring(0, 200)}...`);
     
     return fullTranscript;
@@ -83,7 +92,7 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
     console.error('❌ Error fetching YouTube captions:', error);
     console.error('   Error type:', error?.constructor?.name);
     console.error('   Error message:', error instanceof Error ? error.message : String(error));
-    console.log('💡 Video may not have captions, captions disabled, or library issue');
+    console.log('💡 Video may not have captions, captions disabled, or access restricted');
     return null;
   }
 }
