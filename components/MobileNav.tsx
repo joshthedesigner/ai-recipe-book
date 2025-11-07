@@ -222,8 +222,14 @@ export default function MobileNav() {
               /* COLLAPSED: Logo + Nav Items */
               <>
                 {/* Logo */}
-                <Link
-                  href="/browse"
+                <Box
+                  onClick={() => {
+                    const ownGroup = groups.find(g => g.isOwn);
+                    if (ownGroup) {
+                      switchGroup(ownGroup.id);
+                      router.push('/browse');
+                    }
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -236,7 +242,7 @@ export default function MobileNav() {
                     alt="RecipeBook Logo" 
                     style={{ width: '32px', height: 'auto' }}
                   />
-                </Link>
+                </Box>
 
                 {/* Navigation Items */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>

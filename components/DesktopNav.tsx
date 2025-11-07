@@ -194,8 +194,14 @@ export default function DesktopNav() {
           }}
         >
           {/* Logo */}
-          <Link
-            href="/browse"
+          <Box
+            onClick={() => {
+              const ownGroup = groups.find(g => g.isOwn);
+              if (ownGroup) {
+                switchGroup(ownGroup.id);
+                router.push('/browse');
+              }
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -222,7 +228,7 @@ export default function DesktopNav() {
             >
               RecipeBook
             </Typography>
-          </Link>
+          </Box>
 
           {/* Friends Search */}
           {user && !groupsLoading && (
