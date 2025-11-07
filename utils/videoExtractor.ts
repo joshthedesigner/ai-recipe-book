@@ -35,20 +35,37 @@ interface ExtractedRecipe {
 async function extractRecipeFromTranscript(transcript: string): Promise<Omit<ExtractedRecipe, 'video_url' | 'video_platform'>> {
   const client = getOpenAIClient();
   
-  const prompt = `You are an expert recipe extraction assistant. Extract a complete recipe from this video transcript.
+  const prompt = `You are an expert recipe extraction assistant. Extract a complete recipe from this VIDEO TRANSCRIPT (spoken narration).
 
 Extract these fields:
 - title: The recipe name
-- ingredients: Array of ingredients WITH EXACT QUANTITIES
+- ingredients: Array of ingredients WITH EXACT QUANTITIES as spoken
 - steps: Array of detailed cooking instructions
 - tags: Relevant tags (cuisine, meal type, protein, etc.)
 
-CRITICAL RULES:
-• Include ALL ingredient quantities mentioned (2 cups, 1/4 tsp, etc.)
-• Preserve exact measurements and fractions
-• Include specific times and temperatures in steps
-• Be thorough - capture all details from the transcript
-• Tags should be lowercase
+CRITICAL RULES FOR VIDEO TRANSCRIPTS:
+• Extract EXACT quantities the speaker states - use FIRST mentioned amount
+• Ignore filler words: "about", "roughly", "around", "maybe", "approximately"
+• Handle ranges precisely: "3 to 4 tablespoons" → "3-4 tablespoons"
+• "A couple" = 2, "a few" = 3, "half" = 1/2
+• Watch for base recipe context: "for 8 ounces of noodles" or "for 4 servings"
+• Use the PRIMARY quantity mentioned, not alternatives or suggestions
+• If speaker gives options ("2 or 3 tablespoons"), use the first: "2 tablespoons"
+• Pay attention to "per serving" vs "total batch" context
+
+QUANTITY EXTRACTION EXAMPLES:
+• "I use about 3 tablespoons palm sugar" → "3 tablespoons palm sugar"
+• "Add 2, maybe 3 tablespoons fish sauce" → "2-3 tablespoons fish sauce"  
+• "Around a quarter cup of oil" → "1/4 cup oil"
+• "Half a cup of peanuts" → "1/2 cup peanuts"
+• "A couple eggs" → "2 eggs"
+• "Three to four tablespoons" → "3-4 tablespoons"
+
+MEASUREMENT PRECISION:
+• Preserve exact measurements - don't round or estimate
+• Include units exactly as stated (cups, tablespoons, teaspoons, grams)
+• Keep fractions precise (1/2, 1/4, 3/4)
+• Note if "for 8 oz noodles" or similar base amount is mentioned
 
 If the transcript doesn't contain a recipe, set incomplete:true with a reason.
 
