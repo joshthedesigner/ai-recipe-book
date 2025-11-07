@@ -102,19 +102,7 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
           content: [
             {
               type: 'text',
-              text: `You are viewing a recipe image. Read and transcribe ALL visible text from this image with complete accuracy.
-
-IMPORTANT - Capture these details precisely:
-• All ingredient QUANTITIES (1, 2, 3, etc.)
-• All MEASUREMENTS (cups, tablespoons, teaspoons, grams, ounces, pounds)
-• All FRACTIONS (1/2, 1/4, 3/4, 1/3, 2/3, etc.)
-• Cooking TIMES (minutes, hours, seconds)
-• Cooking TEMPERATURES (350°F, 180°C, medium heat, etc.)
-• Every number and unit
-
-Read ALL text carefully, including small print. Capture every number, measurement, and detail you see.
-
-Output the complete text exactly as it appears in the image, preserving formatting and language. Include everything - do not summarize or omit anything.`,
+              text: `What text do you see in this image? Include all numbers, measurements, and details. List everything you can read.`,
             },
             {
               type: 'image_url',
