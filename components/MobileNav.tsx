@@ -3,51 +3,71 @@
 /**
  * Mobile Navigation Component
  * 
- * Optimized navigation for mobile screens (<600px)
- * Features expanding search pattern and streamlined layout
+ * LinkedIn-style navigation with icon + text labels
+ * Includes expanding search pattern for mobile
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
   IconButton,
   Box,
+  ButtonBase,
+  Typography,
+  Badge,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeIcon from '@mui/icons-material/Home';
+import PeopleIcon from '@mui/icons-material/People';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
-import NotificationBell from '@/components/NotificationBell';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
-import NavButton from '@/components/NavButton';
 
 export default function MobileNav() {
   const router = useRouter();
   const { user } = useAuth();
   const { groups, loading: groupsLoading, switchGroup } = useGroup();
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [friendsCount, setFriendsCount] = useState(0);
 
-  const handleSearchExpand = () => {
-    setSearchExpanded(true);
-  };
-
-  const handleSearchCollapse = () => {
-    setSearchExpanded(false);
-  };
+  const handleSearchExpand = () => setSearchExpanded(true);
+  const handleSearchCollapse = () => setSearchExpanded(false);
 
   const handleHomeClick = () => {
-    // Switch to user's own cookbook
     const ownGroup = groups.find(g => g.isOwn);
     if (ownGroup) {
       switchGroup(ownGroup.id);
     }
     router.push('/browse');
   };
+
+  const handleFriendsClick = () => {
+    router.push('/friends');
+  };
+
+  // Load friends notification count
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadCount = async () => {
+      try {
+        const response = await fetch('/api/friends/list');
+        const data = await response.json();
+        if (data.success) {
+          setFriendsCount(data.pendingIncoming?.length || 0);
+        }
+      } catch (error) {
+        console.error('Error loading friends count:', error);
+      }
+    };
+    
+    loadCount();
+  }, [user]);
 
   return (
     <>
@@ -65,7 +85,6 @@ export default function MobileNav() {
           sx={{ 
             minHeight: 56,
             px: '0 !important',
-            overflow: 'hidden',
           }}
         >
           <Box
@@ -96,9 +115,9 @@ export default function MobileNav() {
                 </Box>
               </>
             ) : (
-              /* COLLAPSED: Logo + Search Icon + Bell + Avatar */
+              /* COLLAPSED: Logo + Nav Items */
               <>
-                {/* Logo Icon Only */}
+                {/* Logo */}
                 <Link
                   href="/browse"
                   style={{
@@ -115,44 +134,110 @@ export default function MobileNav() {
                   />
                 </Link>
 
-                {/* Right Side Icons */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'flex-start', // Align to top so labels don't push icons down
-                  gap: 0.25, 
-                  ml: 'auto' 
-                }}>
+                {/* Navigation Items */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
                   {/* Home */}
-                  <NavButton
-                    icon={<HomeIcon fontSize="small" />}
-                    label="Home"
+                  <ButtonBase
                     onClick={handleHomeClick}
-                    size="small"
-                  />
-                  
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 0.25,
+                      p: 0.75,
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <HomeIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: '10px',
+                        color: 'text.secondary',
+                        lineHeight: 1,
+                      }}
+                    >
+                      Home
+                    </Typography>
+                  </ButtonBase>
+
                   {/* Search */}
                   {user && !groupsLoading && (
-                    <NavButton
-                      icon={<SearchIcon fontSize="small" />}
-                      label="Search"
+                    <ButtonBase
                       onClick={handleSearchExpand}
-                      size="small"
-                    />
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        p: 0.75,
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '10px',
+                          color: 'text.secondary',
+                          lineHeight: 1,
+                        }}
+                      >
+                        Search
+                      </Typography>
+                    </ButtonBase>
                   )}
-                  
-                  {/* Friends Bell */}
+
+                  {/* Friends */}
                   {user && (
-                    <Box sx={{ pt: 0.75 }}> {/* Add padding to align with NavButton */}
-                      <NotificationBell />
-                    </Box>
+                    <ButtonBase
+                      onClick={handleFriendsClick}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        p: 0.75,
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <Badge
+                        badgeContent={friendsCount}
+                        color="error"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            fontSize: '9px',
+                            height: '16px',
+                            minWidth: '16px',
+                          },
+                        }}
+                      >
+                        <PeopleIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                      </Badge>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '10px',
+                          color: 'text.secondary',
+                          lineHeight: 1,
+                        }}
+                      >
+                        Friends
+                      </Typography>
+                    </ButtonBase>
                   )}
-                  
-                  {/* User Avatar Menu */}
-                  {user && (
-                    <Box sx={{ pt: 0.75 }}> {/* Add padding to align with NavButton */}
-                      <UserAvatarMenu />
-                    </Box>
-                  )}
+
+                  {/* User Menu */}
+                  {user && <UserAvatarMenu />}
                 </Box>
               </>
             )}
@@ -160,7 +245,7 @@ export default function MobileNav() {
         </Toolbar>
       </AppBar>
 
-      {/* Backdrop - Dims content when search is active */}
+      {/* Backdrop */}
       {searchExpanded && (
         <Box
           onClick={handleSearchCollapse}
@@ -179,4 +264,3 @@ export default function MobileNav() {
     </>
   );
 }
-
