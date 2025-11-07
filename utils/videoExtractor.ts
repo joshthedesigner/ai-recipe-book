@@ -131,6 +131,47 @@ Return valid JSON only.`;
   return extracted;
 }
 
+/**
+ * Validate URL is safe to scrape (SSRF protection)
+ * Blocks localhost, private IPs, and non-HTTP protocols
+ */
+function isSafeUrl(urlString: string): boolean {
+  try {
+    const url = new URL(urlString);
+    
+    // Only allow HTTP/HTTPS
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      return false;
+    }
+    
+    // Block localhost and private IP ranges
+    const hostname = url.hostname.toLowerCase();
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.16.') ||
+      hostname.startsWith('172.17.') ||
+      hostname.startsWith('172.18.') ||
+      hostname.startsWith('172.19.') ||
+      hostname.startsWith('172.2') || // 172.20-29
+      hostname.startsWith('172.30') ||
+      hostname.startsWith('172.31.') ||
+      hostname.includes('::1') || // IPv6 localhost
+      hostname.includes('169.254.') // Link-local
+    ) {
+      return false;
+    }
+    
+    return true;
+  } catch {
+    // Invalid URL format
+    return false;
+  }
+}
+
 export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<ExtractedRecipe> {
   console.log('🎥 Processing YouTube video:', videoUrl);
 
@@ -154,6 +195,12 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
       if (link.includes('youtube.com') || link.includes('youtu.be') || 
           link.includes('instagram.com') || link.includes('facebook.com') ||
           link.includes('twitter.com') || link.includes('tiktok.com')) {
+        continue;
+      }
+      
+      // SSRF Protection: Validate URL is safe before scraping
+      if (!isSafeUrl(link)) {
+        console.log(`   🛡️ Skipping unsafe URL: ${link}`);
         continue;
       }
       
