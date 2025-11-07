@@ -41,12 +41,20 @@ export function isYouTubeUrl(url: string): boolean {
 export async function getYouTubeCaptions(videoId: string): Promise<string | null> {
   try {
     console.log(`🎥 Fetching captions for YouTube video: ${videoId}`);
+    console.log(`   Full URL: https://www.youtube.com/watch?v=${videoId}`);
     
     // Fetch transcript using youtube-transcript library
     const transcript = await YoutubeTranscript.fetchTranscript(videoId);
     
+    console.log('📝 Transcript result:', {
+      exists: !!transcript,
+      isArray: Array.isArray(transcript),
+      length: transcript?.length,
+      firstSegment: transcript?.[0],
+    });
+    
     if (!transcript || transcript.length === 0) {
-      console.log('No captions found for video:', videoId);
+      console.log('❌ No captions found for video:', videoId);
       return null;
     }
     
@@ -58,12 +66,15 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
     
     console.log(`✅ Extracted ${fullTranscript.length} characters of captions from YouTube video`);
     console.log(`   ${transcript.length} caption segments combined`);
+    console.log(`   Preview: ${fullTranscript.substring(0, 200)}...`);
     
     return fullTranscript;
     
   } catch (error) {
-    console.error('Error fetching YouTube captions:', error);
-    console.log('💡 Video may not have captions or they may be disabled');
+    console.error('❌ Error fetching YouTube captions:', error);
+    console.error('   Error type:', error?.constructor?.name);
+    console.error('   Error message:', error instanceof Error ? error.message : String(error));
+    console.log('💡 Video may not have captions, captions disabled, or library issue');
     return null;
   }
 }
