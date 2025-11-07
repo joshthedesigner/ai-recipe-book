@@ -63,6 +63,7 @@ export default function UserAvatarMenu() {
         disableRipple
         sx={{ 
           gap: 0.5,
+          p: 0,
           '&:hover': {
             bgcolor: 'transparent',
           },
