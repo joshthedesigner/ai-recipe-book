@@ -408,7 +408,7 @@ export default function FriendsPage() {
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
                       <TableCell sx={{ fontWeight: 600, display: { xs: 'none', sm: 'table-cell' } }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
+                      <TableCell sx={{ fontWeight: 600, display: { xs: 'none', sm: 'table-cell' } }}>Status</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -417,26 +417,34 @@ export default function FriendsPage() {
                     {friends.map((friend) => (
                       <TableRow key={friend.friend_id}>
                         <TableCell>
-                          <Box
-                            component="span"
-                            onClick={() => handleFriendClick(friend.friend_name)}
-                            sx={{
-                              cursor: 'pointer',
-                              color: 'primary.main',
-                              fontWeight: 500,
-                              '&:hover': {
-                                textDecoration: 'underline',
-                              },
-                            }}
-                          >
-                            {friend.friend_name}
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Box
+                              component="span"
+                              onClick={() => handleFriendClick(friend.friend_name)}
+                              sx={{
+                                cursor: 'pointer',
+                                color: 'primary.main',
+                                fontWeight: 500,
+                                '&:hover': {
+                                  textDecoration: 'underline',
+                                },
+                              }}
+                            >
+                              {friend.friend_name}
+                            </Box>
+                            <Chip 
+                              label="Active" 
+                              size="small" 
+                              color="success"
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
                           </Box>
                           <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
                             {friend.friend_email}
                           </Box>
                         </TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{friend.friend_email}</TableCell>
-                        <TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           <Chip label="Active" size="small" color="success" />
                         </TableCell>
                         <TableCell align="right">
@@ -456,13 +464,21 @@ export default function FriendsPage() {
                     {pendingIncoming.map((request) => (
                       <TableRow key={request.id} sx={{ bgcolor: '#fff3e0' }}>
                         <TableCell>
-                          <Box>{request.senderName}</Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Box>{request.senderName}</Box>
+                            <Chip 
+                              label="Pending" 
+                              size="small" 
+                              color="warning"
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
+                          </Box>
                           <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
                             {request.senderEmail}
                           </Box>
                         </TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.senderEmail}</TableCell>
-                        <TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           <Chip label="Pending" size="small" color="warning" />
                         </TableCell>
                         <TableCell align="right">
@@ -490,13 +506,21 @@ export default function FriendsPage() {
                     {pendingOutgoing.map((request) => (
                       <TableRow key={request.id}>
                         <TableCell>
-                          <Box>—</Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Box>—</Box>
+                            <Chip 
+                              label="Sent" 
+                              size="small" 
+                              color="default"
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
+                          </Box>
                           <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
                             {request.invited_email}
                           </Box>
                         </TableCell>
                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.invited_email}</TableCell>
-                        <TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
                           <Chip label="Sent" size="small" color="default" />
                         </TableCell>
                         <TableCell align="right">
