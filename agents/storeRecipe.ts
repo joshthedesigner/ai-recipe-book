@@ -520,8 +520,8 @@ Would you still like to save this video link so you can easily find it in the fu
               tags: extractedRecipe.tags,
               source_url: extractedRecipe.source_url || url,
               image_url: extractedRecipe.image_url || null,
-              video_url: extractedRecipe.video_url || null,
-              video_platform: extractedRecipe.video_platform || null,
+              video_url: null, // URL scraping doesn't extract video URLs
+              video_platform: null,
               cookbook_name: cookbookName || null,
               cookbook_page: cookbookPage || null,
               contributor_name: contributorName,
@@ -686,8 +686,8 @@ Would you still like to save this video link so you can easily find it in the fu
         tags: extractedRecipe.tags,
         source_url: extractedRecipe.source_url || null,
         image_url: null,
-        video_url: extractedRecipe.video_url || null,
-        video_platform: extractedRecipe.video_platform || null,
+        video_url: null, // Image extraction doesn't include video URLs
+        video_platform: null,
         cookbook_name: cookbookName || null,
         cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
