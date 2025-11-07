@@ -83,7 +83,13 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
     }
     
     // Extract text from transcript segments
-    const segments = transcriptData.transcript.content.body.initial_segments;
+    const content = transcriptData.transcript.content;
+    if (!content || !content.body) {
+      console.log('❌ No transcript content available');
+      return null;
+    }
+    
+    const segments = content.body.initial_segments;
     
     if (!segments || segments.length === 0) {
       console.log('❌ No caption segments found');
