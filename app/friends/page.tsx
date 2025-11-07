@@ -407,7 +407,7 @@ export default function FriendsPage() {
                   <TableHead>
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
+                      <TableCell sx={{ fontWeight: 600, display: { xs: 'none', sm: 'table-cell' } }}>Email</TableCell>
                       <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
                       <TableCell align="right" sx={{ fontWeight: 600 }}>Actions</TableCell>
                     </TableRow>
@@ -431,8 +431,11 @@ export default function FriendsPage() {
                           >
                             {friend.friend_name}
                           </Box>
+                          <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
+                            {friend.friend_email}
+                          </Box>
                         </TableCell>
-                        <TableCell>{friend.friend_email}</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{friend.friend_email}</TableCell>
                         <TableCell>
                           <Chip label="Active" size="small" color="success" />
                         </TableCell>
@@ -452,8 +455,13 @@ export default function FriendsPage() {
                     {/* Pending Incoming Requests */}
                     {pendingIncoming.map((request) => (
                       <TableRow key={request.id} sx={{ bgcolor: '#fff3e0' }}>
-                        <TableCell>{request.senderName}</TableCell>
-                        <TableCell>{request.senderEmail}</TableCell>
+                        <TableCell>
+                          <Box>{request.senderName}</Box>
+                          <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
+                            {request.senderEmail}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.senderEmail}</TableCell>
                         <TableCell>
                           <Chip label="Pending" size="small" color="warning" />
                         </TableCell>
@@ -481,8 +489,13 @@ export default function FriendsPage() {
                     {/* Pending Outgoing Requests */}
                     {pendingOutgoing.map((request) => (
                       <TableRow key={request.id}>
-                        <TableCell>—</TableCell>
-                        <TableCell>{request.invited_email}</TableCell>
+                        <TableCell>
+                          <Box>—</Box>
+                          <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
+                            {request.invited_email}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.invited_email}</TableCell>
                         <TableCell>
                           <Chip label="Sent" size="small" color="default" />
                         </TableCell>
