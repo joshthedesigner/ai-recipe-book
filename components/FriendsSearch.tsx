@@ -258,14 +258,15 @@ export default function FriendsSearch({
             maxHeight: 400,
             overflow: 'auto',
             width: '100%',
+            py: 1,
           }}
         >
           {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-start', p: 2, pl: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-start', px: 2.5, py: 2 }}>
               <CircularProgress size={24} />
             </Box>
           ) : displayItems.length === 0 ? (
-            <Box sx={{ p: 2, textAlign: 'left' }}>
+            <Box sx={{ px: 2.5, py: 2, textAlign: 'left' }}>
               <Typography variant="body2" color="text.secondary">
                 {searchValue ? 'No friends found' : 'No friends yet'}
               </Typography>
@@ -273,27 +274,29 @@ export default function FriendsSearch({
           ) : (
             <>
               {isShowingRecents && (
-                <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                <Box sx={{ px: 2.5, py: 1.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     Recent Searches
                   </Typography>
                 </Box>
               )}
-              <List dense sx={{ py: 0 }}>
+              <List dense sx={{ py: 0, px: 0.5 }}>
                 {displayItems.map((friend) => (
                   <ListItem key={friend.friend_id} disablePadding>
                     <ListItemButton 
                       onClick={() => handleFriendClick(friend)}
                       sx={{ 
-                        px: 2,
-                        py: 1,
+                        px: 2.5,
+                        py: 1.25,
+                        borderRadius: 1,
+                        mx: 0.5,
                         '&:hover': {
                           bgcolor: 'action.hover',
                         },
                       }}
                     >
                       {isShowingRecents && (
-                        <ListItemIcon sx={{ minWidth: 36 }}>
+                        <ListItemIcon sx={{ minWidth: 40 }}>
                           <HistoryIcon fontSize="small" sx={{ color: 'text.secondary' }} />
                         </ListItemIcon>
                       )}
