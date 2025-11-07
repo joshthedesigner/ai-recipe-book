@@ -239,7 +239,7 @@ export default function MobileNav() {
                 </Link>
 
                 {/* Navigation Items */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
                   {/* Home */}
                   <ButtonBase
                     onClick={handleHomeClick}
