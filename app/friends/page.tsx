@@ -402,7 +402,7 @@ export default function FriendsPage() {
             </Alert>
           ) : (
             <>
-              <TableContainer sx={{ mt: 2 }}>
+              <TableContainer sx={{ mt: 2, overflowX: { xs: 'visible', sm: 'auto' } }}>
                 <Table>
                   <TableHead>
                     <TableRow>
