@@ -287,7 +287,7 @@ export default function FriendsSearch({
                       onClick={() => handleFriendClick(friend)}
                       sx={{ 
                         px: 2.5,
-                        py: 1.25,
+                        py: 1,
                         borderRadius: 1,
                         mx: 0.5,
                         '&:hover': {
