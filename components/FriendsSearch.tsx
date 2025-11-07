@@ -144,7 +144,7 @@ export default function FriendsSearch({
     <Box ref={anchorRef} sx={{ position: 'relative' }}>
       <TextField
         size="small"
-        placeholder="Search for your friends"
+        placeholder="Search names of friends"
         value={searchValue}
         onChange={(e) => setSearchValue(e.target.value)}
         onFocus={handleFocus}
@@ -212,7 +212,7 @@ export default function FriendsSearch({
                     onClick={() => handleFriendClick(friend)}
                     sx={{ 
                       px: 2,
-                      py: 1.5,
+                      py: 1,
                       '&:hover': {
                         bgcolor: 'action.hover',
                       },
