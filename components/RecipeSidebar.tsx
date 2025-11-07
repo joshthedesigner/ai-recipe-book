@@ -414,6 +414,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   };
 
   const processCookbookInfo = async (userInput: string) => {
+    console.log('🟡 processCookbookInfo CALLED', {
+      userInput,
+      hasPendingCookbookInfo: !!pendingCookbookInfo,
+      extractedText: pendingCookbookInfo?.extractedText?.substring(0, 100),
+    });
+    
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -437,6 +443,13 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         cookbookName = userInput.substring(0, pageMatch.index).trim();
       }
 
+      console.log('🟡 Calling /api/recipes/store with:', {
+        cookbookName,
+        cookbookPage,
+        messageLength: pendingCookbookInfo!.extractedText.length,
+        groupId: activeGroup?.id,
+      });
+
       // Store the recipe with cookbook info
       const storeResponse = await fetch('/api/recipes/store', {
         method: 'POST',
@@ -454,6 +467,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       });
 
       const storeData = await storeResponse.json();
+      
+      console.log('🟡 Store API response:', {
+        success: storeData.success,
+        hasRecipe: !!storeData.recipe,
+        error: storeData.error,
+      });
 
       if (storeData.success) {
         const assistantMessage: Message = {
