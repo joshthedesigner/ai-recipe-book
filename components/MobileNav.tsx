@@ -17,24 +17,41 @@ import {
   Typography,
   Badge,
   Divider,
+  Menu,
+  MenuItem,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
+import { useToast } from '@/contexts/ToastContext';
+import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
+
+interface PendingRequest {
+  id: string;
+  senderName: string;
+  senderEmail: string;
+  invitedAt: string;
+}
 
 export default function MobileNav() {
   const router = useRouter();
   const { user } = useAuth();
   const { groups, loading: groupsLoading, switchGroup } = useGroup();
+  const { showToast } = useToast();
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [friendsCount, setFriendsCount] = useState(0);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const handleSearchExpand = () => setSearchExpanded(true);
   const handleSearchCollapse = () => setSearchExpanded(false);
@@ -47,28 +64,114 @@ export default function MobileNav() {
     router.push('/browse');
   };
 
-  const handleFriendsClick = () => {
-    router.push('/friends');
+  const handleFriendsClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  // Load friends notification count
-  useEffect(() => {
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  // Load pending requests
+  const loadPendingRequests = async () => {
     if (!user) return;
-    
-    const loadCount = async () => {
-      try {
-        const response = await fetch('/api/friends/list');
-        const data = await response.json();
-        if (data.success) {
-          setFriendsCount(data.pendingIncoming?.length || 0);
-        }
-      } catch (error) {
-        console.error('Error loading friends count:', error);
+
+    try {
+      const response = await fetch('/api/friends/list');
+      const data = await response.json();
+
+      if (data.success) {
+        setPendingRequests(data.pendingIncoming || []);
       }
-    };
-    
-    loadCount();
+    } catch (error) {
+      console.error('Error loading pending requests:', error);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    loadPendingRequests();
   }, [user]);
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const channel = supabase
+      .channel('friend-requests-mobile')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'friends',
+          filter: `invited_email=eq.${user.email.toLowerCase()}`,
+        },
+        () => {
+          loadPendingRequests();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.email]);
+
+  // Accept friend request
+  const handleAccept = async (inviteId: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/friends/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId, action: 'accept' }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Friend request accepted!', 'success');
+        loadPendingRequests();
+      } else {
+        showToast(data.error || 'Failed to accept request', 'error');
+      }
+    } catch (error) {
+      console.error('Error accepting invite:', error);
+      showToast('Failed to accept request', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reject friend request
+  const handleReject = async (inviteId: string) => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/friends/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId, action: 'reject' }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Friend request rejected', 'info');
+        loadPendingRequests();
+      } else {
+        showToast(data.error || 'Failed to reject request', 'error');
+      }
+    } catch (error) {
+      console.error('Error rejecting invite:', error);
+      showToast('Failed to reject request', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const open = Boolean(anchorEl);
+  const count = pendingRequests.length;
 
   return (
     <>
@@ -197,44 +300,142 @@ export default function MobileNav() {
 
                   {/* Friends */}
                   {user && (
-                    <ButtonBase
-                      onClick={handleFriendsClick}
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.25,
-                        p: 0.75,
-                        borderRadius: 1,
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                    >
-                      <Badge
-                        badgeContent={friendsCount}
-                        color="error"
+                    <>
+                      <ButtonBase
+                        onClick={handleFriendsClick}
                         sx={{
-                          '& .MuiBadge-badge': {
-                            fontSize: '9px',
-                            height: '16px',
-                            minWidth: '16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: 0.25,
+                          p: 0.75,
+                          borderRadius: 1,
+                          '&:hover': {
+                            bgcolor: 'action.hover',
                           },
                         }}
                       >
-                        <PeopleIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                      </Badge>
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: '10px',
-                          color: 'text.secondary',
-                          lineHeight: 1,
+                        <Badge
+                          badgeContent={count}
+                          color="error"
+                          sx={{
+                            '& .MuiBadge-badge': {
+                              fontSize: '9px',
+                              height: '16px',
+                              minWidth: '16px',
+                            },
+                          }}
+                        >
+                          <PeopleIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                        </Badge>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '10px',
+                            color: 'text.secondary',
+                            lineHeight: 1,
+                          }}
+                        >
+                          Friends
+                        </Typography>
+                      </ButtonBase>
+
+                      <Menu
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        anchorOrigin={{
+                          vertical: 'bottom',
+                          horizontal: 'right',
+                        }}
+                        transformOrigin={{
+                          vertical: 'top',
+                          horizontal: 'right',
+                        }}
+                        PaperProps={{
+                          sx: { width: 360, maxHeight: 480 },
                         }}
                       >
-                        Friends
-                      </Typography>
-                    </ButtonBase>
+                        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
+                          <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
+                            Friend Requests
+                          </Typography>
+                        </Box>
+
+                        {count === 0 ? (
+                          <Box sx={{ px: 2, py: 3, textAlign: 'left' }}>
+                            <Typography variant="body2" color="text.secondary">
+                              No pending requests
+                            </Typography>
+                          </Box>
+                        ) : (
+                          pendingRequests.map((request, index) => (
+                            <Box key={request.id}>
+                              {index > 0 && <Divider />}
+                              <MenuItem
+                                sx={{
+                                  px: 2,
+                                  py: 1.5,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'stretch',
+                                }}
+                                disableRipple
+                              >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                  <Box>
+                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                      {request.senderName}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {request.senderEmail}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                                
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                  <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="success"
+                                    startIcon={<CheckIcon />}
+                                    onClick={() => handleAccept(request.id)}
+                                    disabled={loading}
+                                    fullWidth
+                                  >
+                                    Accept
+                                  </Button>
+                                  <Button
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<CloseIcon />}
+                                    onClick={() => handleReject(request.id)}
+                                    disabled={loading}
+                                    fullWidth
+                                  >
+                                    Reject
+                                  </Button>
+                                </Box>
+                              </MenuItem>
+                            </Box>
+                          ))
+                        )}
+
+                        <Divider />
+                        <MenuItem
+                          onClick={() => {
+                            handleClose();
+                            router.push('/friends');
+                          }}
+                          sx={{ justifyContent: 'flex-start', py: 1.5, px: 2 }}
+                        >
+                          <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                            View All Friends
+                          </Typography>
+                        </MenuItem>
+                      </Menu>
+                    </>
                   )}
 
                   {/* Divider */}
