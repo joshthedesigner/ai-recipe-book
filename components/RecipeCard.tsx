@@ -25,6 +25,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Recipe } from '@/types';
+import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -36,6 +37,15 @@ interface RecipeCardProps {
 export default function RecipeCard({ recipe, compact = false, onClick, onDelete }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+
+  // Get image URL - prefer recipe image, fallback to YouTube thumbnail
+  const getImageUrl = (): string | null => {
+    if (recipe.image_url) return recipe.image_url;
+    if (recipe.video_url) return getYouTubeThumbnail(recipe.video_url);
+    return null;
+  };
+
+  const imageUrl = getImageUrl();
 
   const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click
@@ -115,11 +125,11 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
         )}
         
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-          {recipe.image_url ? (
+          {imageUrl ? (
             <CardMedia
               component="img"
               height="200"
-              image={recipe.image_url}
+              image={imageUrl}
               alt={recipe.title}
               sx={{
                 objectFit: 'cover',
@@ -247,10 +257,10 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
 
         {/* Recipe Image */}
         <Box sx={{ mt: 2, mb: 2 }}>
-          {recipe.image_url ? (
+          {imageUrl ? (
             <CardMedia
               component="img"
-              image={recipe.image_url}
+              image={imageUrl}
               alt={recipe.title}
               sx={{
                 width: '100%',

@@ -35,6 +35,20 @@ export function isYouTubeUrl(url: string): boolean {
 }
 
 /**
+ * Get YouTube video thumbnail URL
+ * Returns high-quality thumbnail image
+ */
+export function getYouTubeThumbnail(videoUrl: string): string | null {
+  const videoId = extractYouTubeId(videoUrl);
+  if (!videoId) return null;
+  
+  // maxresdefault = 1920x1080 (best quality, may not exist for all videos)
+  // hqdefault = 480x360 (always available)
+  // We'll use maxresdefault and let the browser fallback to hqdefault if needed
+  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+}
+
+/**
  * Fetch YouTube video captions/subtitles
  * Uses youtube-transcript library for reliable caption extraction
  */
