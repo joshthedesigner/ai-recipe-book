@@ -44,7 +44,16 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
     console.log(`   Full URL: https://www.youtube.com/watch?v=${videoId}`);
     
     // Fetch transcript using youtube-transcript library
-    const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    // Try with English language code first
+    let transcript;
+    try {
+      transcript = await YoutubeTranscript.fetchTranscript(videoId, {
+        lang: 'en',
+      });
+    } catch (langError) {
+      console.log('   Failed with lang=en, trying without language restriction...');
+      transcript = await YoutubeTranscript.fetchTranscript(videoId);
+    }
     
     console.log('📝 Transcript result:', {
       exists: !!transcript,
