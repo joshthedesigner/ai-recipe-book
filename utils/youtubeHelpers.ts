@@ -116,26 +116,38 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
 }
 
 /**
- * Get YouTube video metadata (title, thumbnail)
+ * Get YouTube video metadata (title, thumbnail, description)
  */
 export async function getYouTubeMetadata(videoId: string): Promise<{
   title?: string;
   thumbnail?: string;
-  duration?: string;
+  description?: string;
+  descriptionLinks?: string[];
 } | null> {
   try {
-    // Use YouTube oEmbed API (no API key required!)
-    const response = await fetch(
-      `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`
-    );
+    console.log('📄 Fetching YouTube metadata for video:', videoId);
     
-    if (!response.ok) return null;
+    const youtube = await Innertube.create();
+    const info = await youtube.getInfo(videoId);
     
-    const data = await response.json();
+    const title = info.basic_info.title;
+    const description = info.basic_info.short_description || '';
+    
+    // Extract URLs from description
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    const descriptionLinks = description.match(urlRegex) || [];
+    
+    console.log('📄 Video metadata:', {
+      title,
+      descriptionLength: description.length,
+      linksFound: descriptionLinks.length,
+      links: descriptionLinks.slice(0, 3), // First 3 links
+    });
     
     return {
-      title: data.title,
-      thumbnail: data.thumbnail_url,
+      title,
+      description,
+      descriptionLinks,
     };
   } catch (error) {
     console.error('Error fetching YouTube metadata:', error);

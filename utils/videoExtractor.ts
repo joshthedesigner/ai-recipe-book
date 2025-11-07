@@ -5,7 +5,8 @@
  */
 
 import OpenAI from 'openai';
-import { getYouTubeCaptions, extractYouTubeId, isYouTubeUrl } from '@/utils/youtubeHelpers';
+import { getYouTubeCaptions, extractYouTubeId, isYouTubeUrl, getYouTubeMetadata } from '@/utils/youtubeHelpers';
+import { scrapeRecipe } from '@/utils/recipeScraper';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -141,11 +142,55 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
 
   console.log('📺 YouTube video ID:', videoId);
 
-  // Try to get captions (free!)
+  // First, check video description for recipe links
+  const metadata = await getYouTubeMetadata(videoId);
+  
+  if (metadata?.descriptionLinks && metadata.descriptionLinks.length > 0) {
+    console.log('🔗 Found links in video description, trying to scrape recipe...');
+    
+    // Try each link to see if it has a recipe
+    for (const link of metadata.descriptionLinks) {
+      // Skip social media and YouTube links
+      if (link.includes('youtube.com') || link.includes('youtu.be') || 
+          link.includes('instagram.com') || link.includes('facebook.com') ||
+          link.includes('twitter.com') || link.includes('tiktok.com')) {
+        continue;
+      }
+      
+      try {
+        console.log(`   Trying to scrape recipe from: ${link}`);
+        const scrapedRecipe = await scrapeRecipe(link);
+        
+        if (scrapedRecipe.ingredients.length > 0 && scrapedRecipe.steps.length > 0) {
+          console.log(`✅ Found complete recipe in description link!`);
+          
+          // Return scraped recipe with video URL
+          return {
+            title: scrapedRecipe.title,
+            ingredients: scrapedRecipe.ingredients,
+            steps: scrapedRecipe.steps,
+            tags: scrapedRecipe.tags,
+            incomplete: false,
+            video_url: videoUrl,
+            video_platform: 'youtube',
+          };
+        }
+      } catch (scrapeError) {
+        console.log(`   Failed to scrape ${link}:`, scrapeError instanceof Error ? scrapeError.message : 'Unknown error');
+        // Continue to next link
+      }
+    }
+    
+    console.log('   No valid recipes found in description links');
+  }
+
+  // Fall back to caption extraction
+  console.log('📝 Attempting caption-based extraction...');
   const captions = await getYouTubeCaptions(videoId);
   
   if (!captions) {
-    throw new Error('This video does not have captions available. Try a different video or manually enter the recipe.');
+    // No captions and no description recipe - offer to save video-only
+    throw new Error('VIDEO_LINK_ONLY');
   }
 
   console.log(`✅ Got captions (${captions.length} characters), extracting recipe...`);

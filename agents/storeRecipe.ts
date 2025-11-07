@@ -392,7 +392,20 @@ export async function storeRecipe(
             };
           } catch (videoError) {
             console.error('Error processing video:', videoError);
-            // Return specific error for video processing
+            
+            // Check if it's the special "video link only" case
+            if (videoError instanceof Error && videoError.message === 'VIDEO_LINK_ONLY') {
+              // Offer to save just the video link for future reference
+              return {
+                success: false,
+                message: `I couldn't generate a written recipe with high confidence from this video. The video doesn't have captions or doesn't state specific ingredient quantities.
+
+Would you still like to save this video link so you can easily find it in the future? Reply "yes" to save the video bookmark, or try a different video.`,
+                error: 'VIDEO_LINK_ONLY',
+              };
+            }
+            
+            // Return specific error for other video processing failures
             return {
               success: false,
               message: videoError instanceof Error ? videoError.message : 'Failed to extract recipe from video. The video may not have captions or may not contain a recipe.',
