@@ -599,40 +599,52 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
 
           {/* Recipe Confirmation Buttons */}
           {pendingRecipe && !isLoading && !uploadingImage && (
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-start',
-                mb: 3,
-                gap: 2,
-              }}
-            >
-              <AppButton
-                variant="primary"
-                startIcon={<CheckIcon />}
-                onClick={handleConfirmRecipe}
+            <Box sx={{ mb: 3 }}>
+              <Box
                 sx={{
-                  bgcolor: 'success.main',
-                  '&:hover': { bgcolor: 'success.dark' },
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  mb: 1.5,
+                  gap: 2,
                 }}
               >
-                Yes, Save Recipe
-              </AppButton>
-              <AppButton
-                variant="secondary"
-                startIcon={<CloseIcon />}
-                onClick={handleCancelRecipe}
-                sx={{
-                  color: 'error.main',
-                  borderColor: 'error.main',
-                  '&:hover': {
-                    borderColor: 'error.dark',
-                    backgroundColor: 'rgba(211, 47, 47, 0.04)',
-                  },
+                <AppButton
+                  variant="primary"
+                  startIcon={<CheckIcon />}
+                  onClick={handleConfirmRecipe}
+                  sx={{
+                    bgcolor: 'success.main',
+                    '&:hover': { bgcolor: 'success.dark' },
+                  }}
+                >
+                  Yes, Save Recipe
+                </AppButton>
+                <AppButton
+                  variant="secondary"
+                  startIcon={<CloseIcon />}
+                  onClick={handleCancelRecipe}
+                  sx={{
+                    color: 'error.main',
+                    borderColor: 'error.main',
+                    '&:hover': {
+                      borderColor: 'error.dark',
+                      backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                    },
+                  }}
+                >
+                  No, Cancel
+                </AppButton>
+              </Box>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                  display: 'block',
                 }}
               >
-                No, Cancel
-              </AppButton>
+                Drafted by AI. Human review advised.
+              </Typography>
             </Box>
           )}
 
