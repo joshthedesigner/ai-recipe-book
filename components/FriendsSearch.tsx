@@ -98,10 +98,10 @@ export default function FriendsSearch({
     loadFriends();
   }, [user, open]);
 
-  // Filter friends based on search
+  // Filter friends based on search (matches from start of name or email)
   const filteredFriends = friends.filter(friend =>
-    friend.friend_name.toLowerCase().includes(searchValue.toLowerCase()) ||
-    friend.friend_email.toLowerCase().includes(searchValue.toLowerCase())
+    friend.friend_name.toLowerCase().startsWith(searchValue.toLowerCase()) ||
+    friend.friend_email.toLowerCase().startsWith(searchValue.toLowerCase())
   );
 
   // Determine what to show: filtered results or recent searches
