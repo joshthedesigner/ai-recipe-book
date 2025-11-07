@@ -96,7 +96,19 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
           content: [
             {
               type: 'text',
-              text: 'Extract all text from this recipe image. Return ONLY the text you see, preserving the original formatting and language. Do not translate or modify anything.',
+              text: `Extract ALL text from this recipe image with COMPLETE ACCURACY and MAXIMUM detail.
+
+CRITICAL - Pay special attention to:
+• Ingredient QUANTITIES (1, 2, 3, etc.)
+• MEASUREMENTS (cups, tablespoons, teaspoons, grams, ounces, pounds)
+• FRACTIONS (1/2, 1/4, 3/4, 1/3, 2/3, etc.)
+• Cooking TIMES (minutes, hours, seconds)
+• Cooking TEMPERATURES (350°F, 180°C, medium heat, etc.)
+• Precise amounts and units
+
+Read carefully - small text matters! Capture every number, measurement, and detail.
+
+Return the COMPLETE text exactly as written, preserving original formatting and language. Do not summarize, shorten, or modify anything.`,
             },
             {
               type: 'image_url',
@@ -108,7 +120,7 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
           ],
         },
       ],
-      max_tokens: 2000,
+      max_tokens: 3000,
     });
 
     const extractedText = response.choices[0].message.content;

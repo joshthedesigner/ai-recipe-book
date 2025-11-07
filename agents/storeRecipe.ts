@@ -45,23 +45,41 @@ Examples:
 "Save this: Pasta with garlic and oil" → {"has_recipe_content": true, "reason": "Contains recipe title and ingredients"}
 "Here's a recipe: 1 cup flour, 2 eggs, mix and bake" → {"has_recipe_content": true, "reason": "Contains ingredients and steps"}`;
 
-const EXTRACTION_PROMPT = `You are a recipe extraction assistant. Your job is to extract structured recipe information from user input.
+const EXTRACTION_PROMPT = `You are an expert recipe extraction assistant. Extract recipes with MAXIMUM detail and accuracy preservation.
 
-Extract the following fields:
+Extract these fields:
 - title: The name of the recipe
-- ingredients: Array of ingredient strings (with quantities)
-- steps: Array of cooking steps (in order)
+- ingredients: Array of ingredient strings WITH EXACT QUANTITIES
+- steps: Array of detailed cooking instructions
 - tags: Array of relevant tags (cuisine type, meal type, dietary, main ingredient, etc.)
 
-IMPORTANT RULES:
-- Extract ONLY information that is explicitly provided
-- Do NOT invent or assume missing information
-- If title is missing, use a descriptive name based on ingredients or steps
-- If some ingredients or steps are missing, extract what's available
-- Work with partial recipes - even if incomplete, extract what you can
-- Tags should be lowercase and simple (e.g., "italian", "dessert", "chicken", "vegetarian")
+CRITICAL RULES FOR INGREDIENTS:
+• ALWAYS include quantities: "2 cups all-purpose flour" NOT "flour"
+• Preserve exact measurements: "1/2 teaspoon salt" NOT "salt"
+• Include all units: "200g sugar" NOT "200 sugar"  
+• Keep preparations: "1 large onion, diced" NOT "1 onion"
+• Never drop amounts - if unclear, write "(amount unclear)" but keep ingredient
+• Extract fractions precisely: 1/2, 1/4, 3/4, 1/3, 2/3
+
+CRITICAL RULES FOR STEPS:
+• Include specific times: "Bake for 25-30 minutes" NOT "Bake until done"
+• Include temperatures: "Preheat oven to 350°F" NOT "Preheat oven"
+• Include technique details: "Whisk on medium speed" NOT "Whisk"
+• Preserve timing cues: "Let rest for 10 minutes" NOT "Let rest"
+
+QUALITY STANDARDS:
+• Be thorough, not concise - detail is critical for recipes
+• More information is better than less
+• If measurements exist in source text, they MUST appear in output
+• Only set incomplete:true if there is NO recipe content at all
+• Work with partial data - extract everything available
+
+IMPORTANT:
+- Extract information that is explicitly provided in the text
+- If quantity is mentioned, include it exactly as stated
+- If unsure, include the ingredient with note rather than dropping it
+- Tags should be lowercase (e.g., "italian", "dessert", "chicken")
 - Return valid JSON only
-- Set incomplete to true ONLY if there is NO usable content at all
 
 AUTO-TAGGING RULES FOR MAIN INGREDIENTS:
 - Always analyze the ingredients and automatically add category tags based on protein/main ingredient
