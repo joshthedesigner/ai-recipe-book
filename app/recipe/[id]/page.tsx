@@ -29,6 +29,7 @@ import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
 import { supabase } from '@/db/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { extractYouTubeId } from '@/utils/youtubeHelpers';
 
 export default function RecipeDetailPage() {
   const router = useRouter();
@@ -204,8 +205,33 @@ export default function RecipeDetailPage() {
           )}
         </Box>
 
-        {/* Hero Image */}
-        {recipe.image_url && (
+        {/* Video Embed - Priority over image */}
+        {recipe.video_url && recipe.video_platform === 'youtube' && (
+          <Box
+            sx={{
+              width: { xs: '100%', md: '66.67%' },
+              aspectRatio: '16/9',
+              borderRadius: 2,
+              overflow: 'hidden',
+              mb: 3,
+              bgcolor: 'black',
+            }}
+          >
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
+              title={recipe.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{ display: 'block', border: 'none' }}
+            />
+          </Box>
+        )}
+
+        {/* Hero Image - Only show if no video */}
+        {!recipe.video_url && recipe.image_url && (
           <Box
             sx={{
               width: { xs: '100%', md: '66.67%' },
