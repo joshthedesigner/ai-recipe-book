@@ -19,10 +19,12 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
+  ListItemIcon,
   Typography,
   CircularProgress,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import HistoryIcon from '@mui/icons-material/History';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 
@@ -50,9 +52,28 @@ export default function FriendsSearch({
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [recentSearches, setRecentSearches] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
   const popperRef = useRef<HTMLDivElement>(null);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    if (!user) return;
+
+    const storageKey = `friendsSearch_recentSearches_${user.id}`;
+    const stored = localStorage.getItem(storageKey);
+    
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setRecentSearches(Array.isArray(parsed) ? parsed.slice(0, 3) : []);
+      } catch (error) {
+        console.error('Error loading recent searches:', error);
+        setRecentSearches([]);
+      }
+    }
+  }, [user]);
 
   // Load friends list
   useEffect(() => {
@@ -83,7 +104,39 @@ export default function FriendsSearch({
     friend.friend_email.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  // Determine what to show: filtered results or recent searches
+  const hasSearchInput = searchValue.trim().length > 0;
+  const displayItems = hasSearchInput ? filteredFriends : recentSearches;
+  const isShowingRecents = !hasSearchInput && recentSearches.length > 0;
+
+  // Save friend to recent searches
+  const saveToRecentSearches = (friend: Friend) => {
+    if (!user) return;
+
+    const storageKey = `friendsSearch_recentSearches_${user.id}`;
+    
+    // Remove if already exists (to re-add at top)
+    const filtered = recentSearches.filter(f => f.friend_id !== friend.friend_id);
+    
+    // Add to front, limit to 3
+    const updated = [
+      { 
+        friend_id: friend.friend_id, 
+        friend_name: friend.friend_name, 
+        friend_email: friend.friend_email,
+        friended_at: friend.friended_at 
+      }, 
+      ...filtered
+    ].slice(0, 3);
+    
+    // Update state and localStorage
+    setRecentSearches(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+  };
+
   const handleFriendClick = (friend: Friend) => {
+    // Save to recent searches
+    saveToRecentSearches(friend);
     // Find the friend's group in the groups list
     // Friend groups have isFriend=true and name contains friend's name or email
     const friendGroup = groups.find(g => 
@@ -108,13 +161,26 @@ export default function FriendsSearch({
   };
 
   const handleFocus = () => {
-    setOpen(true);
+    // Only open if there are recent searches to show
+    if (recentSearches.length > 0) {
+      setOpen(true);
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
     setSearchValue('');
   };
+
+  // Open dropdown when user starts typing
+  useEffect(() => {
+    if (searchValue.trim().length > 0) {
+      setOpen(true);
+    } else if (recentSearches.length === 0) {
+      // Close if no search input and no recent searches
+      setOpen(false);
+    }
+  }, [searchValue, recentSearches.length]);
 
   // Close when clicking outside
   useEffect(() => {
@@ -198,37 +264,51 @@ export default function FriendsSearch({
             <Box sx={{ display: 'flex', justifyContent: 'flex-start', p: 2, pl: 2 }}>
               <CircularProgress size={24} />
             </Box>
-          ) : filteredFriends.length === 0 ? (
+          ) : displayItems.length === 0 ? (
             <Box sx={{ p: 2, textAlign: 'left' }}>
               <Typography variant="body2" color="text.secondary">
                 {searchValue ? 'No friends found' : 'No friends yet'}
               </Typography>
             </Box>
           ) : (
-            <List dense sx={{ py: 0 }}>
-              {filteredFriends.map((friend) => (
-                <ListItem key={friend.friend_id} disablePadding>
-                  <ListItemButton 
-                    onClick={() => handleFriendClick(friend)}
-                    sx={{ 
-                      px: 2,
-                      py: 1,
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                    }}
-                  >
-                    <ListItemText
-                      primary={friend.friend_name}
-                      primaryTypographyProps={{ 
-                        fontWeight: 500,
-                        sx: { textAlign: 'left' }
+            <>
+              {isShowingRecents && (
+                <Box sx={{ px: 2, pt: 1.5, pb: 0.5 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    Recent Searches
+                  </Typography>
+                </Box>
+              )}
+              <List dense sx={{ py: 0 }}>
+                {displayItems.map((friend) => (
+                  <ListItem key={friend.friend_id} disablePadding>
+                    <ListItemButton 
+                      onClick={() => handleFriendClick(friend)}
+                      sx={{ 
+                        px: 2,
+                        py: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
                       }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
+                    >
+                      {isShowingRecents && (
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                          <HistoryIcon fontSize="small" sx={{ color: 'text.secondary' }} />
+                        </ListItemIcon>
+                      )}
+                      <ListItemText
+                        primary={friend.friend_name}
+                        primaryTypographyProps={{ 
+                          fontWeight: 500,
+                          sx: { textAlign: 'left' }
+                        }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                ))}
+              </List>
+            </>
           )}
         </Paper>
       </Popper>
