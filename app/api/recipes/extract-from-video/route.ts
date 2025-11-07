@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import OpenAI from 'openai';
 import { createClient } from '@/db/supabaseServer';
-import { getOpenAIClient } from '@/utils/openai';
 import { extractYouTubeId, getYouTubeCaptions, isYouTubeUrl } from '@/utils/youtubeHelpers';
 import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/utils/rateLimit';
 import { errorResponse } from '@/utils/errorHandler';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes for video processing
+
+// Lazy-load OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 interface ExtractedRecipe {
   title: string;
