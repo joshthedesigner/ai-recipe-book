@@ -116,7 +116,12 @@ export default function MobileNav() {
                 </Link>
 
                 {/* Right Side Icons */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 'auto' }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'flex-start', // Align to top so labels don't push icons down
+                  gap: 0.25, 
+                  ml: 'auto' 
+                }}>
                   {/* Home */}
                   <NavButton
                     icon={<HomeIcon fontSize="small" />}
@@ -136,10 +141,18 @@ export default function MobileNav() {
                   )}
                   
                   {/* Friends Bell */}
-                  {user && <NotificationBell />}
+                  {user && (
+                    <Box sx={{ pt: 0.75 }}> {/* Add padding to align with NavButton */}
+                      <NotificationBell />
+                    </Box>
+                  )}
                   
                   {/* User Avatar Menu */}
-                  {user && <UserAvatarMenu />}
+                  {user && (
+                    <Box sx={{ pt: 0.75 }}> {/* Add padding to align with NavButton */}
+                      <UserAvatarMenu />
+                    </Box>
+                  )}
                 </Box>
               </>
             )}

@@ -105,7 +105,12 @@ export default function DesktopNav() {
           )}
 
           {/* User Menu */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, ml: 'auto' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', // Align to top so labels don't push icons down
+            gap: 0.5, 
+            ml: 'auto' 
+          }}>
             {/* Home */}
             <NavButton
               icon={<HomeIcon />}
@@ -115,10 +120,18 @@ export default function DesktopNav() {
             />
             
             {/* Friends - Keep NotificationBell for now, will enhance later */}
-            {user && <NotificationBell />}
+            {user && (
+              <Box sx={{ pt: 1 }}> {/* Add padding to align with NavButton */}
+                <NotificationBell />
+              </Box>
+            )}
             
             {/* User Avatar Menu */}
-            {user && <UserAvatarMenu />}
+            {user && (
+              <Box sx={{ pt: 1 }}> {/* Add padding to align with NavButton */}
+                <UserAvatarMenu />
+              </Box>
+            )}
           </Box>
         </Box>
       </Toolbar>
