@@ -17,6 +17,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
 import { mergeAutoTags } from '@/utils/autoTag';
 import { getUserDefaultGroup, canUserAddRecipes, hasGroupAccess } from '@/utils/permissions';
+import { isYouTubeUrl, extractYouTubeId } from '@/utils/youtubeHelpers';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -310,6 +311,112 @@ export async function storeRecipe(
     if (containsURL(message)) {
       const url = extractURL(message);
       if (url) {
+        // Check if it's a YouTube video URL
+        if (isYouTubeUrl(url)) {
+          const videoId = extractYouTubeId(url);
+          if (videoId) {
+            console.log('YouTube video detected:', videoId);
+            
+            // Call video extraction API
+            try {
+              const videoResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/recipes/extract-from-video`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ videoUrl: url }),
+              });
+              
+              const videoData = await videoResponse.json();
+              
+              if (videoData.success) {
+                console.log('✅ Recipe extracted from YouTube video (using captions - FREE!)');
+                
+                // Add cookbook info if provided
+                const recipeWithMetadata = {
+                  ...videoData.recipe,
+                  cookbook_name: cookbookName || null,
+                  cookbook_page: cookbookPage || null,
+                  contributor_name: contributorName,
+                };
+                
+                // If in review mode, return for confirmation
+                if (reviewMode) {
+                  const preview = generateRecipePreview(recipeWithMetadata);
+                  return {
+                    success: true,
+                    message: preview,
+                    data: recipeWithMetadata,
+                  };
+                }
+                
+                // Otherwise save directly (continue to embedding step below)
+                const extractedRecipe = recipeWithMetadata;
+                
+                // Generate embedding
+                console.log('Generating embedding for video recipe...');
+                let embedding;
+                try {
+                  const searchText = createRecipeSearchText(extractedRecipe);
+                  embedding = await generateEmbedding(searchText);
+                } catch (embedError) {
+                  console.error('Error generating embedding:', embedError);
+                  return {
+                    success: false,
+                    message: 'Sorry, I had trouble processing the recipe for search.',
+                    error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+                  };
+                }
+                
+                // Save to database
+                console.log('Saving video recipe to database...');
+                const { data, error } = await supabase
+                  .from('recipes')
+                  .insert([{
+                    user_id: userId,
+                    group_id: activeGroupId,
+                    title: extractedRecipe.title,
+                    ingredients: extractedRecipe.ingredients,
+                    steps: extractedRecipe.steps,
+                    tags: extractedRecipe.tags,
+                    source_url: extractedRecipe.source_url,
+                    image_url: extractedRecipe.image_url,
+                    video_url: extractedRecipe.video_url,
+                    video_platform: extractedRecipe.video_platform,
+                    cookbook_name: extractedRecipe.cookbook_name,
+                    cookbook_page: extractedRecipe.cookbook_page,
+                    contributor_name: contributorName,
+                    embedding: embedding,
+                  }])
+                  .select()
+                  .single();
+
+                if (error) throw error;
+                
+                const summary = generateRecipeSummary(data);
+                console.log('✅ Video recipe saved successfully');
+
+                return {
+                  success: true,
+                  message: summary,
+                  data: data,
+                };
+              } else {
+                // Video extraction failed, fall through to regular URL scraping
+                console.log('Video extraction failed:', videoData.error);
+                if (videoData.needsCaptions) {
+                  return {
+                    success: false,
+                    message: `This YouTube video doesn't have captions available. ${videoData.error}`,
+                  };
+                }
+                // Fall through to try regular scraping
+              }
+            } catch (videoError) {
+              console.error('Error processing video:', videoError);
+              // Fall through to try regular URL scraping
+            }
+          }
+        }
+        
         console.log('URL detected, scraping recipe from:', url);
         try {
           const scrapedRecipe = await scrapeRecipe(url);

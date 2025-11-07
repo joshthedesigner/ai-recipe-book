@@ -29,6 +29,8 @@ export interface Recipe {
   tags: string[];
   source_url?: string | null;
   image_url?: string | null;
+  video_url?: string | null;
+  video_platform?: 'youtube' | 'tiktok' | 'instagram' | 'direct' | null;
   cookbook_name?: string | null;
   cookbook_page?: string | null;
   contributor_name: string;
