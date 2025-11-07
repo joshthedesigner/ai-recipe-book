@@ -674,8 +674,22 @@ async function extractRecipeData(text: string): Promise<any> {
     const extracted = JSON.parse(content);
     console.log('Extracted recipe:', extracted);
     
-    // Apply auto-tagging to ensure all protein/ingredient categories are tagged
+    // Quality validation: Check for missing quantities
     if (extracted.ingredients && Array.isArray(extracted.ingredients)) {
+      const ingredientsWithoutQuantities = extracted.ingredients.filter((ing: string) => {
+        // Check if ingredient has a number or common fraction
+        return !ing.match(/\d+|½|¼|¾|⅓|⅔|⅛|⅜|⅝|⅞|1\/2|1\/4|3\/4|1\/3|2\/3|1\/8/);
+      });
+      
+      if (ingredientsWithoutQuantities.length > 0) {
+        console.warn('⚠️ Quality Check: Found ingredients without quantities:');
+        console.warn(ingredientsWithoutQuantities);
+        console.warn(`${ingredientsWithoutQuantities.length}/${extracted.ingredients.length} ingredients missing quantities`);
+      } else {
+        console.log('✅ Quality Check: All ingredients have quantities');
+      }
+      
+      // Apply auto-tagging to ensure all protein/ingredient categories are tagged
       extracted.tags = mergeAutoTags(extracted.tags || [], extracted.ingredients);
       console.log('Auto-tags applied:', extracted.tags);
     }
