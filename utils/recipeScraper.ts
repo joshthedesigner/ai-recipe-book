@@ -20,6 +20,25 @@ interface ScrapedRecipe {
   image_url?: string;
 }
 
+/**
+ * Strip HTML tags and decode HTML entities from a string
+ */
+function stripHtml(text: string): string {
+  // Remove HTML tags
+  const withoutTags = text.replace(/<[^>]*>/g, '');
+  
+  // Decode common HTML entities
+  const decoded = withoutTags
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+  
+  return decoded.trim();
+}
+
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
 
@@ -405,30 +424,30 @@ function extractSchemaRecipe($: cheerio.CheerioAPI): ScrapedRecipe | null {
  */
 function parseSchemaRecipe(schema: any): ScrapedRecipe {
   // Extract title
-  const title = schema.name || 'Untitled Recipe';
+  const title = stripHtml(schema.name || 'Untitled Recipe');
 
   // Extract ingredients (can be array or string)
   let ingredients: string[] = [];
   if (Array.isArray(schema.recipeIngredient)) {
-    ingredients = schema.recipeIngredient;
+    ingredients = schema.recipeIngredient.map((ing: string) => stripHtml(ing));
   } else if (typeof schema.recipeIngredient === 'string') {
-    ingredients = [schema.recipeIngredient];
+    ingredients = [stripHtml(schema.recipeIngredient)];
   }
 
   // Extract steps from recipeInstructions
   let steps: string[] = [];
   if (Array.isArray(schema.recipeInstructions)) {
     steps = schema.recipeInstructions.map((instruction: any) => {
-      if (typeof instruction === 'string') return instruction;
-      if (instruction.text) return instruction.text;
-      if (instruction['@type'] === 'HowToStep' && instruction.text) return instruction.text;
+      if (typeof instruction === 'string') return stripHtml(instruction);
+      if (instruction.text) return stripHtml(instruction.text);
+      if (instruction['@type'] === 'HowToStep' && instruction.text) return stripHtml(instruction.text);
       return '';
     }).filter((step: string) => step.length > 0);
   } else if (typeof schema.recipeInstructions === 'string') {
     // Split by newlines or periods if it's a single string
     steps = schema.recipeInstructions
       .split(/\n+/)
-      .map((s: string) => s.trim())
+      .map((s: string) => stripHtml(s.trim()))
       .filter((s: string) => s.length > 0);
   }
 
@@ -436,21 +455,23 @@ function parseSchemaRecipe(schema: any): ScrapedRecipe {
   const tags: string[] = [];
   if (schema.keywords) {
     const keywords = typeof schema.keywords === 'string' 
-      ? schema.keywords.split(',').map((k: string) => k.trim().toLowerCase())
-      : schema.keywords;
+      ? schema.keywords.split(',').map((k: string) => stripHtml(k.trim()).toLowerCase())
+      : Array.isArray(schema.keywords) 
+        ? schema.keywords.map((k: string) => stripHtml(k).toLowerCase())
+        : [];
     tags.push(...keywords);
   }
   if (schema.recipeCategory) {
     const categories = Array.isArray(schema.recipeCategory) 
       ? schema.recipeCategory 
       : [schema.recipeCategory];
-    tags.push(...categories.map((c: string) => c.toLowerCase()));
+    tags.push(...categories.map((c: string) => stripHtml(c).toLowerCase()));
   }
   if (schema.recipeCuisine) {
     const cuisines = Array.isArray(schema.recipeCuisine) 
       ? schema.recipeCuisine 
       : [schema.recipeCuisine];
-    tags.push(...cuisines.map((c: string) => c.toLowerCase()));
+    tags.push(...cuisines.map((c: string) => stripHtml(c).toLowerCase()));
   }
 
   // Get image URL
