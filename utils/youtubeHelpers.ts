@@ -76,9 +76,27 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
       return null;
     }
     
+    // Log first segment structure to understand the format
+    console.log('🔍 First segment structure:', JSON.stringify(segments[0], null, 2).substring(0, 500));
+    
     // Combine all segments into full text
+    // Try different possible text locations in the segment object
     const fullTranscript = segments
-      .map((segment: any) => segment.snippet.text.toString())
+      .map((segment: any) => {
+        // youtubei.js uses different structures - try multiple paths
+        if (segment.snippet?.text) {
+          return typeof segment.snippet.text === 'string' 
+            ? segment.snippet.text 
+            : segment.snippet.text.toString?.() || String(segment.snippet.text);
+        }
+        if (segment.text) {
+          return typeof segment.text === 'string'
+            ? segment.text
+            : segment.text.toString?.() || String(segment.text);
+        }
+        // Fallback: convert whole segment to string
+        return String(segment);
+      })
       .join(' ')
       .trim();
     
