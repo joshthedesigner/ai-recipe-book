@@ -40,26 +40,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
 
   // Get image URL - prefer recipe image, fallback to YouTube thumbnail
   const getImageUrl = (): string | null => {
-    console.log('🖼️ RecipeCard:', recipe.title, {
-      has_image_url: !!recipe.image_url,
-      has_video_url: !!recipe.video_url,
-      image_url: recipe.image_url,
-      video_url: recipe.video_url,
-      compact: compact
-    });
-    
-    if (recipe.image_url) {
-      console.log('   ✅ Using image_url');
-      return recipe.image_url;
-    }
-    
-    if (recipe.video_url) {
-      const thumbnail = getYouTubeThumbnail(recipe.video_url);
-      console.log('   ✅ Using YouTube thumbnail:', thumbnail);
-      return thumbnail;
-    }
-    
-    console.log('   ❌ No image or video, showing placeholder');
+    if (recipe.image_url) return recipe.image_url;
+    if (recipe.video_url) return getYouTubeThumbnail(recipe.video_url);
     return null;
   };
 
