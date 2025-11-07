@@ -44,6 +44,7 @@ const INITIAL_MESSAGE: Message = {
 I can help you add delicious recipes in a few easy ways:
 
 🍴 Paste a recipe URL
+📺 Paste a YouTube video link
 📸 Upload a photo of a recipe
 📝 Describe a recipe in your own words
 
