@@ -109,7 +109,9 @@ Return valid JSON only.`;
       
       if (searchTerms.length > 0) {
         const mainTerm = searchTerms[0];
-        const regex = new RegExp(`.{0,80}${mainTerm}.{0,80}`, 'gi');
+        // Escape special regex characters
+        const escapedTerm = mainTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`.{0,80}${escapedTerm}.{0,80}`, 'gi');
         const matches = transcript.match(regex);
         
         if (matches && matches.length > 0) {
