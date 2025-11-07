@@ -16,6 +16,7 @@ import {
   ButtonBase,
   Typography,
   Badge,
+  Divider,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -234,6 +235,19 @@ export default function MobileNav() {
                         Friends
                       </Typography>
                     </ButtonBase>
+                  )}
+
+                  {/* Divider */}
+                  {user && (
+                    <Divider 
+                      orientation="vertical" 
+                      flexItem 
+                      sx={{ 
+                        mx: 0.5,
+                        my: 0.75,
+                        bgcolor: 'divider',
+                      }} 
+                    />
                   )}
 
                   {/* User Menu */}

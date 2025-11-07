@@ -14,6 +14,7 @@ import {
   Box,
   ButtonBase,
   Badge,
+  Divider,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
@@ -197,6 +198,19 @@ export default function DesktopNav() {
                   Friends
                 </Typography>
               </ButtonBase>
+            )}
+
+            {/* Divider */}
+            {user && (
+              <Divider 
+                orientation="vertical" 
+                flexItem 
+                sx={{ 
+                  mx: 1,
+                  my: 1,
+                  bgcolor: 'divider',
+                }} 
+              />
             )}
 
             {/* User Menu */}
