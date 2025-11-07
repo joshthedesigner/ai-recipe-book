@@ -88,6 +88,12 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
     const base64Image = bufferToBase64(imageBuffer);
     const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
+    console.log('🔍 Calling Vision API with image:', {
+      mimeType,
+      imageSize: imageBuffer.length,
+      base64Length: base64Image.length,
+    });
+
     const response = await client.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
@@ -123,12 +129,28 @@ Return the COMPLETE text exactly as written, preserving original formatting and 
       max_tokens: 3000,
     });
 
+    console.log('🔍 Vision API response:', {
+      model: response.model,
+      finishReason: response.choices[0].finish_reason,
+      contentLength: response.choices[0].message.content?.length,
+      contentPreview: response.choices[0].message.content?.substring(0, 150),
+    });
+
     const extractedText = response.choices[0].message.content;
     
     if (!extractedText || extractedText.trim().length === 0) {
       throw new Error('No text found in image');
     }
 
+    // Check if model refused
+    if (extractedText.toLowerCase().includes("i'm unable to") || 
+        extractedText.toLowerCase().includes("i cannot") ||
+        extractedText.toLowerCase().includes("i can't")) {
+      console.error('🔴 Vision API REFUSED to extract text:', extractedText);
+      throw new Error('Vision API refused to process this image. The image might be unclear or contain unsupported content.');
+    }
+
+    console.log('✅ Text extracted successfully, length:', extractedText.length);
     return extractedText;
   } catch (error) {
     console.error('Error extracting text from image:', error);
