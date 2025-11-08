@@ -146,6 +146,13 @@ export async function getUserGroups(
 
       if (!friendsError && friendsGroups) {
         friendsGroups.forEach((fg: any) => {
+          // Skip friends without recipe_groups (new users who haven't added recipes)
+          // They'll appear in friends list but not in group switcher
+          if (!fg.group_id) {
+            console.log(`Skipping friend ${fg.friend_name} - no recipe group yet`);
+            return;
+          }
+          
           groups.push({
             id: fg.group_id,
             name: `${fg.friend_name || fg.friend_email}'s RecipeBook`,
