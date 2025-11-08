@@ -291,26 +291,33 @@ export default function SettingsPage() {
                   {user.user_metadata?.name || 'Not set'}
                 </Typography>
               ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                <Box sx={{ mt: 1 }}>
                   <TextField
-                    fullWidth
                     value={nameValue}
                     onChange={(e) => setNameValue(e.target.value)}
                     size="small"
                     autoFocus
                     disabled={nameSaving}
+                    sx={{ width: '66%', mb: 2 }}
                   />
-                  <IconButton
-                    onClick={handleSaveName}
-                    disabled={nameSaving}
-                    color="primary"
-                    size="small"
-                  >
-                    {nameSaving ? <CircularProgress size={20} /> : <CheckIcon />}
-                  </IconButton>
-                  <IconButton onClick={handleCancelName} disabled={nameSaving} size="small">
-                    <CloseIcon />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <AppButton
+                      variant="primary"
+                      size="small"
+                      onClick={handleSaveName}
+                      disabled={nameSaving || !nameValue.trim()}
+                    >
+                      {nameSaving ? 'Saving...' : 'Save'}
+                    </AppButton>
+                    <AppButton
+                      variant="secondary"
+                      size="small"
+                      onClick={handleCancelName}
+                      disabled={nameSaving}
+                    >
+                      Cancel
+                    </AppButton>
+                  </Box>
                 </Box>
               )}
             </Box>
