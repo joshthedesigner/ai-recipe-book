@@ -24,7 +24,7 @@ import { useRouter } from 'next/navigation';
 import AppButton from '@/components/AppButton';
 
 export default function SettingsPage() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, loading } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -59,12 +59,12 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated (only after loading completes)
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
   // Password validation (same as signup)
   const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
