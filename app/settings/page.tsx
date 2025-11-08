@@ -406,27 +406,34 @@ export default function SettingsPage() {
 
         {/* Delete Account */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5, color: 'error.main' }}>
-            Delete Account
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Permanently delete your account and all associated data. This action cannot be undone.
-          </Typography>
-          <AppButton
-            variant="secondary"
-            size="small"
-            onClick={() => setShowDeleteDialog(true)}
-            sx={{
-              color: 'error.main',
-              borderColor: 'error.main',
-              '&:hover': {
-                borderColor: 'error.dark',
-                backgroundColor: 'rgba(211, 47, 47, 0.04)',
-              },
-            }}
+          <Box
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}
           >
-            Delete Account
-          </AppButton>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Delete Account
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Permanently delete your account and all associated data. This action cannot be undone.
+              </Typography>
+            </Box>
+            <AppButton
+              variant="secondary"
+              size="small"
+              onClick={() => setShowDeleteDialog(true)}
+              sx={{
+                minWidth: 80,
+                color: 'error.main',
+                borderColor: 'error.main',
+                '&:hover': {
+                  borderColor: 'error.dark',
+                  backgroundColor: 'rgba(211, 47, 47, 0.04)',
+                },
+              }}
+            >
+              Delete Account
+            </AppButton>
+          </Box>
         </Box>
 
         {/* Delete Confirmation Dialog */}
