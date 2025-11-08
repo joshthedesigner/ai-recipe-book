@@ -1,21 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { initPostHog, trackPageView } from '@/lib/analytics';
 
 /**
- * PostHog Provider
- * Initializes analytics and tracks page views
+ * PostHog Page Tracker
+ * Tracks page views on navigation
  */
-export function PostHogProvider({ children }: { children: React.ReactNode }) {
+function PostHogPageTracker() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  // Initialize PostHog on mount
-  useEffect(() => {
-    initPostHog();
-  }, []);
 
   // Track page views on navigation
   useEffect(() => {
@@ -25,6 +20,26 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, searchParams]);
 
-  return <>{children}</>;
+  return null;
+}
+
+/**
+ * PostHog Provider
+ * Initializes analytics and tracks page views
+ */
+export function PostHogProvider({ children }: { children: React.ReactNode }) {
+  // Initialize PostHog on mount
+  useEffect(() => {
+    initPostHog();
+  }, []);
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <PostHogPageTracker />
+      </Suspense>
+      {children}
+    </>
+  );
 }
 
