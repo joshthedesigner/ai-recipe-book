@@ -28,7 +28,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -45,8 +45,9 @@ interface PendingRequest {
 
 export default function MobileNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
-  const { groups, loading: groupsLoading, switchGroup } = useGroup();
+  const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -258,17 +259,36 @@ export default function MobileNav() {
                       gap: 0.25,
                       p: 0.75,
                       borderRadius: 1,
+                      position: 'relative',
                       '&:hover': {
                         bgcolor: 'action.hover',
                       },
+                      // Selected state indicator - only when on /browse AND viewing own cookbook
+                      '&::after': (pathname === '/browse' && activeGroup?.isOwn) ? {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '80%',
+                        height: '3px',
+                        bgcolor: 'text.primary',
+                        borderRadius: '2px 2px 0 0',
+                      } : {},
                     }}
                   >
-                    <HomeIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                    <HomeIcon 
+                      sx={{ 
+                        fontSize: 20, 
+                        color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary'
+                      }} 
+                    />
                     <Typography
                       variant="caption"
                       sx={{
                         fontSize: '10px',
-                        color: 'text.secondary',
+                        color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary',
+                        fontWeight: (pathname === '/browse' && activeGroup?.isOwn) ? 600 : 400,
                         lineHeight: 1,
                       }}
                     >
@@ -318,9 +338,22 @@ export default function MobileNav() {
                           gap: 0.25,
                           p: 0.75,
                           borderRadius: 1,
+                          position: 'relative',
                           '&:hover': {
                             bgcolor: 'action.hover',
                           },
+                          // Selected state indicator
+                          '&::after': pathname === '/friends' ? {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: 0,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '80%',
+                            height: '3px',
+                            bgcolor: 'text.primary',
+                            borderRadius: '2px 2px 0 0',
+                          } : {},
                         }}
                       >
                         <Badge
@@ -334,13 +367,19 @@ export default function MobileNav() {
                             },
                           }}
                         >
-                          <PeopleIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                          <PeopleIcon 
+                            sx={{ 
+                              fontSize: 20, 
+                              color: pathname === '/friends' ? 'text.primary' : 'text.secondary'
+                            }} 
+                          />
                         </Badge>
                         <Typography
                           variant="caption"
                           sx={{
                             fontSize: '10px',
-                            color: 'text.secondary',
+                            color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
+                            fontWeight: pathname === '/friends' ? 600 : 400,
                             lineHeight: 1,
                           }}
                         >

@@ -24,7 +24,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
@@ -42,8 +42,9 @@ interface PendingRequest {
 
 export default function DesktopNav() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
-  const { groups, loading: groupsLoading, switchGroup } = useGroup();
+  const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
@@ -251,17 +252,36 @@ export default function DesktopNav() {
                 gap: 0.5,
                 p: 1,
                 borderRadius: 1,
+                position: 'relative',
                 '&:hover': {
                   bgcolor: 'action.hover',
                 },
+                // Selected state indicator - only when on /browse AND viewing own cookbook
+                '&::after': (pathname === '/browse' && activeGroup?.isOwn) ? {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '80%',
+                  height: '3px',
+                  bgcolor: 'text.primary',
+                  borderRadius: '2px 2px 0 0',
+                } : {},
               }}
             >
-              <HomeIcon sx={{ fontSize: 24, color: 'text.secondary' }} />
+              <HomeIcon 
+                sx={{ 
+                  fontSize: 24, 
+                  color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary'
+                }} 
+              />
               <Typography
                 variant="caption"
                 sx={{
                   fontSize: '12px',
-                  color: 'text.secondary',
+                  color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary',
+                  fontWeight: (pathname === '/browse' && activeGroup?.isOwn) ? 600 : 400,
                   lineHeight: 1,
                 }}
               >
@@ -281,9 +301,22 @@ export default function DesktopNav() {
                     gap: 0.5,
                     p: 1,
                     borderRadius: 1,
+                    position: 'relative',
                     '&:hover': {
                       bgcolor: 'action.hover',
                     },
+                    // Selected state indicator
+                    '&::after': pathname === '/friends' ? {
+                      content: '""',
+                      position: 'absolute',
+                      bottom: 0,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '80%',
+                      height: '3px',
+                      bgcolor: 'text.primary',
+                      borderRadius: '2px 2px 0 0',
+                    } : {},
                   }}
                 >
                   <Badge
@@ -297,13 +330,19 @@ export default function DesktopNav() {
                       },
                     }}
                   >
-                    <PeopleIcon sx={{ fontSize: 24, color: 'text.secondary' }} />
+                    <PeopleIcon 
+                      sx={{ 
+                        fontSize: 24, 
+                        color: pathname === '/friends' ? 'text.primary' : 'text.secondary'
+                      }} 
+                    />
                   </Badge>
                   <Typography
                     variant="caption"
                     sx={{
                       fontSize: '12px',
-                      color: 'text.secondary',
+                      color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
+                      fontWeight: pathname === '/friends' ? 600 : 400,
                       lineHeight: 1,
                     }}
                   >
