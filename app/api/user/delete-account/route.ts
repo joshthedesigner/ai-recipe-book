@@ -45,7 +45,7 @@ export async function DELETE(request: NextRequest) {
     // Allow 1 deletion attempt per day per user
     const rateLimitResult = await checkRateLimit(
       request,
-      { requests: 1, window: 86400 }, // 24 hours
+      { maxRequests: 1, windowMs: 24 * 60 * 60 * 1000 }, // 24 hours in milliseconds
       user.id
     );
 
