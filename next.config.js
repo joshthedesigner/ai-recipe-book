@@ -52,11 +52,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js requires unsafe-eval and unsafe-inline
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.i.posthog.com https://us-assets.i.posthog.com", // Next.js + PostHog
               "style-src 'self' 'unsafe-inline'", // Material-UI requires unsafe-inline
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://*.i.posthog.com https://app.posthog.com https://us.i.posthog.com https://us-assets.i.posthog.com", // Add PostHog domains
               "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com", // Allow YouTube embeds
               "frame-ancestors 'self'",
             ].join('; ')
