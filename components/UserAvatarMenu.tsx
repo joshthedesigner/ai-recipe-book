@@ -130,7 +130,6 @@ export default function UserAvatarMenu() {
           </ListItemIcon>
           <ListItemText primary="Settings" />
         </MenuItem>
-        <Divider />
         <MenuItem onClick={handleSignOut}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
