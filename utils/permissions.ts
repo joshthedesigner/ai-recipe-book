@@ -134,8 +134,15 @@ export async function getUserGroups(
 
     // Get friends' owned groups
     try {
+      console.log('🔍 Calling get_friends_groups RPC...');
       const { data: friendsGroups, error: friendsError } = await supabase
         .rpc('get_friends_groups');
+
+      console.log('🔍 RPC returned:', { 
+        error: friendsError, 
+        dataLength: friendsGroups?.length,
+        data: friendsGroups 
+      });
 
       if (!friendsError && friendsGroups) {
         friendsGroups.forEach((fg: any) => {
@@ -150,6 +157,8 @@ export async function getUserGroups(
         });
 
         console.log(`getUserGroups: Added ${friendsGroups.length} friend group(s)`);
+      } else if (friendsError) {
+        console.error('🚨 RPC error:', friendsError);
       }
     } catch (friendsError) {
       console.warn('Error fetching friends groups:', friendsError);
