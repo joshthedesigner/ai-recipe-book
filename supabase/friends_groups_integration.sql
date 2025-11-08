@@ -37,7 +37,7 @@ AS $$
       ELSE f.user_a_id
     END = u.id
   )
-  JOIN recipe_groups rg ON rg.owner_id = u.id
+  LEFT JOIN recipe_groups rg ON rg.owner_id = u.id
   WHERE (f.user_a_id = auth.uid() OR f.user_b_id = auth.uid())
     AND f.status = 'accepted'
   ORDER BY u.raw_user_meta_data->>'name', rg.name;
@@ -46,7 +46,7 @@ $$;
 GRANT EXECUTE ON FUNCTION get_friends_groups() TO authenticated;
 
 COMMENT ON FUNCTION get_friends_groups() IS 
-  'Returns all owned recipe groups of the current user''s friends for display in group switcher.';
+  'Returns all owned recipe groups of the current user''s friends for display in group switcher. Uses LEFT JOIN to include friends even if they don''t have recipe_groups yet (new users).';
 
 -- Simple helper function to check if two users are friends
 CREATE OR REPLACE FUNCTION are_friends(user1_id UUID, user2_id UUID)

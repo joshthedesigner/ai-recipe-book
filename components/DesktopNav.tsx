@@ -126,6 +126,8 @@ export default function DesktopNav() {
       if (data.success) {
         showToast('Friend request accepted!', 'success');
         loadPendingRequests();
+        // Notify GroupContext to reload (friend's group is now available)
+        window.dispatchEvent(new Event('groups-refresh'));
       } else {
         showToast(data.error || 'Failed to accept request', 'error');
       }

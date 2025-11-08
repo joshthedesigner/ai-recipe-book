@@ -49,6 +49,15 @@ export default function FriendsSearch({
   const router = useRouter();
   const { user } = useAuth();
   const { groups, switchGroup } = useGroup();
+  
+  // DEBUG: Log when groups change
+  useEffect(() => {
+    console.log('🔵 FRIENDSSEARCH: Groups updated', {
+      groupsLength: groups.length,
+      friendGroups: groups.filter(g => g.isFriend).length,
+      allGroups: groups.map(g => ({ name: g.name, isFriend: g.isFriend }))
+    });
+  }, [groups]);
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -135,6 +144,13 @@ export default function FriendsSearch({
   };
 
   const handleFriendClick = (friend: Friend) => {
+    console.log('🟢 FRIENDSSEARCH: handleFriendClick called!', {
+      friendName: friend.friend_name,
+      friendEmail: friend.friend_email,
+      groupsAvailable: groups.length,
+      friendGroupsAvailable: groups.filter(g => g.isFriend).length,
+    });
+    
     // Save to recent searches
     saveToRecentSearches(friend);
     // Find the friend's group in the groups list
@@ -144,6 +160,12 @@ export default function FriendsSearch({
       (g.name.toLowerCase().includes(friend.friend_name.toLowerCase()) ||
        g.name.toLowerCase().includes(friend.friend_email.toLowerCase()))
     );
+    
+    console.log('🟢 FRIENDSSEARCH: Search result', {
+      foundGroup: !!friendGroup,
+      groupName: friendGroup?.name,
+      searchingFor: [friend.friend_name, friend.friend_email],
+    });
     
     if (friendGroup) {
       switchGroup(friendGroup.id);
@@ -156,7 +178,19 @@ export default function FriendsSearch({
         onSelect();
       }
     } else {
-      console.warn('Could not find group for friend:', friend);
+      // Friend exists but hasn't created their recipe group yet (new user, no recipes)
+      console.log(`Friend ${friend.friend_name} doesn't have a recipe collection yet`);
+      // Show friendly message instead of error
+      setOpen(false);
+      setSearchValue('');
+      
+      // Could show a toast here if needed
+      // For now, just close the dropdown silently
+      
+      // Call parent callback (for mobile collapse)
+      if (onSelect) {
+        onSelect();
+      }
     }
   };
 

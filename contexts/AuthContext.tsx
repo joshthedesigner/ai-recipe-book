@@ -71,12 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const tokenChanged = newAccessToken !== lastAccessToken.current;
     
     if (userIdChanged || tokenChanged) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('✅ shouldUpdateAuth: Critical change detected', {
-          userIdChanged,
-          tokenChanged,
-        });
-      }
       return true;
     }
     
@@ -96,15 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: newName,
           avatar_url: newAvatar,
         };
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ shouldUpdateAuth: Metadata changed', {
-            nameChanged,
-            avatarChanged,
-            oldName: lastMetadata.current?.name,
-            newName,
-          });
-        }
         
         return true;
       }
@@ -218,11 +203,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session');
       
-      // Filter out irrelevant events (like INITIAL_SESSION duplicate)
-      if (!RELEVANT_EVENTS.includes(event)) {
-        console.log(`AuthContext: Ignoring ${event} event to prevent duplicate updates`);
-        return;
-      }
+      // Filter out irrelevant events (like INITIAL_SESSION duplicate)        
+        if (!RELEVANT_EVENTS.includes(event)) {
+          return;
+        }
       
       if (mounted) {
         // Only update state if user ID or access token changed
