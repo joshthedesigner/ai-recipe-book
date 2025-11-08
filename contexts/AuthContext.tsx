@@ -17,25 +17,100 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// TEST 8: Track provider mount count (module scope - persists across renders)
+let providerMountCount = 0;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   
+  // Feature flag for metadata sync (can disable if issues occur)
+  const ENABLE_METADATA_SYNC = 
+    process.env.NEXT_PUBLIC_ENABLE_METADATA_SYNC === 'true'; // Default: disabled for safety
+  
   // Track last auth state to prevent duplicate updates
   const lastUserId = useRef<string | null>(null);
   const lastAccessToken = useRef<string | null>(null);
   
+  // Track metadata for profile updates (name, avatar)
+  const lastMetadata = useRef<{
+    name?: string;
+    avatar_url?: string;
+  } | null>(null);
+  
+  // Circuit breaker: Prevent runaway updates
+  const updateCount = useRef(0);
+  const lastResetTime = useRef(Date.now());
+  
   // Helper to check if auth state actually changed
   const shouldUpdateAuth = (session: Session | null): boolean => {
+    // Circuit breaker: Reset counter every second
+    const now = Date.now();
+    if (now - lastResetTime.current > 1000) {
+      updateCount.current = 0;
+      lastResetTime.current = now;
+    }
+    
+    // Circuit breaker: Check if updating too frequently
+    updateCount.current++;
+    if (updateCount.current > 5) {
+      console.error('🚨 CIRCUIT BREAKER: Too many auth updates (>5/second)', {
+        count: updateCount.current,
+        disablingMetadataSync: ENABLE_METADATA_SYNC,
+      });
+      return false; // Stop the loop
+    }
+    
     const newUserId = session?.user?.id ?? null;
     const newAccessToken = session?.access_token ?? null;
     
-    return (
-      newUserId !== lastUserId.current || 
-      newAccessToken !== lastAccessToken.current
-    );
+    // Critical changes: user ID or access token (login, logout, token refresh)
+    const userIdChanged = newUserId !== lastUserId.current;
+    const tokenChanged = newAccessToken !== lastAccessToken.current;
+    
+    if (userIdChanged || tokenChanged) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('✅ shouldUpdateAuth: Critical change detected', {
+          userIdChanged,
+          tokenChanged,
+        });
+      }
+      return true;
+    }
+    
+    // Metadata changes: name, avatar (profile updates)
+    if (ENABLE_METADATA_SYNC) {
+      const newName = session?.user?.user_metadata?.name;
+      const newAvatar = session?.user?.user_metadata?.avatar_url;
+      
+      // Compare primitive values (strings)
+      const nameChanged = lastMetadata.current?.name !== newName;
+      const avatarChanged = lastMetadata.current?.avatar_url !== newAvatar;
+      
+      if (nameChanged || avatarChanged) {
+        // CRITICAL: Store metadata ATOMICALLY (before returning)
+        // This ensures subsequent checks (of 7+ events) see the stored value
+        lastMetadata.current = {
+          name: newName,
+          avatar_url: newAvatar,
+        };
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ shouldUpdateAuth: Metadata changed', {
+            nameChanged,
+            avatarChanged,
+            oldName: lastMetadata.current?.name,
+            newName,
+          });
+        }
+        
+        return true;
+      }
+    }
+    
+    return false;
   };
   
   // Helper to update auth state and tracking refs
@@ -47,6 +122,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    // TEST 8: Track mount/unmount
+    providerMountCount++;
+    console.log(`🏗️ AuthProvider MOUNTED (total mounts in session: ${providerMountCount})`);
+    
     // Only run on client-side
     if (typeof window === 'undefined') {
       setLoading(false);
@@ -109,9 +188,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Filter events to only process meaningful changes
     const RELEVANT_EVENTS = ['SIGNED_IN', 'SIGNED_OUT', 'USER_UPDATED', 'TOKEN_REFRESHED'];
     
+    // TEST 7: Track event details and timing
+    const eventLog: Array<{ event: string; timestamp: number; tokenPrefix: string }> = [];
+    
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const timestamp = Date.now();
+      const tokenPrefix = session?.access_token?.slice(0, 20) || 'no-token';
+      
+      // Calculate gap from previous event
+      const previousEvent = eventLog[eventLog.length - 1];
+      const gap = previousEvent ? timestamp - previousEvent.timestamp : 0;
+      
+      eventLog.push({ event, timestamp, tokenPrefix });
+      
+      // TEST 7: Detailed event logging
+      console.log('🔔 AUTH EVENT', {
+        eventType: event,
+        eventNumber: eventLog.filter(e => e.event === event).length,
+        totalEvents: eventLog.length,
+        gapFromPrevious: `${gap}ms`,
+        hasSession: !!session,
+        userId: session?.user?.id?.slice(0, 8),
+        userName: session?.user?.user_metadata?.name,
+        tokenPrefix: tokenPrefix,
+        sameTokenAsPrevious: previousEvent?.tokenPrefix === tokenPrefix,
+      });
+      
       console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session');
       
       // Filter out irrelevant events (like INITIAL_SESSION duplicate)
@@ -140,6 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       lastUserId.current = null;
       lastAccessToken.current = null;
+      lastMetadata.current = null;
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
