@@ -116,6 +116,8 @@ export default function NotificationBell() {
       if (data.success) {
         showToast('Friend request accepted!', 'success');
         loadPendingRequests(); // Refresh
+        // Notify GroupContext to reload (friend's group is now available)
+        window.dispatchEvent(new Event('groups-refresh'));
       } else {
         showToast(data.error || 'Failed to accept request', 'error');
       }
