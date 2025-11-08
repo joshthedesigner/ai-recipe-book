@@ -134,35 +134,14 @@ export async function getUserGroups(
 
     // Get friends' owned groups
     try {
-      console.log('🔍 Calling get_friends_groups RPC...');
-      
-      // Also check raw friends table to compare
-      const { data: rawFriends, error: rawError } = await supabase
-        .from('friends')
-        .select('*')
-        .eq('status', 'accepted');
-      
-      console.log('🔍 RAW friends table:', {
-        error: rawError,
-        friendsCount: rawFriends?.length,
-        friends: rawFriends
-      });
-      
       const { data: friendsGroups, error: friendsError } = await supabase
         .rpc('get_friends_groups');
-
-      console.log('🔍 RPC returned:', { 
-        error: friendsError, 
-        dataLength: friendsGroups?.length,
-        data: friendsGroups 
-      });
 
       if (!friendsError && friendsGroups) {
         friendsGroups.forEach((fg: any) => {
           // Skip friends without recipe_groups (new users who haven't added recipes)
           // They'll appear in friends list but not in group switcher
           if (!fg.group_id) {
-            console.log(`Skipping friend ${fg.friend_name} - no recipe group yet`);
             return;
           }
           
@@ -175,10 +154,8 @@ export async function getUserGroups(
             joinedAt: fg.friended_at,
           });
         });
-
-        console.log(`getUserGroups: Added ${friendsGroups.length} friend group(s)`);
       } else if (friendsError) {
-        console.error('🚨 RPC error:', friendsError);
+        console.error('Error calling get_friends_groups RPC:', friendsError);
       }
     } catch (friendsError) {
       console.warn('Error fetching friends groups:', friendsError);

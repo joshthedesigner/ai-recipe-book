@@ -120,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // TEST 8: Track mount/unmount
     providerMountCount++;
-    console.log(`🏗️ AuthProvider MOUNTED (total mounts in session: ${providerMountCount})`);
     
     // Only run on client-side
     if (typeof window === 'undefined') {
@@ -144,7 +143,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get initial session - important for page reload/navigation
     const initSession = async () => {
       try {
-        console.log('AuthContext: Attempting to get session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
@@ -157,12 +155,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
         
-        console.log('AuthContext: Session retrieved:', session ? 'valid' : 'null');
-        
         if (shouldUpdateAuth(session)) {
           updateAuthState(session);
-        } else {
-          console.log('AuthContext: Skipping duplicate auth update (same user and token)');
         }
         
         if (timeoutId) clearTimeout(timeoutId);
@@ -199,21 +193,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       eventLog.push({ event, timestamp, tokenPrefix });
       
-      // TEST 7: Detailed event logging
-      console.log('🔔 AUTH EVENT', {
-        eventType: event,
-        eventNumber: eventLog.filter(e => e.event === event).length,
-        totalEvents: eventLog.length,
-        gapFromPrevious: `${gap}ms`,
-        hasSession: !!session,
-        userId: session?.user?.id?.slice(0, 8),
-        userName: session?.user?.user_metadata?.name,
-        tokenPrefix: tokenPrefix,
-        sameTokenAsPrevious: previousEvent?.tokenPrefix === tokenPrefix,
-      });
-      
-      console.log('AuthContext: Auth state changed:', event, session ? 'session exists' : 'no session');
-      
       // Filter out irrelevant events (like INITIAL_SESSION duplicate)        
         if (!RELEVANT_EVENTS.includes(event)) {
           return;
@@ -223,8 +202,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Only update state if user ID or access token changed
         if (shouldUpdateAuth(session)) {
           updateAuthState(session);
-        } else {
-          console.log('AuthContext: Skipping duplicate auth update (same user and token)');
         }
         
         if (timeoutId) clearTimeout(timeoutId);
