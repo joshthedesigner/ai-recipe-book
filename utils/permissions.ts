@@ -135,6 +135,19 @@ export async function getUserGroups(
     // Get friends' owned groups
     try {
       console.log('🔍 Calling get_friends_groups RPC...');
+      
+      // Also check raw friends table to compare
+      const { data: rawFriends, error: rawError } = await supabase
+        .from('friends')
+        .select('*')
+        .eq('status', 'accepted');
+      
+      console.log('🔍 RAW friends table:', {
+        error: rawError,
+        friendsCount: rawFriends?.length,
+        friends: rawFriends
+      });
+      
       const { data: friendsGroups, error: friendsError } = await supabase
         .rpc('get_friends_groups');
 
