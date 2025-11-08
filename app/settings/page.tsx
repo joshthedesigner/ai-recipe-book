@@ -22,6 +22,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useRouter } from 'next/navigation';
 import AppButton from '@/components/AppButton';
+import { supabase } from '@/db/supabaseClient';
 
 export default function SettingsPage() {
   const { user, signOut, loading } = useAuth();
@@ -39,6 +40,10 @@ export default function SettingsPage() {
   const [nameSaving, setNameSaving] = useState(false);
 
   // Password editing
+  const [showPasswordConfirmDialog, setShowPasswordConfirmDialog] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [currentPasswordError, setCurrentPasswordError] = useState('');
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -167,12 +172,54 @@ export default function SettingsPage() {
     }
   };
 
+  // Handle password verification (before allowing edit)
+  const handleVerifyCurrentPassword = async () => {
+    if (!currentPassword) {
+      setCurrentPasswordError('Password is required');
+      return;
+    }
+
+    setVerifyingPassword(true);
+    setCurrentPasswordError('');
+
+    try {
+      // Verify current password by attempting sign in
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user!.email!,
+        password: currentPassword,
+      });
+
+      if (error) {
+        setCurrentPasswordError('Incorrect password');
+        setVerifyingPassword(false);
+        return;
+      }
+
+      // Password verified - close modal and open inline editing
+      setShowPasswordConfirmDialog(false);
+      setCurrentPassword('');
+      setCurrentPasswordError('');
+      setVerifyingPassword(false);
+      setIsEditingPassword(true);
+    } catch (error) {
+      setCurrentPasswordError('Verification failed. Please try again.');
+      setVerifyingPassword(false);
+    }
+  };
+
   // Handle password cancel
   const handleCancelPassword = () => {
     setIsEditingPassword(false);
     setNewPassword('');
     setConfirmPassword('');
     setPasswordError('');
+  };
+  
+  // Handle password confirmation modal cancel
+  const handleCancelPasswordConfirm = () => {
+    setShowPasswordConfirmDialog(false);
+    setCurrentPassword('');
+    setCurrentPasswordError('');
   };
 
   // Handle delete account
@@ -244,26 +291,33 @@ export default function SettingsPage() {
                   {user.user_metadata?.name || 'Not set'}
                 </Typography>
               ) : (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                <Box sx={{ mt: 1 }}>
                   <TextField
-                    fullWidth
                     value={nameValue}
                     onChange={(e) => setNameValue(e.target.value)}
                     size="small"
                     autoFocus
                     disabled={nameSaving}
+                    sx={{ width: '66%', mb: 2 }}
                   />
-                  <IconButton
-                    onClick={handleSaveName}
-                    disabled={nameSaving}
-                    color="primary"
-                    size="small"
-                  >
-                    {nameSaving ? <CircularProgress size={20} /> : <CheckIcon />}
-                  </IconButton>
-                  <IconButton onClick={handleCancelName} disabled={nameSaving} size="small">
-                    <CloseIcon />
-                  </IconButton>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <AppButton
+                      variant="primary"
+                      size="small"
+                      onClick={handleSaveName}
+                      disabled={nameSaving || !nameValue.trim()}
+                    >
+                      {nameSaving ? 'Saving...' : 'Save'}
+                    </AppButton>
+                    <AppButton
+                      variant="secondary"
+                      size="small"
+                      onClick={handleCancelName}
+                      disabled={nameSaving}
+                    >
+                      Cancel
+                    </AppButton>
+                  </Box>
                 </Box>
               )}
             </Box>
@@ -391,7 +445,7 @@ export default function SettingsPage() {
                   <AppButton
                     variant="secondary"
                     size="small"
-                    onClick={() => setIsEditingPassword(true)}
+                    onClick={() => setShowPasswordConfirmDialog(true)}
                     sx={{ minWidth: 80 }}
                   >
                     Edit
@@ -435,6 +489,63 @@ export default function SettingsPage() {
             </AppButton>
           </Box>
         </Box>
+
+        {/* Password Confirmation Dialog */}
+        <Dialog
+          open={showPasswordConfirmDialog}
+          onClose={() => !verifyingPassword && handleCancelPasswordConfirm()}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: 2 } }}
+        >
+          <DialogTitle>
+            <Typography variant="h6">Confirm Your Password</Typography>
+          </DialogTitle>
+
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              To update your password, please enter your current password first.
+            </Typography>
+
+            <TextField
+              fullWidth
+              type="password"
+              label="Current password"
+              value={currentPassword}
+              onChange={(e) => {
+                setCurrentPassword(e.target.value);
+                setCurrentPasswordError('');
+              }}
+              error={!!currentPasswordError}
+              helperText={currentPasswordError}
+              disabled={verifyingPassword}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && currentPassword) {
+                  handleVerifyCurrentPassword();
+                }
+              }}
+            />
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <AppButton
+              variant="secondary"
+              onClick={handleCancelPasswordConfirm}
+              disabled={verifyingPassword}
+            >
+              Cancel
+            </AppButton>
+            <AppButton
+              variant="primary"
+              onClick={handleVerifyCurrentPassword}
+              disabled={verifyingPassword || !currentPassword}
+              startIcon={verifyingPassword ? <CircularProgress size={16} color="inherit" /> : null}
+            >
+              {verifyingPassword ? 'Verifying...' : 'Continue'}
+            </AppButton>
+          </DialogActions>
+        </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog
