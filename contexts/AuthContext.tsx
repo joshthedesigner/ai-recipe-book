@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/db/supabaseClient';
 import { useRouter } from 'next/navigation';
+import { identifyUser, resetUser, analytics } from '@/lib/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -104,6 +105,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     lastAccessToken.current = session?.access_token ?? null;
     setSession(session);
     setUser(session?.user ?? null);
+    
+    // Identify user in analytics
+    if (session?.user) {
+      identifyUser(session.user.id, {
+        email: session.user.email,
+        name: session.user.user_metadata?.name,
+      });
+    } else {
+      resetUser();
+    }
   };
 
   useEffect(() => {
@@ -301,6 +312,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    analytics.logout();
     await supabase.auth.signOut();
     router.push('/');
   };

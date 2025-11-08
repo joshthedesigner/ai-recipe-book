@@ -7,19 +7,22 @@ import theme from './theme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { GroupProvider } from '@/contexts/GroupContext';
+import { PostHogProvider } from '@/components/PostHogProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <AppRouterCacheProvider>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AuthProvider>
-          <GroupProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </GroupProvider>
-        </AuthProvider>
+        <PostHogProvider>
+          <AuthProvider>
+            <GroupProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </GroupProvider>
+          </AuthProvider>
+        </PostHogProvider>
       </ThemeProvider>
     </AppRouterCacheProvider>
   );
