@@ -183,15 +183,19 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     let refreshTimeout: NodeJS.Timeout | null = null;
     
     const handleRefresh = () => {
+      console.log('🔔 GroupContext: groups-refresh event caught!');
+      
       // Clear any pending refresh
       if (refreshTimeout) {
+        console.log('🔔 GroupContext: Clearing previous timeout');
         clearTimeout(refreshTimeout);
       }
       
       // Schedule refresh after 300ms
       // Multiple dispatches within 300ms = only one reload
+      console.log('🔔 GroupContext: Scheduling reload in 300ms');
       refreshTimeout = setTimeout(() => {
-        console.log('GroupContext: Refresh event received, reloading groups...');
+        console.log('🔄 GroupContext: Executing reload now...');
         loadGroups(user.id);
         refreshTimeout = null;
       }, 300);
