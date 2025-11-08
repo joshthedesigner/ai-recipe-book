@@ -156,7 +156,19 @@ export default function FriendsSearch({
         onSelect();
       }
     } else {
-      console.warn('Could not find group for friend:', friend);
+      // Friend exists but hasn't created their recipe group yet (new user, no recipes)
+      console.log(`Friend ${friend.friend_name} doesn't have a recipe collection yet`);
+      // Show friendly message instead of error
+      setOpen(false);
+      setSearchValue('');
+      
+      // Could show a toast here if needed
+      // For now, just close the dropdown silently
+      
+      // Call parent callback (for mobile collapse)
+      if (onSelect) {
+        onSelect();
+      }
     }
   };
 

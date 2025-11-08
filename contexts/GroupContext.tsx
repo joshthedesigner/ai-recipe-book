@@ -196,7 +196,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       console.log('🔔 GroupContext: Scheduling reload in 300ms');
       refreshTimeout = setTimeout(() => {
         console.log('🔄 GroupContext: Executing reload now...');
-        loadGroups(user.id);
+      loadGroups(user.id);
         refreshTimeout = null;
       }, 300);
     };
