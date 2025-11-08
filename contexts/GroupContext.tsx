@@ -150,6 +150,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   // Single effect: Watch user from AuthContext and load groups accordingly
   useEffect(() => {
+    console.log('🟣 GroupContext useEffect triggered', {
+      hasWindow: typeof window !== 'undefined',
+      authLoading,
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      currentGroupsCount: groups.length,
+    });
+    
     if (typeof window === 'undefined') {
       setLoading(false);
       return;
@@ -157,11 +165,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     // Wait for auth to finish loading
     if (authLoading) {
+      console.log('🟣 GroupContext: Waiting for auth to finish loading');
       return;
     }
 
     // No user - clear state
     if (!user) {
+      console.log('🟣 GroupContext: No user, clearing groups');
       setGroups([]);
       setActiveGroup(null);
       setLoading(false);
@@ -176,6 +186,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
 
     // User is available - load groups
+    console.log('🟣 GroupContext: User available, loading groups');
     loadGroups(user.id);
     
     // Listen for refresh events (e.g., after invites are activated)
