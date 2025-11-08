@@ -10,22 +10,24 @@ import {
   Link as MuiLink,
   InputAdornment,
   IconButton,
+  Divider,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import GoogleIcon from '@mui/icons-material/Google';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import AppButton from '@/components/AppButton';
 
 export default function SignupPage() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
@@ -78,11 +80,6 @@ export default function SignupPage() {
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-
     // Strong password validation
     const passwordValidation = validatePassword(password);
     if (!passwordValidation.valid) {
@@ -102,6 +99,19 @@ export default function SignupPage() {
     }
 
     setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    const { error } = await signInWithGoogle();
+
+    if (error) {
+      setError(error.message || 'Failed to sign in with Google. Please try again.');
+      setGoogleLoading(false);
+    }
+    // Note: If successful, user will be redirected to Google OAuth flow
   };
 
   return (
@@ -204,17 +214,6 @@ export default function SignupPage() {
                   </InputAdornment>
                 ),
               }}
-              sx={{ mb: 2 }}
-            />
-
-            <TextField
-              fullWidth
-              label="Confirm Password"
-              type={showPassword ? 'text' : 'password'}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              autoComplete="new-password"
               sx={{ mb: 3 }}
             />
 
@@ -223,12 +222,32 @@ export default function SignupPage() {
               variant="primary"
               size="large"
               type="submit"
-              disabled={loading}
-              sx={{ mb: 2 }}
+              disabled={loading || googleLoading}
+              sx={{ mb: 3 }}
             >
               {loading ? 'Creating account...' : 'Sign Up'}
             </AppButton>
           </form>
+
+          {/* Divider */}
+          <Divider sx={{ mb: 3 }}>
+            <Typography variant="body2" color="text.secondary">
+              or
+            </Typography>
+          </Divider>
+
+          {/* Google Sign In - Secondary Option */}
+          <AppButton
+            fullWidth
+            variant="secondary"
+            size="large"
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading || loading}
+            startIcon={<GoogleIcon />}
+            sx={{ mb: 3 }}
+          >
+            {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+          </AppButton>
 
           {/* Sign In Link */}
           <Box sx={{ textAlign: 'center', mt: 2 }}>

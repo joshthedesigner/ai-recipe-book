@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -10,20 +10,33 @@ import {
   Link as MuiLink,
   InputAdornment,
   IconButton,
+  Divider,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import GoogleIcon from '@mui/icons-material/Google';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import AppButton from '@/components/AppButton';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    // Check for auth error from callback
+    const authError = searchParams.get('error');
+    if (authError === 'auth_failed') {
+      setError('Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +50,19 @@ export default function LoginPage() {
     }
 
     setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setGoogleLoading(true);
+
+    const { error } = await signInWithGoogle();
+
+    if (error) {
+      setError(error.message || 'Failed to sign in with Google. Please try again.');
+      setGoogleLoading(false);
+    }
+    // Note: If successful, user will be redirected to Google OAuth flow
   };
 
   return (
@@ -111,12 +137,32 @@ export default function LoginPage() {
             variant="primary"
             size="large"
             type="submit"
-            disabled={loading}
-            sx={{ mb: 2 }}
+            disabled={loading || googleLoading}
+            sx={{ mb: 3 }}
           >
             {loading ? 'Signing in...' : 'Sign In'}
           </AppButton>
         </form>
+
+        {/* Divider */}
+        <Divider sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            or
+          </Typography>
+        </Divider>
+
+        {/* Google Sign In - Secondary Option */}
+        <AppButton
+          fullWidth
+          variant="secondary"
+          size="large"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || loading}
+          startIcon={<GoogleIcon />}
+          sx={{ mb: 3 }}
+        >
+          {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+        </AppButton>
 
         {/* Sign Up Link */}
         <Box sx={{ textAlign: 'center', mt: 2 }}>
