@@ -179,9 +179,22 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     loadGroups(user.id);
     
     // Listen for refresh events (e.g., after invites are activated)
+    // Debounce to prevent multiple rapid reloads
+    let refreshTimeout: NodeJS.Timeout | null = null;
+    
     const handleRefresh = () => {
-      console.log('GroupContext: Refresh event received, reloading groups...');
-      loadGroups(user.id);
+      // Clear any pending refresh
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
+      
+      // Schedule refresh after 300ms
+      // Multiple dispatches within 300ms = only one reload
+      refreshTimeout = setTimeout(() => {
+        console.log('GroupContext: Refresh event received, reloading groups...');
+        loadGroups(user.id);
+        refreshTimeout = null;
+      }, 300);
     };
     
     window.addEventListener('groups-refresh', handleRefresh);

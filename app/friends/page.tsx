@@ -196,6 +196,8 @@ export default function FriendsPage() {
       if (data.success) {
         showToast('Friend request accepted!', 'success');
         loadData(); // Refresh lists
+        // Notify GroupContext to reload (friend's group is now available)
+        window.dispatchEvent(new Event('groups-refresh'));
       } else {
         showToast(data.error || 'Failed to accept request', 'error');
       }
@@ -297,6 +299,8 @@ export default function FriendsPage() {
         if (data.success) {
           showToast('Friend removed', 'success');
           loadData(); // Refresh lists
+          // Notify GroupContext to reload (friend's group is now gone)
+          window.dispatchEvent(new Event('groups-refresh'));
         } else {
           showToast(data.error || 'Failed to remove friend', 'error');
         }
