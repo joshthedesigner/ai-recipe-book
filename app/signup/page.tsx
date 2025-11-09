@@ -132,7 +132,7 @@ export default function SignupPage() {
               <img src="/logo.svg" alt="RecipeBook Logo" style={{ width: '80px', height: 'auto' }} />
             </Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              Create Account
+              Welcome to RecipeBook
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Already have an account?{' '}
