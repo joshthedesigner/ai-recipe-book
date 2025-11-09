@@ -27,8 +27,8 @@ export default function LandingPage() {
       answer: 'Absolutely! RecipeBook can import recipes from most recipe websites by simply pasting the URL. We also support importing from images (using AI to extract the recipe) and even from videos. Just paste, snap, or upload!'
     },
     {
-      question: 'How does AI recipe generation work?',
-      answer: 'Our AI Chef can create custom recipes based on your preferences, dietary restrictions, available ingredients, or cuisine preferences. Just tell it what you\'re in the mood for, and it will generate a complete recipe with ingredients, instructions, and cooking tips.'
+      question: 'How does AI help with my recipes?',
+      answer: 'RecipeBook uses AI to extract recipes from images, videos, and websites - turning photos of cookbook pages or URLs into organized digital recipes. You can also chat with our AI assistant for cooking advice, ingredient substitutions, and technique tips.'
     },
     {
       question: 'Can I use RecipeBook offline?',
