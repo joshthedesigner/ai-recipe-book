@@ -430,7 +430,7 @@ export default function BrowsePage() {
         </Box>
 
         {/* Search and Filters */}
-        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Search Bar */}
           <TextField
             placeholder="Search recipes, ingredients, or tags..."
@@ -451,10 +451,11 @@ export default function BrowsePage() {
               ),
             }}
             size="small"
-            sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' }, minWidth: { sm: 300 } }}
+            sx={{ width: { xs: '100%', sm: 300 } }}
           />
 
-          {/* Filter Buttons */}
+          {/* Filter Buttons - Right Aligned */}
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Cuisine Filter Button */}
           <Chip
             label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
@@ -503,15 +504,6 @@ export default function BrowsePage() {
             }}
           />
 
-          {/* Sort */}
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Sort By</InputLabel>
-            <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
-              <MenuItem value="created_at">Date Added (Newest)</MenuItem>
-              <MenuItem value="title">Title (A-Z)</MenuItem>
-            </Select>
-          </FormControl>
-
           {/* Clear All */}
           {hasActiveFilters && (
             <Chip
@@ -524,6 +516,7 @@ export default function BrowsePage() {
               sx={{ height: 40, fontWeight: 600 }}
             />
           )}
+          </Box>
         </Box>
 
         {/* Loading State */}
