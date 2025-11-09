@@ -109,11 +109,11 @@ export default function PrivacyPolicyPage() {
               (e) Cookies information and information taken from similar technologies
             </Typography>
             <Typography paragraph>
-              When you visit the Service, we (and our third-party partners) will create online identifiers and collect information using cookies and similar technologies ("Cookies") — small text files that uniquely identify your browser and lets RecipeBook do things like help you log in faster, enhance your navigation through the site, remember your preferences and generally improve the user experience. Cookies also convey information to us about how you use the Service (e.g., the pages you view, the links you click and other actions you take on the Service), and allow us or our business partners to track your usage of the Service over time. They also allow us to measure traffic and usage trends for the Service, deliver personalized advertisements that may be of interest to you and measure their effectiveness, and find potential new users of the Service. You can control or reset your cookies and similar technologies through your web browser, which will allow you to customize your cookie preferences and to refuse all cookies or to indicate when a cookie is being sent. However, some features of the Service may not function properly if the ability to accept cookies is disabled.
+              When you visit the Service, we (and our third-party partners) will create online identifiers and collect information using cookies and similar technologies ("Cookies") — small text files that uniquely identify your browser and lets RecipeBook do things like help you log in faster, enhance your navigation through the site, remember your preferences and generally improve the user experience. Cookies also convey information to us about how you use the Service (e.g., the pages you view, the links you click and other actions you take on the Service), and allow us to track your usage of the Service over time. They also allow us to measure traffic and usage trends for the Service and improve our internal operations. We use cookies primarily for essential functionality (such as authentication and session management) and internal analytics (via PostHog for performance tracking). We do not use third-party advertising cookies or share your data with advertising networks for behavioral advertising purposes. You can control or reset your cookies and similar technologies through your web browser, which will allow you to customize your cookie preferences and to refuse all cookies or to indicate when a cookie is being sent. However, some features of the Service may not function properly if the ability to accept cookies is disabled.
             </Typography>
 
             <SummaryBox>
-              We use cookies to help you use RecipeBook and for other business purposes. You can control them through your browser settings, but some features may not work without them.
+              We use cookies to help you use RecipeBook and for internal analytics. We do not use third-party advertising cookies. You can control them through your browser settings, but some features may not work without them.
             </SummaryBox>
 
             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2, mb: 1, fontSize: '0.9375rem' }}>
@@ -196,7 +196,7 @@ export default function PrivacyPolicyPage() {
               For Service improvement (including analytics and machine learning):
             </Typography>
             <Typography paragraph>
-              We may analyze your activity, content, media uploads and related data in your account to provide and customize the Service, and to train our algorithms, models and AI products and services using machine learning to develop, improve and provide our Service. These activities include, but are not limited to: detecting and categorizing food items in images to provide better recipe suggestions; labeling raw individual data (e.g., "chocolate cake recipe"); understanding recipe preferences and dietary restrictions; predicting the most relevant recipe recommendations for a user; and search terms and corresponding search interaction data to deliver the most relevant recipe results.
+              We may analyze your activity, content, media uploads and related data in your account to provide and customize the Service, and to train our algorithms, models and AI products and services using machine learning to develop, improve and provide our Service. We do not use personally identifiable data or private user content for public AI model training unless it has been aggregated, anonymized, or users have explicitly consented through their privacy settings. When we use third-party AI service providers (such as OpenAI), we utilize their API services which do not train models on your data by default. These activities include, but are not limited to: detecting and categorizing food items in images to provide better recipe suggestions; labeling aggregated raw data (e.g., "chocolate cake recipe"); understanding recipe preferences and dietary restrictions; predicting the most relevant recipe recommendations for a user; and search terms and corresponding search interaction data to deliver the most relevant recipe results.
             </Typography>
 
             <Typography paragraph sx={{ fontWeight: 500, mt: 2 }}>
@@ -260,10 +260,10 @@ export default function PrivacyPolicyPage() {
               (a) How we share your information
             </Typography>
             <Typography paragraph>
-              We share your information with RecipeBook affiliates and third-party service providers for the purpose of providing the Service to you, to facilitate RecipeBook's legitimate interests or if you consent. These parties are vetted by us, and will only be provided with access to your information as is reasonably necessary for the purpose that RecipeBook has engaged that party. We require that such parties comply with applicable laws, and have security, privacy and data retention policies consistent with our policies to the extent necessary for them to perform a business or technology support function for us.
+              We share your information with RecipeBook affiliates and third-party service providers for the purpose of providing the Service to you, to facilitate RecipeBook's legitimate interests or if you consent. These parties are vetted by us, and will only be provided with access to your information as is reasonably necessary for the purpose that RecipeBook has engaged that party. We require that such parties comply with applicable laws, and have security, privacy and data retention policies consistent with our policies to the extent necessary for them to perform a business or technology support function for us. These third-party service providers act as data processors under our instruction and are contractually bound to protect your data.
             </Typography>
             <Typography paragraph>
-              Some of the parties with whom RecipeBook may share your personal information assist RecipeBook with functions such as: Authentication services (Supabase); AI and machine learning services (OpenAI); Email services; Hosting and storage; Data analytics and predictive analytics; Data labeling and machine learning; Security and Service delivery; Marketing services; Payment processing; and other service providers.
+              Some of the parties with whom RecipeBook may share your personal information assist RecipeBook with functions such as: Authentication services (Supabase - see Supabase Privacy Policy at supabase.com/privacy); AI and machine learning services (OpenAI - see OpenAI Privacy Policy at openai.com/privacy, note that OpenAI's API services do not use your data for model training); Email services; Hosting and storage; Data analytics and predictive analytics (PostHog - used for internal performance tracking only, not third-party advertising); Data labeling and machine learning; Security and Service delivery; Marketing services; Payment processing; and other service providers.
             </Typography>
 
             <SummaryBox>
@@ -285,11 +285,11 @@ export default function PrivacyPolicyPage() {
               (c) Sharing in connection with a merger, acquisition or reorganization
             </Typography>
             <Typography paragraph>
-              RecipeBook may also share, sell or transfer your information to third parties in connection with or contemplation of (including as part of the due diligence process) any merger, acquisition, reorganization, financing, sale of assets, bankruptcy or insolvency event involving RecipeBook or any portion of our assets, services or businesses. Information such as customer names and email addresses, User Content and other user information related to the Service may be among the items shared, sold or otherwise transferred in these types of transactions. You will be notified via email and/or a notice on the Service if such a transaction takes place.
+              RecipeBook may also share, disclose or transfer your information to third parties in connection with or contemplation of (including as part of the due diligence process) any merger, acquisition, reorganization, financing, sale of assets, bankruptcy or insolvency event involving RecipeBook or any portion of our assets, services or businesses. Information such as customer names and email addresses, User Content and other user information related to the Service may be among the items shared, disclosed or otherwise transferred in these types of transactions. You will be notified via email and/or a notice on the Service if such a transaction takes place. RecipeBook does not sell personal information for monetary value to third-party data brokers or advertisers.
             </Typography>
 
             <SummaryBox>
-              If we sell our business, any of the info which we've acquired about you may be part of the sale.
+              If we transfer our business, any of the info which we've acquired about you may be part of the transfer. We do not sell your personal information to data brokers.
             </SummaryBox>
 
             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2, mb: 1, fontSize: '0.9375rem' }}>
@@ -329,7 +329,7 @@ export default function PrivacyPolicyPage() {
               4. How we transfer, store and protect your data
             </Typography>
             <Typography paragraph>
-              Your information collected through the Service will be stored and processed in the United States and any other country in which RecipeBook or its subsidiaries, affiliates or service providers maintain facilities or employ staff or contractors. RecipeBook transfers information that we collect about you, including personal information, to affiliated entities, and to other third parties across borders and from your country or jurisdiction to other countries or jurisdictions around the world. As a result, we may transfer information, including personal information, to a country and jurisdiction that does not have the same data protection laws as your jurisdiction. However, we always take steps to ensure that your information remains protected wherever it is stored and processed in accordance with applicable laws.
+              Your information collected through the Service will be stored and processed in the United States and any other country in which RecipeBook or its subsidiaries, affiliates or service providers maintain facilities or employ staff or contractors. RecipeBook transfers information that we collect about you, including personal information, to affiliated entities, and to other third parties across borders and from your country or jurisdiction to other countries or jurisdictions around the world. As a result, we may transfer information, including personal information, to a country and jurisdiction that does not have the same data protection laws as your jurisdiction. However, we always take steps to ensure that your information remains protected wherever it is stored and processed in accordance with applicable laws. Where required by law, including for transfers involving EU, UK, or Swiss data, we implement standard contractual clauses (SCCs), adequacy determinations, or equivalent safeguards to ensure adequate protection for transferred data in compliance with GDPR and other applicable data protection regulations.
             </Typography>
 
             <SummaryBox>
@@ -388,7 +388,7 @@ export default function PrivacyPolicyPage() {
               7. How long we keep your information
             </Typography>
             <Typography paragraph>
-              Following termination or deactivation of your user account, RecipeBook will retain your profile information and User Content for a commercially reasonable time, and for as long as we have a valid purpose to do so. In particular, RecipeBook will retain your information for the purpose of complying with its legal and audit obligations, and for backup and archival purposes. If you delete your account, we will delete your personal data within 30 days, except where we are required to retain it for legal purposes.
+              Following termination or deactivation of your user account, RecipeBook will retain your profile information and User Content only for as long as we have a valid legal, business, or operational purpose to do so. In particular, RecipeBook will retain your information for the purpose of complying with its legal and audit obligations, resolving disputes, enforcing our agreements, and for backup and archival purposes. Upon account deletion, we will delete your personal data within thirty (30) days, except where we are legally required to retain it (such as for tax, legal reporting, or audit purposes). Aggregated or anonymized data that does not identify you personally may be retained indefinitely for analytics and service improvement purposes.
             </Typography>
 
             <SummaryBox>
@@ -399,11 +399,11 @@ export default function PrivacyPolicyPage() {
               8. Children's Privacy
             </Typography>
             <Typography paragraph>
-              RecipeBook is not intended for users under 13 years of age. We do not knowingly collect or solicit personal information from children under 13. If we learn that we have collected personal information from a child under 13 without verification of parental consent where this is required, we will delete that information as quickly as possible. If you believe that we might have any information from or about a child under 13, please contact us at privacy@recipebook.app.
+              RecipeBook is not intended for users under 16 years of age (or the minimum legal age in your jurisdiction, whichever is higher). We do not knowingly collect or solicit personal information from children under 16 without parental consent. In jurisdictions where the age of digital consent is 13 (such as the United States under COPPA), we require users to be at least 13 years old. For users in the European Union, United Kingdom, and other jurisdictions where the age of digital consent is 16, we require users to be at least 16 years old or to have verifiable parental consent. If we learn that we have collected personal information from a child under the applicable age threshold without verification of parental consent where this is required, we will delete that information as quickly as possible. If you believe that we might have any information from or about a child who does not meet the age requirements, please contact us immediately at privacy@recipebook.app.
             </Typography>
 
             <SummaryBox>
-              Our Service is not intended for children under 13. We do not knowingly collect information from children.
+              Our Service is not intended for children under 16 (or under 13 in the U.S.). Parental consent is required for minors in certain jurisdictions. We do not knowingly collect information from children without proper consent.
             </SummaryBox>
 
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4, mb: 1.5, fontSize: '1rem' }}>
@@ -429,17 +429,41 @@ export default function PrivacyPolicyPage() {
             </SummaryBox>
 
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4, mb: 1.5, fontSize: '1rem' }}>
-              11. How to contact us
+              11. Data Breach Notification
             </Typography>
             <Typography paragraph>
-              If you have any questions about this Privacy Policy or the Service, or wish to make a complaint please contact us at:
+              In the event of a data breach that affects your personal information, we will notify you and relevant authorities as required by applicable law. We will provide notice without undue delay and, where feasible, within 72 hours of becoming aware of the breach. Our notification will include information about the nature of the breach, the types of data affected, the potential consequences, and the measures we have taken or propose to take to address the breach and mitigate potential adverse effects.
+            </Typography>
+
+            <SummaryBox>
+              If a data breach affects your information, we will notify you and authorities as required by law, typically within 72 hours of discovery.
+            </SummaryBox>
+
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, mt: 4, mb: 1.5, fontSize: '1rem' }}>
+              12. How to contact us
+            </Typography>
+            <Typography paragraph>
+              If you have any questions about this Privacy Policy or the Service, or wish to make a complaint, exercise your privacy rights, or request access to, correction of, or deletion of your data, please contact us at:
             </Typography>
             <Typography paragraph>
               Email: privacy@recipebook.app
             </Typography>
+            <Typography paragraph>
+              Write:
+            </Typography>
+            <Typography paragraph sx={{ ml: 2 }}>
+              Privacy Officer<br />
+              RecipeBook, Inc.<br />
+              1234 Recipe Lane, Suite 100<br />
+              San Francisco, CA 94102<br />
+              United States
+            </Typography>
+            <Typography paragraph>
+              For users in the European Economic Area (EEA), United Kingdom, or Switzerland, our designated representative for GDPR inquiries can be contacted at the above address.
+            </Typography>
 
             <SummaryBox>
-              Your privacy is important to us and we are happy to answer any questions you may have.
+              Your privacy is important to us and we are happy to answer any questions you may have. You can reach us by email or mail.
             </SummaryBox>
           </Box>
         </Paper>
