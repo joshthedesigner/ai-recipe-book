@@ -457,21 +457,7 @@ export default function BrowsePage() {
                       },
                     }}
                   >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, position: 'relative' }}>
-                      <Badge
-                        badgeContent={count}
-                        color="error"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          '& .MuiBadge-badge': {
-                            fontSize: '0.75rem',
-                            height: 20,
-                            minWidth: 20,
-                          },
-                        }}
-                      />
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 32 }}>
                           {cuisine.icon}
@@ -524,21 +510,7 @@ export default function BrowsePage() {
                       },
                     }}
                   >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, position: 'relative' }}>
-                      <Badge
-                        badgeContent={count}
-                        color="error"
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          right: 8,
-                          '& .MuiBadge-badge': {
-                            fontSize: '0.75rem',
-                            height: 20,
-                            minWidth: 20,
-                          },
-                        }}
-                      />
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 32 }}>
                           {ingredient.icon}
