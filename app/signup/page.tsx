@@ -163,7 +163,7 @@ export default function SignupPage() {
           {/* Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              Welcome to RecipeBook
+              Welcome back!
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Already have an account?{' '}
