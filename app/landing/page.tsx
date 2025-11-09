@@ -403,8 +403,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800&h=600&fit=crop"
-                  alt="Beautiful recipe ingredients and cookbook"
+                  src="/mapo.png"
+                  alt="Delicious mapo tofu recipe"
                   style={{
                     width: '100%',
                     height: '100%',
