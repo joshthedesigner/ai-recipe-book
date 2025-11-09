@@ -18,11 +18,9 @@ import {
   IconButton,
   Card,
   CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Popover,
   Button,
+  Paper,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -73,8 +71,8 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [cuisineDialogOpen, setCuisineDialogOpen] = useState(false);
-  const [ingredientDialogOpen, setIngredientDialogOpen] = useState(false);
+  const [cuisineAnchorEl, setCuisineAnchorEl] = useState<HTMLElement | null>(null);
+  const [ingredientAnchorEl, setIngredientAnchorEl] = useState<HTMLElement | null>(null);
   const [tempCuisine, setTempCuisine] = useState('');
   const [tempIngredient, setTempIngredient] = useState('');
 
@@ -365,34 +363,34 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || sortBy !== 'created_at';
 
-  const handleCuisineDialogOpen = () => {
+  const handleCuisineOpen = (event: React.MouseEvent<HTMLElement>) => {
     setTempCuisine(filterCuisine);
-    setCuisineDialogOpen(true);
+    setCuisineAnchorEl(event.currentTarget);
   };
 
-  const handleCuisineDialogClose = () => {
-    setCuisineDialogOpen(false);
+  const handleCuisineClose = () => {
+    setCuisineAnchorEl(null);
     setTempCuisine('');
   };
 
   const handleCuisineApply = () => {
     setFilterCuisine(tempCuisine);
-    setCuisineDialogOpen(false);
+    setCuisineAnchorEl(null);
   };
 
-  const handleIngredientDialogOpen = () => {
+  const handleIngredientOpen = (event: React.MouseEvent<HTMLElement>) => {
     setTempIngredient(filterMainIngredient);
-    setIngredientDialogOpen(true);
+    setIngredientAnchorEl(event.currentTarget);
   };
 
-  const handleIngredientDialogClose = () => {
-    setIngredientDialogOpen(false);
+  const handleIngredientClose = () => {
+    setIngredientAnchorEl(null);
     setTempIngredient('');
   };
 
   const handleIngredientApply = () => {
     setFilterMainIngredient(tempIngredient);
-    setIngredientDialogOpen(false);
+    setIngredientAnchorEl(null);
   };
 
   const handleRecipeAdded = () => {
@@ -431,12 +429,37 @@ export default function BrowsePage() {
           </Box>
         </Box>
 
+        {/* Search Bar */}
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            placeholder="Search recipes, ingredients, or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchQuery('')}>
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            size="small"
+            fullWidth
+          />
+        </Box>
+
         {/* Filter Buttons */}
         <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           {/* Cuisine Filter Button */}
           <Chip
             label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
-            onClick={handleCuisineDialogOpen}
+            onClick={handleCuisineOpen}
             onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
             deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
             icon={<ExpandMoreIcon />}
@@ -460,7 +483,7 @@ export default function BrowsePage() {
           {/* Ingredient Filter Button */}
           <Chip
             label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
-            onClick={handleIngredientDialogOpen}
+            onClick={handleIngredientOpen}
             onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
             deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
             icon={<ExpandMoreIcon />}
@@ -632,20 +655,37 @@ export default function BrowsePage() {
         onRecipeAdded={handleRecipeAdded}
       />
 
-      {/* Cuisine Filter Dialog */}
-      <Dialog
-        open={cuisineDialogOpen}
-        onClose={handleCuisineDialogClose}
-        maxWidth="sm"
-        fullWidth
+      {/* Cuisine Filter Popover */}
+      <Popover
+        open={Boolean(cuisineAnchorEl)}
+        anchorEl={cuisineAnchorEl}
+        onClose={handleCuisineClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            maxWidth: 600,
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          }
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 600 }}>Cuisines</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Cuisines
+          </Typography>
+          <Grid container spacing={2}>
             {availableCuisines.map((cuisine) => {
               const isSelected = tempCuisine === cuisine.value;
               return (
-                <Grid item xs={6} sm={4} md={3} key={cuisine.value}>
+                <Grid item xs={4} sm={3} key={cuisine.value}>
                   <Card
                     onClick={() => setTempCuisine(isSelected ? '' : cuisine.value)}
                     sx={{
@@ -656,20 +696,20 @@ export default function BrowsePage() {
                       transition: 'all 0.2s',
                       '&:hover': {
                         borderColor: 'hsl(24, 85%, 55%)',
-                        transform: 'translateY(-2px)',
+                        transform: 'scale(1.05)',
                         boxShadow: 2,
                       },
                     }}
                   >
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 40, mb: 1 }}>
+                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 36, mb: 0.5 }}>
                         {cuisine.icon}
                       </Box>
                       <Typography
                         variant="body2"
                         sx={{
                           fontWeight: 600,
-                          fontSize: '0.8125rem',
+                          fontSize: '0.75rem',
                           color: isSelected ? 'white' : 'text.primary',
                         }}
                       >
@@ -681,38 +721,55 @@ export default function BrowsePage() {
               );
             })}
           </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-          <Button onClick={() => setTempCuisine('')} color="inherit">
-            Reset
-          </Button>
-          <Button
-            onClick={handleCuisineApply}
-            variant="contained"
-            sx={{
-              bgcolor: 'hsl(24, 85%, 55%)',
-              '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
-            }}
-          >
-            View Results
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            <Button onClick={() => setTempCuisine('')} color="inherit">
+              Reset
+            </Button>
+            <Button
+              onClick={handleCuisineApply}
+              variant="contained"
+              sx={{
+                bgcolor: 'hsl(24, 85%, 55%)',
+                '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
+              }}
+            >
+              View Results
+            </Button>
+          </Box>
+        </Box>
+      </Popover>
 
-      {/* Ingredient Filter Dialog */}
-      <Dialog
-        open={ingredientDialogOpen}
-        onClose={handleIngredientDialogClose}
-        maxWidth="sm"
-        fullWidth
+      {/* Ingredient Filter Popover */}
+      <Popover
+        open={Boolean(ingredientAnchorEl)}
+        anchorEl={ingredientAnchorEl}
+        onClose={handleIngredientClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'left',
+        }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            maxWidth: 600,
+            borderRadius: 2,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+          }
+        }}
       >
-        <DialogTitle sx={{ fontWeight: 600 }}>Main Ingredient</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 0.5 }}>
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            Main Ingredient
+          </Typography>
+          <Grid container spacing={2}>
             {availableIngredients.map((ingredient) => {
               const isSelected = tempIngredient === ingredient.value;
               return (
-                <Grid item xs={6} sm={4} md={3} key={ingredient.value}>
+                <Grid item xs={4} sm={3} key={ingredient.value}>
                   <Card
                     onClick={() => setTempIngredient(isSelected ? '' : ingredient.value)}
                     sx={{
@@ -723,20 +780,20 @@ export default function BrowsePage() {
                       transition: 'all 0.2s',
                       '&:hover': {
                         borderColor: 'hsl(24, 85%, 55%)',
-                        transform: 'translateY(-2px)',
+                        transform: 'scale(1.05)',
                         boxShadow: 2,
                       },
                     }}
                   >
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 40, mb: 1 }}>
+                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 36, mb: 0.5 }}>
                         {ingredient.icon}
                       </Box>
                       <Typography
                         variant="body2"
                         sx={{
                           fontWeight: 600,
-                          fontSize: '0.8125rem',
+                          fontSize: '0.75rem',
                           color: isSelected ? 'white' : 'text.primary',
                         }}
                       >
@@ -748,23 +805,23 @@ export default function BrowsePage() {
               );
             })}
           </Grid>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2, justifyContent: 'space-between' }}>
-          <Button onClick={() => setTempIngredient('')} color="inherit">
-            Reset
-          </Button>
-          <Button
-            onClick={handleIngredientApply}
-            variant="contained"
-            sx={{
-              bgcolor: 'hsl(24, 85%, 55%)',
-              '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
-            }}
-          >
-            View Results
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            <Button onClick={() => setTempIngredient('')} color="inherit">
+              Reset
+            </Button>
+            <Button
+              onClick={handleIngredientApply}
+              variant="contained"
+              sx={{
+                bgcolor: 'hsl(24, 85%, 55%)',
+                '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
+              }}
+            >
+              View Results
+            </Button>
+          </Box>
+        </Box>
+      </Popover>
     </Box>
   );
 }
