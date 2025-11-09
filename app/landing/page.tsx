@@ -399,7 +399,10 @@ export default function LandingPage() {
                   borderRadius: '1rem',
                   overflow: 'hidden',
                   boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
-                  height: { xs: 300, md: 400 },
+                  bgcolor: 'hsl(0, 0%, 98%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
               >
                 <img
@@ -407,8 +410,9 @@ export default function LandingPage() {
                   alt="Delicious mapo tofu recipe"
                   style={{
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
                   }}
                 />
               </Box>
