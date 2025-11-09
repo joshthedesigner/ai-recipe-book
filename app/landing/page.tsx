@@ -396,10 +396,6 @@ export default function LandingPage() {
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
-                  borderRadius: '1rem',
-                  overflow: 'hidden',
-                  boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
-                  bgcolor: 'hsl(0, 0%, 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
