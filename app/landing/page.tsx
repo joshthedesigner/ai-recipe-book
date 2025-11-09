@@ -343,6 +343,27 @@ export default function LandingPage() {
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src="/mapo.png"
+                  alt="Delicious mapo tofu recipe"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <Typography
                 variant="h2"
                 sx={{
@@ -391,27 +412,6 @@ export default function LandingPage() {
               >
                 Start Your Recipe Collection
               </AppButton>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <img
-                  src="/mapo.png"
-                  alt="Delicious mapo tofu recipe"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    display: 'block',
-                  }}
-                />
-              </Box>
             </Grid>
           </Grid>
         </Container>
