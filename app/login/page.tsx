@@ -142,7 +142,7 @@ export default function LoginPage() {
           {/* Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              RecipeBook
+              Welcome Back!
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Don't have an account?{' '}
