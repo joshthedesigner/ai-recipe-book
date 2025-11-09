@@ -238,17 +238,18 @@ export default function LandingPage() {
                 sx={{
                   borderRadius: '1rem',
                   overflow: 'hidden',
-                  boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
-                  height: { xs: 300, md: 500 },
+                  boxShadow: '0 12px 40px -4px hsl(24 85% 55% / 0.15)',
+                  border: '1px solid',
+                  borderColor: 'divider',
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800&h=600&fit=crop"
-                  alt="Friends cooking together in a modern kitchen"
+                  src="/hero-app-screenshot.png"
+                  alt="RecipeBook app showing recipe collection"
                   style={{
                     width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
+                    height: 'auto',
+                    display: 'block',
                   }}
                 />
               </Box>
@@ -435,8 +436,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&h=600&fit=crop"
-                  alt="Organized recipe collection"
+                  src="https://images.unsplash.com/photo-1495521821757-a1efb6729352?w=800&h=600&fit=crop"
+                  alt="Beautiful recipe ingredients and cookbook"
                   style={{
                     width: '100%',
                     height: '100%',
