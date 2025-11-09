@@ -94,7 +94,7 @@ export default function BrowsePage() {
     { value: 'mexican', label: 'Mexican', icon: '🌮' },
     { value: 'thai', label: 'Thai', icon: '🍜' },
     { value: 'vietnamese', label: 'Vietnamese', icon: '🥢' },
-    { value: 'middle eastern', label: 'Middle Eastern', icon: '�串' },
+    { value: 'middle eastern', label: 'Middle Eastern', icon: '🧆' },
     { value: 'mediterranean', label: 'Mediterranean', icon: '🫒' },
   ];
   
