@@ -510,40 +510,97 @@ export default function BrowsePage() {
           <Box
             sx={{
               textAlign: 'center',
-              py: 8,
+              py: 12,
               px: 3,
+              maxWidth: 600,
+              mx: 'auto',
             }}
           >
+            {/* Icon */}
             <Box
               sx={{
-                fontSize: '5rem',
-                mb: 3,
-                lineHeight: 1,
+                width: 120,
+                height: 120,
+                borderRadius: '50%',
+                bgcolor: 'hsl(24, 85%, 55%, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                mx: 'auto',
+                mb: 4,
               }}
             >
-              🎉
+              <RestaurantIcon 
+                sx={{ 
+                  fontSize: 60, 
+                  color: 'hsl(24, 85%, 55%)',
+                }} 
+              />
             </Box>
+
+            {/* Heading */}
             <Typography 
-              variant="h5" 
+              variant="h4" 
               sx={{ 
-                fontWeight: 500,
+                fontWeight: 600,
                 color: 'text.primary',
                 mb: 2,
               }}
             >
-              Add your first recipe to get started!
+              Your cookbook is empty
             </Typography>
+
+            {/* Description */}
             <Typography 
               variant="body1" 
               sx={{ 
                 color: 'text.secondary',
-                maxWidth: 600,
-                mx: 'auto',
+                mb: 4,
+                lineHeight: 1.6,
               }}
             >
-              Your recipe collection is waiting to be filled with delicious discoveries. 
-              Start building your culinary library!
+              Start building your personal recipe collection. Import from websites, YouTube videos, or create your own.
             </Typography>
+
+            {/* CTA Button */}
+            {canAddRecipes && (
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => setSidebarOpen(true)}
+                sx={{
+                  bgcolor: 'hsl(24, 85%, 55%)',
+                  color: 'white',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: 'hsl(24, 85%, 45%)',
+                  },
+                }}
+              >
+                Add Your First Recipe
+              </Button>
+            )}
+
+            {/* Feature hints */}
+            <Box sx={{ mt: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                <Box component="span" sx={{ color: 'hsl(24, 85%, 55%)' }}>✓</Box>
+                Import from any website or YouTube video
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                <Box component="span" sx={{ color: 'hsl(24, 85%, 55%)' }}>✓</Box>
+                Create your own custom recipes
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+                <Box component="span" sx={{ color: 'hsl(24, 85%, 55%)' }}>✓</Box>
+                Organize and never lose a recipe again
+              </Typography>
+            </Box>
           </Box>
         )}
 
