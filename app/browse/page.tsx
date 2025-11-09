@@ -567,13 +567,14 @@ export default function BrowsePage() {
         {!loading && filteredRecipes.length > 0 && (
           <>
             <Grid container spacing={3}>
-              {displayedRecipes.map((recipe) => (
+              {displayedRecipes.map((recipe, index) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
                   <RecipeCard 
                     recipe={recipe} 
                     compact 
                     onClick={() => handleCardClick(recipe)}
                     onDelete={canAddRecipes ? handleDeleteClick : undefined}
+                    loading={index < 8 ? 'eager' : 'lazy'}
                   />
                 </Grid>
               ))}

@@ -32,9 +32,10 @@ interface RecipeCardProps {
   compact?: boolean;
   onClick?: () => void;
   onDelete?: (recipeId: string) => void;
+  loading?: 'lazy' | 'eager';
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy' }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -131,6 +132,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete 
               height="200"
               image={imageUrl}
               alt={recipe.title}
+              loading={loading}
               sx={{
                 objectFit: 'cover',
               }}
