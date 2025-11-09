@@ -429,8 +429,9 @@ export default function BrowsePage() {
           </Box>
         </Box>
 
-        {/* Search Bar */}
-        <Box sx={{ mb: 3 }}>
+        {/* Search and Filters */}
+        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Search Bar */}
           <TextField
             placeholder="Search recipes, ingredients, or tags..."
             value={searchQuery}
@@ -450,12 +451,10 @@ export default function BrowsePage() {
               ),
             }}
             size="small"
-            fullWidth
+            sx={{ flex: { xs: '1 1 100%', sm: '1 1 auto' }, minWidth: { sm: 300 } }}
           />
-        </Box>
 
-        {/* Filter Buttons */}
-        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          {/* Filter Buttons */}
           {/* Cuisine Filter Button */}
           <Chip
             label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
@@ -526,7 +525,6 @@ export default function BrowsePage() {
             />
           )}
         </Box>
-
 
         {/* Loading State */}
         {loading && (
