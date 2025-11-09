@@ -48,6 +48,22 @@ export default function Footer() {
           <Typography variant="body2" color="text.secondary">
             •
           </Typography>
+          <Typography
+            variant="body2"
+            component="a"
+            href="mailto:Support@RecipeHaven.app"
+            sx={{ 
+              color: 'primary.main',
+              cursor: 'pointer',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+          >
+            Support@RecipeHaven.app
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            •
+          </Typography>
           <Typography variant="body2" color="text.secondary">
             © {new Date().getFullYear()} RecipeBook
           </Typography>
