@@ -483,7 +483,7 @@ export default function MobileNav() {
                           lineHeight: 1,
                         }}
                       >
-                        Search
+                        Search Friends
                       </Typography>
                     </ButtonBase>
                   )}
