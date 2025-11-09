@@ -16,10 +16,25 @@ import {
   CircularProgress,
   Chip,
   IconButton,
+  Card,
+  CardContent,
+  Badge,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearIcon from '@mui/icons-material/Clear';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import RamenDiningIcon from '@mui/icons-material/RamenDining';
+import PizzaIcon from '@mui/icons-material/LocalPizza';
+import SushiIcon from '@mui/icons-material/SetMeal';
+import FastfoodIcon from '@mui/icons-material/Fastfood';
+import BakeryDiningIcon from '@mui/icons-material/BakeryDining';
+import EmojiFoodBeverageIcon from '@mui/icons-material/EmojiFoodBeverage';
+import LunchDiningIcon from '@mui/icons-material/LunchDining';
+import SpaIcon from '@mui/icons-material/Spa';
+import EggIcon from '@mui/icons-material/Egg';
+import FishIcon from '@mui/icons-material/SetMeal';
+import PetsIcon from '@mui/icons-material/Pets';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -60,35 +75,51 @@ export default function BrowsePage() {
   // TODO: Adjust scroll threshold for earlier/later loading
   const SCROLL_THRESHOLD = 300; // pixels from bottom
 
-  // Common cuisine types
-  const CUISINE_TYPES = ['american', 'chinese', 'french', 'greek', 'indian', 'italian', 'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 'middle eastern', 'mediterranean'];
+  // Common cuisine types with icons
+  const CUISINE_TYPES = [
+    { value: 'american', label: 'American', icon: <FastfoodIcon /> },
+    { value: 'chinese', label: 'Chinese', icon: <RamenDiningIcon /> },
+    { value: 'french', label: 'French', icon: <BakeryDiningIcon /> },
+    { value: 'greek', label: 'Greek', icon: <RestaurantIcon /> },
+    { value: 'indian', label: 'Indian', icon: <EmojiFoodBeverageIcon /> },
+    { value: 'italian', label: 'Italian', icon: <PizzaIcon /> },
+    { value: 'japanese', label: 'Japanese', icon: <SushiIcon /> },
+    { value: 'korean', label: 'Korean', icon: <LunchDiningIcon /> },
+    { value: 'mexican', label: 'Mexican', icon: <FastfoodIcon /> },
+    { value: 'thai', label: 'Thai', icon: <RamenDiningIcon /> },
+    { value: 'vietnamese', label: 'Vietnamese', icon: <LunchDiningIcon /> },
+    { value: 'middle eastern', label: 'Middle Eastern', icon: <RestaurantIcon /> },
+    { value: 'mediterranean', label: 'Mediterranean', icon: <RestaurantIcon /> },
+  ];
   
-  // Main ingredient types (matching auto-tagging categories)
-  const MAIN_INGREDIENT_TYPES = ['fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'vegetarian', 'vegan'];
+  // Main ingredient types with icons (matching auto-tagging categories)
+  const MAIN_INGREDIENT_TYPES = [
+    { value: 'fish', label: 'Fish', icon: <FishIcon /> },
+    { value: 'seafood', label: 'Seafood', icon: <FishIcon /> },
+    { value: 'chicken', label: 'Chicken', icon: <EggIcon /> },
+    { value: 'beef', label: 'Beef', icon: <PetsIcon /> },
+    { value: 'pork', label: 'Pork', icon: <PetsIcon /> },
+    { value: 'lamb', label: 'Lamb', icon: <PetsIcon /> },
+    { value: 'vegetarian', label: 'Vegetarian', icon: <SpaIcon /> },
+    { value: 'vegan', label: 'Vegan', icon: <SpaIcon /> },
+  ];
 
-  // Get unique cuisines and contributors for filter dropdowns
-  
-  // Extract cuisine types from tags
-  const allCuisines = Array.from(
-    new Set(
-      recipes.flatMap(r => 
-        r.tags.filter(tag => 
-          CUISINE_TYPES.includes(tag.toLowerCase())
-        )
-      )
-    )
-  ).sort();
-  
-  // Extract main ingredient types from tags
-  const allMainIngredients = Array.from(
-    new Set(
-      recipes.flatMap(r => 
-        r.tags.filter(tag => 
-          MAIN_INGREDIENT_TYPES.includes(tag.toLowerCase())
-        )
-      )
-    )
-  ).sort();
+  // Calculate counts for each filter option
+  const getCuisineCount = (cuisineValue: string) => {
+    return recipes.filter(r => 
+      r.tags.some(tag => tag.toLowerCase() === cuisineValue.toLowerCase())
+    ).length;
+  };
+
+  const getIngredientCount = (ingredientValue: string) => {
+    return recipes.filter(r => 
+      r.tags.some(tag => tag.toLowerCase() === ingredientValue.toLowerCase())
+    ).length;
+  };
+
+  // Get cuisines and ingredients that actually exist in recipes
+  const availableCuisines = CUISINE_TYPES.filter(c => getCuisineCount(c.value) > 0);
+  const availableIngredients = MAIN_INGREDIENT_TYPES.filter(i => getIngredientCount(i.value) > 0);
 
   // Fetch recipes from API
   const fetchRecipes = useCallback(async () => {
@@ -360,11 +391,10 @@ export default function BrowsePage() {
           </Box>
         </Box>
 
-        {/* Search and Filters */}
-        <Box sx={{ mb: 4 }}>
-          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
-            {/* Search Bar - Left Aligned */}
-            <Grid item xs={12} md="auto">
+        {/* Search and Sort */}
+        <Box sx={{ mb: 3 }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={8}>
               <TextField
                 placeholder="Search recipes, ingredients, or tags..."
                 value={searchQuery}
@@ -384,75 +414,169 @@ export default function BrowsePage() {
                   ),
                 }}
                 size="small"
-                sx={{ width: { xs: '100%', md: '400px' } }}
+                fullWidth
               />
             </Grid>
-
-            {/* Filters - Right Aligned */}
-            <Grid item xs={12} md="auto">
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
-                    <InputLabel>Sort By</InputLabel>
-                    <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
-                      <MenuItem value="created_at">Date Added (Newest)</MenuItem>
-                      <MenuItem value="title">Title (A-Z)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
-                    <InputLabel>Cuisine</InputLabel>
-                    <Select
-                      value={filterCuisine}
-                      label="Cuisine"
-                      onChange={(e) => setFilterCuisine(e.target.value)}
-                    >
-                      <MenuItem value="">All Cuisines</MenuItem>
-                      {allCuisines.map((cuisine) => (
-                        <MenuItem key={cuisine} value={cuisine}>
-                          {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={6} md="auto">
-                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
-                    <InputLabel>Main Ingredient</InputLabel>
-                    <Select
-                      value={filterMainIngredient}
-                      label="Main Ingredient"
-                      onChange={(e) => setFilterMainIngredient(e.target.value)}
-                    >
-                      <MenuItem value="">All Ingredients</MenuItem>
-                      {allMainIngredients.map((ingredient) => (
-                        <MenuItem key={ingredient} value={ingredient}>
-                          {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                {hasActiveFilters && (
-                  <Grid item xs={12} sm={6} md="auto">
-                    <Chip
-                      label="Clear Filters"
-                      onDelete={clearFilters}
-                      deleteIcon={<ClearIcon />}
-                      color="primary"
-                      variant="outlined"
-                      sx={{ height: 40, px: 1 }}
-                    />
-                  </Grid>
-                )}
-              </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControl size="small" fullWidth>
+                <InputLabel>Sort By</InputLabel>
+                <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
+                  <MenuItem value="created_at">Date Added (Newest)</MenuItem>
+                  <MenuItem value="title">Title (A-Z)</MenuItem>
+                </Select>
+              </FormControl>
             </Grid>
           </Grid>
         </Box>
+
+        {/* Visual Cuisine Filters */}
+        {availableCuisines.length > 0 && (
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>
+              CUISINE
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              {availableCuisines.map((cuisine) => {
+                const count = getCuisineCount(cuisine.value);
+                const isSelected = filterCuisine === cuisine.value;
+                return (
+                  <Card
+                    key={cuisine.value}
+                    onClick={() => setFilterCuisine(isSelected ? '' : cuisine.value)}
+                    sx={{
+                      minWidth: 120,
+                      cursor: 'pointer',
+                      bgcolor: isSelected ? 'hsl(24, 85%, 55%)' : 'background.paper',
+                      border: '1px solid',
+                      borderColor: isSelected ? 'hsl(24, 85%, 55%)' : 'divider',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(24, 85%, 55%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 2,
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, position: 'relative' }}>
+                      <Badge
+                        badgeContent={count}
+                        color="error"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          '& .MuiBadge-badge': {
+                            fontSize: '0.75rem',
+                            height: 20,
+                            minWidth: 20,
+                          },
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 32 }}>
+                          {cuisine.icon}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                            color: isSelected ? 'white' : 'text.primary',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {cuisine.label}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Visual Ingredient Filters */}
+        {availableIngredients.length > 0 && (
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 600, color: 'text.secondary', fontSize: '0.875rem' }}>
+              MAIN INGREDIENT
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              {availableIngredients.map((ingredient) => {
+                const count = getIngredientCount(ingredient.value);
+                const isSelected = filterMainIngredient === ingredient.value;
+                return (
+                  <Card
+                    key={ingredient.value}
+                    onClick={() => setFilterMainIngredient(isSelected ? '' : ingredient.value)}
+                    sx={{
+                      minWidth: 120,
+                      cursor: 'pointer',
+                      bgcolor: isSelected ? 'hsl(24, 85%, 55%)' : 'background.paper',
+                      border: '1px solid',
+                      borderColor: isSelected ? 'hsl(24, 85%, 55%)' : 'divider',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        borderColor: 'hsl(24, 85%, 55%)',
+                        transform: 'translateY(-2px)',
+                        boxShadow: 2,
+                      },
+                    }}
+                  >
+                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, position: 'relative' }}>
+                      <Badge
+                        badgeContent={count}
+                        color="error"
+                        sx={{
+                          position: 'absolute',
+                          top: 8,
+                          right: 8,
+                          '& .MuiBadge-badge': {
+                            fontSize: '0.75rem',
+                            height: 20,
+                            minWidth: 20,
+                          },
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 32 }}>
+                          {ingredient.icon}
+                        </Box>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 600,
+                            fontSize: '0.875rem',
+                            color: isSelected ? 'white' : 'text.primary',
+                            textAlign: 'center',
+                          }}
+                        >
+                          {ingredient.label}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </Box>
+          </Box>
+        )}
+
+        {/* Clear Filters */}
+        {hasActiveFilters && (
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center' }}>
+            <Chip
+              label="Clear All Filters"
+              onDelete={clearFilters}
+              onClick={clearFilters}
+              deleteIcon={<ClearIcon />}
+              color="primary"
+              variant="outlined"
+              sx={{ fontWeight: 600 }}
+            />
+          </Box>
+        )}
 
 
         {/* Loading State */}
