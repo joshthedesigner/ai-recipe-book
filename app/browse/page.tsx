@@ -409,7 +409,7 @@ export default function BrowsePage() {
       <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, pb: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', pb: 3, borderBottom: '1px solid', borderColor: 'divider' }}>
             <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
