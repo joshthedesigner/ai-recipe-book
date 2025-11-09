@@ -73,20 +73,8 @@ export default function SettingsPage() {
 
   // Password validation (same as signup)
   const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
-    if (pwd.length < 12) {
-      return { valid: false, error: 'Password must be at least 12 characters long' };
-    }
-    if (!/[a-z]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one lowercase letter' };
-    }
-    if (!/[A-Z]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one uppercase letter' };
-    }
-    if (!/[0-9]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one number' };
-    }
-    if (!/[^a-zA-Z0-9]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one special character' };
+    if (pwd.length < 6) {
+      return { valid: false, error: 'Password must be at least 6 characters long' };
     }
     return { valid: true };
   };
@@ -403,7 +391,7 @@ export default function SettingsPage() {
                         error={!!passwordError}
                         disabled={passwordSaving}
                         sx={{ mb: 2 }}
-                        helperText="Minimum 12 characters with uppercase, lowercase, number, and special character"
+                        helperText="Minimum 6 characters"
                       />
                       <TextField
                         fullWidth
