@@ -352,7 +352,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Never lose a recipe again
+                Stop Searching. Start Cooking.
               </Typography>
               <Typography
                 variant="body1"
