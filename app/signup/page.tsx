@@ -32,38 +32,9 @@ export default function SignupPage() {
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
 
   const validatePassword = (pwd: string): { valid: boolean; error?: string } => {
-    // Minimum 12 characters
-    if (pwd.length < 12) {
-      return { valid: false, error: 'Password must be at least 12 characters long' };
-    }
-
-    // Must contain lowercase letter
-    if (!/[a-z]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one lowercase letter' };
-    }
-
-    // Must contain uppercase letter
-    if (!/[A-Z]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one uppercase letter' };
-    }
-
-    // Must contain number
-    if (!/[0-9]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one number' };
-    }
-
-    // Must contain special character
-    if (!/[^a-zA-Z0-9]/.test(pwd)) {
-      return { valid: false, error: 'Password must contain at least one special character (!@#$%^&*()_+-=[]{}|;:,.<>?)' };
-    }
-
-    // Check against common weak passwords
-    const commonPasswords = [
-      'password', 'password123', 'qwerty', '123456', '12345678', 'abc123',
-      'password1', 'welcome', 'monkey', '1234567', 'letmein', 'trustno1'
-    ];
-    if (commonPasswords.some(common => pwd.toLowerCase().includes(common))) {
-      return { valid: false, error: 'Password is too common. Please choose a stronger password.' };
+    // Minimum 6 characters
+    if (pwd.length < 6) {
+      return { valid: false, error: 'Password must be at least 6 characters long' };
     }
 
     return { valid: true };
