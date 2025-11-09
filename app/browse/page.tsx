@@ -83,19 +83,19 @@ export default function BrowsePage() {
 
   // Common cuisine types with icons
   const CUISINE_TYPES = [
-    { value: 'american', label: 'American', icon: <FastfoodIcon /> },
-    { value: 'chinese', label: 'Chinese', icon: <RamenDiningIcon /> },
-    { value: 'french', label: 'French', icon: <BakeryDiningIcon /> },
-    { value: 'greek', label: 'Greek', icon: <RestaurantIcon /> },
-    { value: 'indian', label: 'Indian', icon: <EmojiFoodBeverageIcon /> },
-    { value: 'italian', label: 'Italian', icon: <PizzaIcon /> },
-    { value: 'japanese', label: 'Japanese', icon: <SushiIcon /> },
-    { value: 'korean', label: 'Korean', icon: <LunchDiningIcon /> },
-    { value: 'mexican', label: 'Mexican', icon: <FastfoodIcon /> },
-    { value: 'thai', label: 'Thai', icon: <RamenDiningIcon /> },
-    { value: 'vietnamese', label: 'Vietnamese', icon: <LunchDiningIcon /> },
-    { value: 'middle eastern', label: 'Middle Eastern', icon: <RestaurantIcon /> },
-    { value: 'mediterranean', label: 'Mediterranean', icon: <RestaurantIcon /> },
+    { value: 'american', label: 'American', icon: '🍔' },
+    { value: 'chinese', label: 'Chinese', icon: '🥘' },
+    { value: 'french', label: 'French', icon: '🥖' },
+    { value: 'greek', label: 'Greek', icon: '🥙' },
+    { value: 'indian', label: 'Indian', icon: '🍛' },
+    { value: 'italian', label: 'Italian', icon: '🍕' },
+    { value: 'japanese', label: 'Japanese', icon: '🍣' },
+    { value: 'korean', label: 'Korean', icon: '🍜' },
+    { value: 'mexican', label: 'Mexican', icon: '🌮' },
+    { value: 'thai', label: 'Thai', icon: '🍜' },
+    { value: 'vietnamese', label: 'Vietnamese', icon: '🥢' },
+    { value: 'middle eastern', label: 'Middle Eastern', icon: '�串' },
+    { value: 'mediterranean', label: 'Mediterranean', icon: '🫒' },
   ];
   
   // Main ingredient types with icons (matching auto-tagging categories)
