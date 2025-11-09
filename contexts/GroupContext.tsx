@@ -43,9 +43,15 @@ export function GroupProvider({ children }: { children: ReactNode }) {
   // Load groups for current user
   const loadGroups = useCallback(async (userId: string) => {
     try {
+      console.log('GroupContext: Loading groups for user:', userId);
       setLoading(true);
       
+      const startTime = Date.now();
       const userGroups = await getUserGroups(supabase, userId);
+      const loadTime = Date.now() - startTime;
+      
+      console.log(`GroupContext: Loaded ${userGroups.length} groups in ${loadTime}ms`);
+      console.log('GroupContext: Groups found:', userGroups.map(g => ({ id: g.id, name: g.name, isOwn: g.isOwn, role: g.role })));
       
       setGroups(userGroups);
 
@@ -86,6 +92,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         
         if (recentlyJoined) {
           active = recentlyJoined;
+          console.log('GroupContext: Prioritizing recently joined group:', recentlyJoined.name);
         }
       }
       
@@ -108,6 +115,8 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           console.warn('Error updating localStorage:', error);
         }
       }
+      
+      console.log('GroupContext: Active group set:', active ? active.name : 'none');
     } catch (error) {
       console.error('GroupContext: Error loading groups:', error);
       setGroups([]);
@@ -141,6 +150,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
   // Single effect: Watch user from AuthContext and load groups accordingly
   useEffect(() => {
+    console.log('🟣 GroupContext useEffect triggered', {
+      hasWindow: typeof window !== 'undefined',
+      authLoading,
+      hasUser: !!user,
+      userId: user?.id?.slice(0, 8),
+      currentGroupsCount: groups.length,
+    });
+    
     if (typeof window === 'undefined') {
       setLoading(false);
       return;
@@ -148,11 +165,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
 
     // Wait for auth to finish loading
     if (authLoading) {
+      console.log('🟣 GroupContext: Waiting for auth to finish loading');
       return;
     }
 
     // No user - clear state
     if (!user) {
+      console.log('🟣 GroupContext: No user, clearing groups');
       setGroups([]);
       setActiveGroup(null);
       setLoading(false);
@@ -167,6 +186,7 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     }
 
     // User is available - load groups
+    console.log('🟣 GroupContext: User available, loading groups');
     loadGroups(user.id);
     
     // Listen for refresh events (e.g., after invites are activated)
@@ -174,15 +194,20 @@ export function GroupProvider({ children }: { children: ReactNode }) {
     let refreshTimeout: NodeJS.Timeout | null = null;
     
     const handleRefresh = () => {
+      console.log('🔔 GroupContext: groups-refresh event caught!');
+      
       // Clear any pending refresh
       if (refreshTimeout) {
+        console.log('🔔 GroupContext: Clearing previous timeout');
         clearTimeout(refreshTimeout);
       }
       
       // Schedule refresh after 300ms
       // Multiple dispatches within 300ms = only one reload
+      console.log('🔔 GroupContext: Scheduling reload in 300ms');
       refreshTimeout = setTimeout(() => {
-        loadGroups(user.id);
+        console.log('🔄 GroupContext: Executing reload now...');
+      loadGroups(user.id);
         refreshTimeout = null;
       }, 300);
     };

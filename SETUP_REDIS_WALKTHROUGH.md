@@ -287,3 +287,4 @@ UPSTASH_REDIS_REST_TOKEN=your-token-here
 
 **Questions?** The code automatically handles everything - just add the env vars and restart!
 
+

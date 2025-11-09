@@ -51,3 +51,4 @@ echo "   • Check Upstash dashboard for activity"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
+

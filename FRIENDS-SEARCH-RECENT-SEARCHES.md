@@ -135,3 +135,4 @@ const isShowingRecents = !hasSearchInput && recentSearches.length > 0;
 - Backwards compatible (degrades gracefully if localStorage disabled)
 - No performance impact (localStorage operations are synchronous but minimal)
 
+
