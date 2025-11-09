@@ -124,7 +124,7 @@ export default function LandingPage() {
                 lineHeight: 1.2,
               }}
             >
-              An AI-recipe assistant for everyone.
+              A recipe assistant for everyone.
             </Typography>
             <Typography
               variant="body1"
@@ -139,7 +139,7 @@ export default function LandingPage() {
             >
               Save recipes from anywhere, organize with AI, and share with the people you love.
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2, justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 'calc(16px + 12px)', justifyContent: 'center' }}>
               <AppButton
                 variant="primary"
                 size="large"
@@ -161,7 +161,7 @@ export default function LandingPage() {
                 fontSize: '16px',
                 color: 'hsl(24, 85%, 55%)',
                 fontWeight: 600,
-                mb: 'calc(32px + 12px)',
+                mb: 'calc(32px + 48px)',
               }}
             >
               ✨ 100% Free. Unlimited recipes. No credit card required.
@@ -524,9 +524,6 @@ export default function LandingPage() {
               size="large"
               onClick={() => router.push('/signup')}
               sx={{
-                px: 5,
-                py: 2,
-                fontSize: '1.125rem',
                 mb: 2,
               }}
             >
