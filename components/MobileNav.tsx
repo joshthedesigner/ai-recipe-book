@@ -249,6 +249,36 @@ export default function MobileNav() {
 
                 {/* Navigation Items */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
+                  {/* Search */}
+                  {user && !groupsLoading && (
+                    <ButtonBase
+                      onClick={handleSearchExpand}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        p: 0.75,
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '10px',
+                          color: 'text.secondary',
+                          lineHeight: 1,
+                        }}
+                      >
+                        Search
+                      </Typography>
+                    </ButtonBase>
+                  )}
+
                   {/* Home */}
                   <ButtonBase
                     onClick={handleHomeClick}
@@ -295,36 +325,6 @@ export default function MobileNav() {
                       Home
                     </Typography>
                   </ButtonBase>
-
-                  {/* Search */}
-                  {user && !groupsLoading && (
-                    <ButtonBase
-                      onClick={handleSearchExpand}
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.25,
-                        p: 0.75,
-                        borderRadius: 1,
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                    >
-                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: '10px',
-                          color: 'text.secondary',
-                          lineHeight: 1,
-                        }}
-                      >
-                        Search
-                      </Typography>
-                    </ButtonBase>
-                  )}
 
                   {/* Friends */}
                   {user && (

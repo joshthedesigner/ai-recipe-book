@@ -233,13 +233,6 @@ export default function DesktopNav() {
             </Typography>
           </Box>
 
-          {/* Friends Search */}
-          {user && !groupsLoading && (
-            <Box sx={{ ml: 3, display: 'flex', alignItems: 'center' }}>
-              <FriendsSearch />
-            </Box>
-          )}
-
           {/* Navigation Items */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
             {/* Home */}
@@ -463,6 +456,13 @@ export default function DesktopNav() {
 
             {/* User Menu */}
             {user && <UserAvatarMenu />}
+
+            {/* Friends Search */}
+            {user && !groupsLoading && (
+              <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
+                <FriendsSearch />
+              </Box>
+            )}
           </Box>
         </Box>
       </Toolbar>
