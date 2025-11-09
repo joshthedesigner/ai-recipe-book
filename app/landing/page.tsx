@@ -381,8 +381,7 @@ export default function LandingPage() {
                   'Cloud-synced across all your devices',
                   'AI-powered recipe extraction and generation',
                   'Share with friends and family',
-                  'Completely free with unlimited recipes',
-                  'Your recipes, your data, your control'
+                  'Completely free with unlimited recipes'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
