@@ -412,15 +412,10 @@ export default function BrowsePage() {
           
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Box>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0.5 }}>
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, mb: 0 }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
                   : 'Your RecipeBook'}
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-                {activeGroup?.isFriend
-                  ? 'Browsing friend\'s cookbook'
-                  : 'Browse and search your saved recipes'}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2 }}>
