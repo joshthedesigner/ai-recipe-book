@@ -233,8 +233,8 @@ export default function DesktopNav() {
             </Typography>
           </Box>
 
-          {/* Navigation Items */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
+          {/* Navigation Items - Left (Home/Friends) */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 3 }}>
             {/* Home */}
             <ButtonBase
               onClick={handleHomeClick}
@@ -440,6 +440,16 @@ export default function DesktopNav() {
                 </Menu>
               </>
             )}
+          </Box>
+
+          {/* Right Side - Search & User */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
+            {/* Friends Search */}
+            {user && !groupsLoading && (
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <FriendsSearch />
+              </Box>
+            )}
 
             {/* Divider */}
             {user && (
@@ -447,7 +457,6 @@ export default function DesktopNav() {
                 orientation="vertical" 
                 flexItem 
                 sx={{ 
-                  mx: 1,
                   my: 1,
                   bgcolor: 'divider',
                 }} 
@@ -456,13 +465,6 @@ export default function DesktopNav() {
 
             {/* User Menu */}
             {user && <UserAvatarMenu />}
-
-            {/* Friends Search */}
-            {user && !groupsLoading && (
-              <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
-                <FriendsSearch />
-              </Box>
-            )}
           </Box>
         </Box>
       </Toolbar>

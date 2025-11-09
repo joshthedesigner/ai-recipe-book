@@ -247,38 +247,8 @@ export default function MobileNav() {
                   />
                 </Box>
 
-                {/* Navigation Items */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
-                  {/* Search */}
-                  {user && !groupsLoading && (
-                    <ButtonBase
-                      onClick={handleSearchExpand}
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 0.25,
-                        p: 0.75,
-                        borderRadius: 1,
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                      }}
-                    >
-                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          fontSize: '10px',
-                          color: 'text.secondary',
-                          lineHeight: 1,
-                        }}
-                      >
-                        Search
-                      </Typography>
-                    </ButtonBase>
-                  )}
-
+                {/* Navigation Items - Left (Home/Friends) */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 2 }}>
                   {/* Home */}
                   <ButtonBase
                     onClick={handleHomeClick}
@@ -484,6 +454,39 @@ export default function MobileNav() {
                       </Menu>
                     </>
                   )}
+                </Box>
+
+                {/* Right Side - Search & User */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
+                  {/* Search */}
+                  {user && !groupsLoading && (
+                    <ButtonBase
+                      onClick={handleSearchExpand}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        p: 0.75,
+                        borderRadius: 1,
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <SearchIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '10px',
+                          color: 'text.secondary',
+                          lineHeight: 1,
+                        }}
+                      >
+                        Search
+                      </Typography>
+                    </ButtonBase>
+                  )}
 
                   {/* Divider */}
                   {user && (
@@ -491,7 +494,6 @@ export default function MobileNav() {
                       orientation="vertical" 
                       flexItem 
                       sx={{ 
-                        mx: 0.5,
                         my: 0.75,
                         bgcolor: 'divider',
                       }} 
