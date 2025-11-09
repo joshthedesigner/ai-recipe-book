@@ -88,17 +88,73 @@ export default function SignupPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        bgcolor: 'background.default',
-        py: 4,
-      }}
-    >
-      <Container maxWidth="sm">
+    <>
+      {/* Simple Nav with Logo Only */}
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Toolbar sx={{ minHeight: 64 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              maxWidth: '1536px',
+              mx: 'auto',
+              px: 3,
+            }}
+          >
+            <Link href="/landing" passHref legacyBehavior>
+              <Box
+                component="a"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.8,
+                  },
+                }}
+              >
+                <img 
+                  src="/logo.svg" 
+                  alt="RecipeBook Logo" 
+                  style={{ width: '32px', height: 'auto' }}
+                />
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: 'text.primary',
+                    fontWeight: 600,
+                  }}
+                >
+                  RecipeBook
+                </Typography>
+              </Box>
+            </Link>
+          </Box>
+        </Toolbar>
+      </AppBar>
+
+      <Box
+        sx={{
+          minHeight: 'calc(100vh - 64px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default',
+          py: 4,
+        }}
+      >
+        <Container maxWidth="sm">
           {/* Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
