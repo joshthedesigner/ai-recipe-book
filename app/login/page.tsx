@@ -84,8 +84,13 @@ export default function LoginPage() {
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
             RecipeBook
           </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Create your recipe legacy. Share it with the people you love.
+          <Typography variant="body2" color="text.secondary">
+            Don't have an account?{' '}
+            <Link href="/signup" passHref legacyBehavior>
+              <MuiLink sx={{ fontWeight: 600, cursor: 'pointer' }}>
+                Sign up
+              </MuiLink>
+            </Link>
           </Typography>
         </Box>
 
@@ -180,18 +185,6 @@ export default function LoginPage() {
               </MuiLink>
             </Link>
             .
-          </Typography>
-        </Box>
-
-        {/* Sign Up Link */}
-        <Box sx={{ textAlign: 'center', mt: 2 }}>
-          <Typography variant="body2" color="text.secondary">
-            Don't have an account?{' '}
-            <Link href="/signup" passHref legacyBehavior>
-              <MuiLink sx={{ fontWeight: 600, cursor: 'pointer' }}>
-                Sign up
-              </MuiLink>
-            </Link>
           </Typography>
         </Box>
       </Container>
