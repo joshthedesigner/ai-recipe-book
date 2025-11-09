@@ -96,6 +96,26 @@ export default function LoginPage() {
           </Alert>
         )}
 
+        {/* Google Sign In - Primary Option */}
+        <AppButton
+          fullWidth
+          variant="secondary"
+          size="large"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading || loading}
+          startIcon={<GoogleIcon />}
+          sx={{ mb: 3 }}
+        >
+          {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
+        </AppButton>
+
+        {/* Divider */}
+        <Divider sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary">
+            or
+          </Typography>
+        </Divider>
+
         {/* Login Form */}
         <form onSubmit={handleSubmit}>
           <TextField
@@ -143,26 +163,6 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </AppButton>
         </form>
-
-        {/* Divider */}
-        <Divider sx={{ mb: 3 }}>
-          <Typography variant="body2" color="text.secondary">
-            or
-          </Typography>
-        </Divider>
-
-        {/* Google Sign In - Secondary Option */}
-        <AppButton
-          fullWidth
-          variant="secondary"
-          size="large"
-          onClick={handleGoogleSignIn}
-          disabled={googleLoading || loading}
-          startIcon={<GoogleIcon />}
-          sx={{ mb: 3 }}
-        >
-          {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
-        </AppButton>
 
         {/* Terms and Privacy Agreement */}
         <Box sx={{ textAlign: 'center', mt: 2, mb: 3 }}>
