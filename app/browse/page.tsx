@@ -492,19 +492,6 @@ export default function BrowsePage() {
               },
             }}
           />
-
-          {/* Clear All */}
-          {hasActiveFilters && (
-            <Chip
-              label="Clear All Filters"
-              onDelete={clearFilters}
-              onClick={clearFilters}
-              deleteIcon={<ClearIcon />}
-              color="error"
-              variant="outlined"
-              sx={{ height: 40, fontWeight: 600 }}
-            />
-          )}
         </Box>
 
         {/* Loading State */}
