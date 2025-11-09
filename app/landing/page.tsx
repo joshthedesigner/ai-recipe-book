@@ -19,32 +19,20 @@ export default function LandingPage() {
       answer: 'RecipeBook is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve and share their culinary heritage.'
     },
     {
-      question: 'Are my recipes private?',
-      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeBook is your own personal space. You control exactly what you share and with whom.'
-    },
-    {
-      question: 'Can I import recipes from other websites?',
-      answer: 'Absolutely! RecipeBook can import recipes from most recipe websites by simply pasting the URL. We also support importing from images (using AI to extract the recipe) and even from videos. Just paste, snap, or upload!'
-    },
-    {
       question: 'How does AI help with my recipes?',
       answer: 'RecipeBook uses AI to extract recipes from images, videos, and websites - turning photos of cookbook pages or URLs into organized digital recipes. You can also chat with our AI assistant for cooking advice, ingredient substitutions, and technique tips.'
-    },
-    {
-      question: 'Can I use RecipeBook offline?',
-      answer: 'RecipeBook is a web-based application that requires an internet connection to sync your recipes across devices. However, once loaded, you can view your recipes even if your connection drops temporarily.'
-    },
-    {
-      question: 'How does friend sharing work?',
-      answer: 'You can add friends by searching for their email address. Once they accept your friend request, you can browse each other\'s recipe collections. Your recipes remain private unless you explicitly share them with friends.'
     },
     {
       question: 'What languages does RecipeBook support?',
       answer: 'RecipeBook can automatically translate recipes to and from virtually any language. Import a recipe in Italian, German, or Japanese, and read it in English - or vice versa!'
     },
     {
-      question: 'Can I export my recipes?',
-      answer: 'Yes! You maintain full ownership of your recipes and can export them at any time. We never lock you in.'
+      question: 'Are my recipes private?',
+      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeBook is your own personal space. You control exactly what you share and with whom.'
+    },
+    {
+      question: 'How does friend sharing work?',
+      answer: 'You can add friends by searching for their email address. Once they accept your friend request, you can browse each other\'s recipe collections. Your recipes remain private unless you explicitly share them with friends.'
     }
   ];
 
