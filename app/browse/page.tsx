@@ -637,21 +637,22 @@ export default function BrowsePage() {
         PaperProps={{
           sx: {
             mt: 1,
-            maxWidth: 600,
+            maxWidth: { xs: '90vw', sm: 600 },
+            width: { xs: '90vw', sm: 'auto' },
             borderRadius: 2,
             boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           }
         }}
       >
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" sx={{ mb: { xs: 1.5, sm: 2 }, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Cuisines
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 1.5, sm: 2 }}>
             {availableCuisines.map((cuisine) => {
               const isSelected = tempCuisine === cuisine.value;
               return (
-                <Grid item xs={4} sm={3} key={cuisine.value}>
+                <Grid item xs={6} sm={4} md={3} key={cuisine.value}>
                   <Card
                     onClick={() => setTempCuisine(isSelected ? '' : cuisine.value)}
                     sx={{
@@ -667,15 +668,15 @@ export default function BrowsePage() {
                       },
                     }}
                   >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 36, mb: 0.5 }}>
+                    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } }, textAlign: 'center' }}>
+                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: { xs: 28, sm: 36 }, mb: 0.5 }}>
                         {cuisine.icon}
                       </Box>
                       <Typography
                         variant="body2"
                         sx={{
                           fontWeight: 600,
-                          fontSize: '0.75rem',
+                          fontSize: { xs: '0.6875rem', sm: '0.75rem' },
                           color: isSelected ? 'white' : 'text.primary',
                         }}
                       >
@@ -687,13 +688,14 @@ export default function BrowsePage() {
               );
             })}
           </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button onClick={() => setTempCuisine('')} color="inherit">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: { xs: 2, sm: 3 }, gap: 1 }}>
+            <Button onClick={() => setTempCuisine('')} color="inherit" size="small">
               Reset
             </Button>
             <Button
               onClick={handleCuisineApply}
               variant="contained"
+              size="small"
               sx={{
                 bgcolor: 'hsl(24, 85%, 55%)',
                 '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
@@ -721,21 +723,22 @@ export default function BrowsePage() {
         PaperProps={{
           sx: {
             mt: 1,
-            maxWidth: 600,
+            maxWidth: { xs: '90vw', sm: 600 },
+            width: { xs: '90vw', sm: 'auto' },
             borderRadius: 2,
             boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           }
         }}
       >
-        <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+          <Typography variant="h6" sx={{ mb: { xs: 1.5, sm: 2 }, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             Main Ingredient
           </Typography>
-          <Grid container spacing={2}>
+          <Grid container spacing={{ xs: 1.5, sm: 2 }}>
             {availableIngredients.map((ingredient) => {
               const isSelected = tempIngredient === ingredient.value;
               return (
-                <Grid item xs={4} sm={3} key={ingredient.value}>
+                <Grid item xs={6} sm={4} md={3} key={ingredient.value}>
                   <Card
                     onClick={() => setTempIngredient(isSelected ? '' : ingredient.value)}
                     sx={{
@@ -751,15 +754,15 @@ export default function BrowsePage() {
                       },
                     }}
                   >
-                    <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: 36, mb: 0.5 }}>
+                    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } }, textAlign: 'center' }}>
+                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: { xs: 28, sm: 36 }, mb: 0.5 }}>
                         {ingredient.icon}
                       </Box>
                       <Typography
                         variant="body2"
                         sx={{
                           fontWeight: 600,
-                          fontSize: '0.75rem',
+                          fontSize: { xs: '0.6875rem', sm: '0.75rem' },
                           color: isSelected ? 'white' : 'text.primary',
                         }}
                       >
@@ -771,13 +774,14 @@ export default function BrowsePage() {
               );
             })}
           </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
-            <Button onClick={() => setTempIngredient('')} color="inherit">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: { xs: 2, sm: 3 }, gap: 1 }}>
+            <Button onClick={() => setTempIngredient('')} color="inherit" size="small">
               Reset
             </Button>
             <Button
               onClick={handleIngredientApply}
               variant="contained"
+              size="small"
               sx={{
                 bgcolor: 'hsl(24, 85%, 55%)',
                 '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
