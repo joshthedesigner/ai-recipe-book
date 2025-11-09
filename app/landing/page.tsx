@@ -7,6 +7,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
 import AppButton from '@/components/AppButton';
+import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -344,6 +345,9 @@ export default function LandingPage() {
           </Box>
         </Container>
       </Box>
+
+      {/* Footer */}
+      <Footer />
     </Box>
   );
 }
