@@ -93,7 +93,7 @@ export default function BrowsePage() {
     { value: 'korean', label: 'Korean', icon: '🍜' },
     { value: 'mexican', label: 'Mexican', icon: '🌮' },
     { value: 'thai', label: 'Thai', icon: '🍤' },
-    { value: 'vietnamese', label: 'Vietnamese', icon: '🥢' },
+    { value: 'vietnamese', label: 'Vietnamese', icon: '🍲' },
     { value: 'middle eastern', label: 'Middle Eastern', icon: '🧆' },
     { value: 'mediterranean', label: 'Mediterranean', icon: '🫒' },
   ];
