@@ -505,7 +505,7 @@ export default function LandingPage() {
                 mb: 1,
               }}
             >
-              Your Ultimate Kitchen Companion
+              Less Chaos. More Cooking.
             </Typography>
             <Typography
               variant="body1"
