@@ -1,14 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Box, Container, Typography, Grid, Card, CardContent, AppBar, Toolbar, Collapse, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import { Box, Container, Typography, Grid, AppBar, Toolbar, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { useRouter } from 'next/navigation';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
-import LinkIcon from '@mui/icons-material/Link';
-import PublicIcon from '@mui/icons-material/Public';
-import GroupIcon from '@mui/icons-material/Group';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -19,53 +12,6 @@ import Footer from '@/components/Footer';
 
 export default function LandingPage() {
   const router = useRouter();
-
-  const features = [
-    {
-      icon: <CameraAltIcon sx={{ fontSize: 40 }} />,
-      title: 'Import from Anywhere',
-      description: "Add recipes from any source - instantly and intelligently.",
-      bullets: [
-        'Import from TikTok, Instagram, websites & more',
-        'Turn photos into recipes with AI Scanner',
-        'Paste URLs for automatic extraction',
-        'Upload images of cookbook pages or recipe cards'
-      ]
-    },
-    {
-      icon: <SmartToyIcon sx={{ fontSize: 40 }} />,
-      title: 'AI-Powered Creation',
-      description: 'Let AI help you discover and create amazing recipes.',
-      bullets: [
-        'Generate custom recipes with AI Chef',
-        'Get cooking advice and substitutions',
-        'Translate recipes to any language',
-        'Smart recipe recommendations based on your tastes'
-      ]
-    },
-    {
-      icon: <SearchIcon sx={{ fontSize: 40 }} />,
-      title: 'Organize with Ease',
-      description: 'Find any recipe in seconds with powerful search and filters.',
-      bullets: [
-        'Search by ingredients, cuisine, or dietary needs',
-        'Filter by tags, contributor, or date',
-        'Tag and categorize your recipes',
-        'Never lose a recipe again'
-      ]
-    },
-    {
-      icon: <GroupIcon sx={{ fontSize: 40 }} />,
-      title: 'Share & Collaborate',
-      description: 'Build your recipe collection together with friends and family.',
-      bullets: [
-        'Invite friends to view your recipes',
-        'Browse your friends\' cookbooks',
-        'Private by default, share what you choose',
-        'Build your culinary legacy together'
-      ]
-    },
-  ];
 
   const faqs = [
     {
@@ -389,119 +335,6 @@ export default function LandingPage() {
               </Typography>
             </Box>
           </Grid>
-        </Grid>
-      </Container>
-
-      {/* Features Section - Detailed with Bullets */}
-      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
-        <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
-          <Typography
-            variant="h2"
-            sx={{
-              fontSize: { xs: '2rem', md: '2.5rem' },
-              fontWeight: 700,
-              color: 'hsl(24, 20%, 15%)',
-              mb: 2,
-            }}
-          >
-            Everything you need in one place
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              fontSize: { xs: '1rem', md: '1.125rem' },
-              color: 'hsl(24, 20%, 15%)',
-              maxWidth: 700,
-              mx: 'auto',
-            }}
-          >
-            Powerful features that make recipe management effortless
-          </Typography>
-        </Box>
-
-        <Grid container spacing={4}>
-          {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} key={index}>
-              <Card
-                sx={{
-                  height: '100%',
-                  bgcolor: 'hsl(0, 0%, 100%)',
-                  borderRadius: '1rem',
-                  boxShadow: '0 4px 24px -2px hsl(24 85% 55% / 0.08)',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
-                    transform: 'translateY(-4px)',
-                  },
-                }}
-              >
-                <CardContent sx={{ p: 4 }}>
-                  <Box
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      borderRadius: '0.75rem',
-                      bgcolor: 'hsl(24, 85%, 55%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white',
-                      mb: 2.5,
-                    }}
-                  >
-                    {feature.icon}
-                  </Box>
-                  <Typography
-                    variant="h5"
-                    sx={{
-                      fontWeight: 600,
-                      color: 'hsl(24, 20%, 15%)',
-                      mb: 1.5,
-                      fontSize: '1.25rem',
-                    }}
-                  >
-                    {feature.title}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: 'hsl(24, 20%, 15%)',
-                      lineHeight: 1.6,
-                      mb: 2.5,
-                    }}
-                  >
-                    {feature.description}
-                  </Typography>
-                  
-                  {/* Feature Bullets */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {feature.bullets.map((bullet, idx) => (
-                      <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                        <CheckCircleIcon 
-                          sx={{ 
-                            fontSize: 18, 
-                            color: 'hsl(24, 85%, 55%)',
-                            mt: 0.25,
-                            flexShrink: 0,
-                          }} 
-                        />
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: '0.875rem',
-                            color: 'text.secondary',
-                            lineHeight: 1.5,
-                          }}
-                        >
-                          {bullet}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
         </Grid>
       </Container>
 
