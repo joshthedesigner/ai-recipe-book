@@ -11,6 +11,8 @@ import {
   InputAdornment,
   IconButton,
   Divider,
+  AppBar,
+  Toolbar,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -97,11 +99,8 @@ export default function SignupPage() {
       }}
     >
       <Container maxWidth="sm">
-        {/* Logo & Title */}
+          {/* Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Box sx={{ mb: 2 }}>
-              <img src="/logo.svg" alt="RecipeBook Logo" style={{ width: '80px', height: 'auto' }} />
-            </Box>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
               Welcome to RecipeBook
             </Typography>
@@ -243,8 +242,9 @@ export default function SignupPage() {
               .
             </Typography>
           </Box>
-      </Container>
-    </Box>
+        </Container>
+      </Box>
+    </>
   );
 }
 
