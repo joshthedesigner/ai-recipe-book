@@ -209,7 +209,43 @@ export default function TermsOfServicePage() {
             </SummaryBox>
 
             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2, mb: 1, fontSize: '0.9375rem' }}>
-              d. Sharing Your Recipes
+              d. Importing and Scraping Content
+            </Typography>
+            <Typography paragraph>
+              RecipeBook may provide tools that allow you to import, copy, or scrape content from third-party websites, including recipes, images, or other materials ("Imported Content"). By using such tools, you represent and warrant that:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+              <Typography component="li" paragraph>
+                You have all necessary rights or permissions to access, copy, and use the Imported Content.
+              </Typography>
+              <Typography component="li" paragraph>
+                You will comply with the terms of service, copyright, and other legal obligations of the third-party site from which content is obtained.
+              </Typography>
+            </Box>
+            <Typography paragraph>
+              RecipeBook does not claim ownership over Imported Content and is not responsible for:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, mb: 2 }}>
+              <Typography component="li" paragraph>
+                Any copyright or intellectual property infringement claims resulting from Imported Content.
+              </Typography>
+              <Typography component="li" paragraph>
+                Any inaccuracies, errors, or safety issues in recipes obtained through Imported Content.
+              </Typography>
+              <Typography component="li" paragraph>
+                Any terms of use violations of third-party websites.
+              </Typography>
+            </Box>
+            <Typography paragraph>
+              You acknowledge and agree that you use import and scraping features at your own risk, and RecipeBook disclaims all liability to the maximum extent permitted by law for any claims, losses, or damages arising from the use of Imported Content.
+            </Typography>
+
+            <SummaryBox>
+              If you import or scrape recipes from other websites, you are responsible for ensuring you have the right to do so. We provide the tools, but you use them at your own risk. RecipeBook is not liable for copyright violations, errors, or safety issues from imported content.
+            </SummaryBox>
+
+            <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mt: 2, mb: 1, fontSize: '0.9375rem' }}>
+              e. Sharing Your Recipes
             </Typography>
             <Typography paragraph>
               You may share Recipes with friends within the Service. By default, your recipes are private and only visible to you unless you explicitly share them. When you share a recipe with a friend, that friend can view the recipe and any associated content. You are responsible for managing your sharing settings and for any content you choose to share. RecipeBook maintains no responsibility in relation to such sharing of Recipes and RecipeBook's enablement of such activity will not be considered a violation of any of RecipeBook's obligations under these Terms.
