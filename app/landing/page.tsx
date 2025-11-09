@@ -127,7 +127,7 @@ export default function LandingPage() {
                     lineHeight: 1.2,
                   }}
                 >
-                  Your own AI-powered recipe assistant.
+                  An AI-recipe assistant for everyone.
                 </Typography>
                 <Typography
                   variant="body1"
