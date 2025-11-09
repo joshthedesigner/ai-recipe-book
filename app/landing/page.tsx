@@ -11,6 +11,9 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import SearchIcon from '@mui/icons-material/Search';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import PeopleIcon from '@mui/icons-material/People';
 import AppButton from '@/components/AppButton';
 import Footer from '@/components/Footer';
 
@@ -257,6 +260,137 @@ export default function LandingPage() {
           </Grid>
         </Container>
       </Box>
+
+      {/* Simple 3 Value Props Section */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+        <Grid container spacing={4}>
+          {/* Value Prop 1 */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  bgcolor: 'hsl(32, 40%, 95%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                }}
+              >
+                <MenuBookIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+              </Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '1.25rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 1,
+                }}
+              >
+                Import from anywhere
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.9375rem',
+                  color: 'text.secondary',
+                  lineHeight: 1.6,
+                }}
+              >
+                Import recipes from socials, websites, scan physical recipes or create new ones with AI.
+              </Typography>
+            </Box>
+          </Grid>
+
+          {/* Value Prop 2 */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  bgcolor: 'hsl(32, 40%, 95%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                }}
+              >
+                <FavoriteIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+              </Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '1.25rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 1,
+                }}
+              >
+                Never lose a recipe
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.9375rem',
+                  color: 'text.secondary',
+                  lineHeight: 1.6,
+                }}
+              >
+                Cloud-synced across all your devices. Search, organize, and find any recipe in seconds.
+              </Typography>
+            </Box>
+          </Grid>
+
+          {/* Value Prop 3 */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Box
+                sx={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: '50%',
+                  bgcolor: 'hsl(32, 40%, 95%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  mx: 'auto',
+                  mb: 2,
+                }}
+              >
+                <PeopleIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+              </Box>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 600,
+                  fontSize: '1.25rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 1,
+                }}
+              >
+                Share & collaborate
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.9375rem',
+                  color: 'text.secondary',
+                  lineHeight: 1.6,
+                }}
+              >
+                Invite friends to view your recipes and build your culinary legacy together.
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
 
       {/* Features Section - Detailed with Bullets */}
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
