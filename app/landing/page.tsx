@@ -1,11 +1,16 @@
 'use client';
 
-import { Box, Container, Typography, Button, Grid, Card, CardContent, AppBar, Toolbar } from '@mui/material';
+import { useState } from 'react';
+import { Box, Container, Typography, Grid, Card, CardContent, AppBar, Toolbar, Collapse, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import LinkIcon from '@mui/icons-material/Link';
 import PublicIcon from '@mui/icons-material/Public';
 import GroupIcon from '@mui/icons-material/Group';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import SearchIcon from '@mui/icons-material/Search';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import AppButton from '@/components/AppButton';
 import Footer from '@/components/Footer';
 
@@ -15,24 +20,83 @@ export default function LandingPage() {
   const features = [
     {
       icon: <CameraAltIcon sx={{ fontSize: 40 }} />,
-      title: 'Snap a Photo',
-      description: "Capture handwritten recipes, cookbook pages, or recipe cards. We'll digitize them instantly.",
+      title: 'Import from Anywhere',
+      description: "Add recipes from any source - instantly and intelligently.",
+      bullets: [
+        'Import from TikTok, Instagram, websites & more',
+        'Turn photos into recipes with AI Scanner',
+        'Paste URLs for automatic extraction',
+        'Upload images of cookbook pages or recipe cards'
+      ]
     },
     {
-      icon: <LinkIcon sx={{ fontSize: 40 }} />,
-      title: 'Paste a URL',
-      description: "Found a recipe online? Just paste the link and we'll save it beautifully to your collection.",
+      icon: <SmartToyIcon sx={{ fontSize: 40 }} />,
+      title: 'AI-Powered Creation',
+      description: 'Let AI help you discover and create amazing recipes.',
+      bullets: [
+        'Generate custom recipes with AI Chef',
+        'Get cooking advice and substitutions',
+        'Translate recipes to any language',
+        'Smart recipe recommendations based on your tastes'
+      ]
     },
     {
-      icon: <PublicIcon sx={{ fontSize: 40 }} />,
-      title: 'Auto Translation',
-      description: 'Recipes in any language, instantly translated so everyone can cook together.',
+      icon: <SearchIcon sx={{ fontSize: 40 }} />,
+      title: 'Organize with Ease',
+      description: 'Find any recipe in seconds with powerful search and filters.',
+      bullets: [
+        'Search by ingredients, cuisine, or dietary needs',
+        'Filter by tags, contributor, or date',
+        'Tag and categorize your recipes',
+        'Never lose a recipe again'
+      ]
     },
     {
       icon: <GroupIcon sx={{ fontSize: 40 }} />,
-      title: 'Share with Anyone',
-      description: 'Invite friends and loved ones to view or contribute. Build your cookbook together.',
+      title: 'Share & Collaborate',
+      description: 'Build your recipe collection together with friends and family.',
+      bullets: [
+        'Invite friends to view your recipes',
+        'Browse your friends\' cookbooks',
+        'Private by default, share what you choose',
+        'Build your culinary legacy together'
+      ]
     },
+  ];
+
+  const faqs = [
+    {
+      question: 'How much does RecipeBook cost?',
+      answer: 'RecipeBook is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve and share their culinary heritage.'
+    },
+    {
+      question: 'Are my recipes private?',
+      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeBook is your own personal space. You control exactly what you share and with whom.'
+    },
+    {
+      question: 'Can I import recipes from other websites?',
+      answer: 'Absolutely! RecipeBook can import recipes from most recipe websites by simply pasting the URL. We also support importing from images (using AI to extract the recipe) and even from videos. Just paste, snap, or upload!'
+    },
+    {
+      question: 'How does AI recipe generation work?',
+      answer: 'Our AI Chef can create custom recipes based on your preferences, dietary restrictions, available ingredients, or cuisine preferences. Just tell it what you\'re in the mood for, and it will generate a complete recipe with ingredients, instructions, and cooking tips.'
+    },
+    {
+      question: 'Can I use RecipeBook offline?',
+      answer: 'RecipeBook is a web-based application that requires an internet connection to sync your recipes across devices. However, once loaded, you can view your recipes even if your connection drops temporarily.'
+    },
+    {
+      question: 'How does friend sharing work?',
+      answer: 'You can add friends by searching for their email address. Once they accept your friend request, you can browse each other\'s recipe collections. Your recipes remain private unless you explicitly share them with friends.'
+    },
+    {
+      question: 'What languages does RecipeBook support?',
+      answer: 'RecipeBook can automatically translate recipes to and from virtually any language. Import a recipe in Italian, German, or Japanese, and read it in English - or vice versa!'
+    },
+    {
+      question: 'Can I export my recipes?',
+      answer: 'Yes! You maintain full ownership of your recipes and can export them at any time. We never lock you in.'
+    }
   ];
 
   return (
@@ -109,11 +173,11 @@ export default function LandingPage() {
         </Toolbar>
       </AppBar>
 
-      {/* Hero Section - Two Column Layout */}
+      {/* Hero Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
-            {/* Left Column - Text and Buttons */}
+            {/* Left Column */}
             <Grid item xs={12} md={6}>
               <Box>
                 <Typography
@@ -122,11 +186,11 @@ export default function LandingPage() {
                     fontSize: { xs: '2.5rem', md: '3.5rem' },
                     fontWeight: 700,
                     color: 'hsl(24, 85%, 55%)',
-                    mb: 3,
+                    mb: 2,
                     lineHeight: 1.2,
                   }}
                 >
-                  RecipeBook
+                  The AI-powered recipe manager for everyone
                 </Typography>
                 <Typography
                   variant="body1"
@@ -137,15 +201,15 @@ export default function LandingPage() {
                     lineHeight: 1.6,
                   }}
                 >
-                  Collect, share, and treasure your recipes. Add recipes from anywhere, in any language, and share them with the people you love.
+                  Save recipes from anywhere, organize with AI, and share with the people you love.
                 </Typography>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
                   <AppButton
                     variant="primary"
                     size="large"
                     onClick={() => router.push('/signup')}
                   >
-                    Get Started
+                    Get Started Free
                   </AppButton>
                   <AppButton
                     variant="secondary"
@@ -158,17 +222,17 @@ export default function LandingPage() {
                 <Typography
                   variant="body2"
                   sx={{
-                    fontSize: '14px',
-                    color: 'text.secondary',
-                    mt: 1.5,
+                    fontSize: '16px',
+                    color: 'hsl(24, 85%, 55%)',
+                    fontWeight: 600,
                   }}
                 >
-                  No payment required. 100% free.
+                  ✨ 100% Free. Unlimited recipes. No credit card required.
                 </Typography>
               </Box>
             </Grid>
 
-            {/* Right Column - Hero Image */}
+            {/* Right Column */}
             <Grid item xs={12} md={6}>
               <Box
                 sx={{
@@ -176,7 +240,6 @@ export default function LandingPage() {
                   overflow: 'hidden',
                   boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
                   height: { xs: 300, md: 500 },
-                  position: 'relative',
                 }}
               >
                 <img
@@ -194,39 +257,36 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* Features Section */}
+      {/* Features Section - Detailed with Bullets */}
       <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
-        {/* Section Heading */}
-        <Box id="features" sx={{ textAlign: 'center', mb: { xs: 8, md: 12 } }}>
+        <Box sx={{ textAlign: 'center', mb: { xs: 6, md: 8 } }}>
           <Typography
             variant="h2"
             sx={{
-              fontSize: { xs: '2rem', md: '2.5rem', lg: '3rem' },
+              fontSize: { xs: '2rem', md: '2.5rem' },
               fontWeight: 700,
               color: 'hsl(24, 20%, 15%)',
               mb: 2,
             }}
           >
-            Simple. Powerful. Together.
+            Everything you need in one place
           </Typography>
           <Typography
             variant="body1"
             sx={{
-              fontSize: { xs: '1.125rem', md: '1.25rem' },
-              fontWeight: 400,
+              fontSize: { xs: '1rem', md: '1.125rem' },
               color: 'hsl(24, 20%, 15%)',
-              maxWidth: 600,
+              maxWidth: 700,
               mx: 'auto',
             }}
           >
-            Everything you need to preserve and share your culinary heritage
+            Powerful features that make recipe management effortless
           </Typography>
         </Box>
 
-        {/* Features Grid */}
         <Grid container spacing={4}>
           {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid item xs={12} sm={6} key={index}>
               <Card
                 sx={{
                   height: '100%',
@@ -243,25 +303,26 @@ export default function LandingPage() {
                 <CardContent sx={{ p: 4 }}>
                   <Box
                     sx={{
-                      width: 64,
-                      height: 64,
+                      width: 56,
+                      height: 56,
                       borderRadius: '0.75rem',
                       bgcolor: 'hsl(24, 85%, 55%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',
-                      mb: 3,
+                      mb: 2.5,
                     }}
                   >
                     {feature.icon}
                   </Box>
                   <Typography
-                    variant="h6"
+                    variant="h5"
                     sx={{
                       fontWeight: 600,
                       color: 'hsl(24, 20%, 15%)',
                       mb: 1.5,
+                      fontSize: '1.25rem',
                     }}
                   >
                     {feature.title}
@@ -271,10 +332,37 @@ export default function LandingPage() {
                     sx={{
                       color: 'hsl(24, 20%, 15%)',
                       lineHeight: 1.6,
+                      mb: 2.5,
                     }}
                   >
                     {feature.description}
                   </Typography>
+                  
+                  {/* Feature Bullets */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {feature.bullets.map((bullet, idx) => (
+                      <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                        <CheckCircleIcon 
+                          sx={{ 
+                            fontSize: 18, 
+                            color: 'hsl(24, 85%, 55%)',
+                            mt: 0.25,
+                            flexShrink: 0,
+                          }} 
+                        />
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: '0.875rem',
+                            color: 'text.secondary',
+                            lineHeight: 1.5,
+                          }}
+                        >
+                          {bullet}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
                 </CardContent>
               </Card>
             </Grid>
@@ -282,7 +370,161 @@ export default function LandingPage() {
         </Grid>
       </Container>
 
-      {/* CTA Section */}
+      {/* Why RecipeBook Section */}
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  fontWeight: 700,
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                }}
+              >
+                Never lose a recipe again
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: '1.125rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                  lineHeight: 1.7,
+                }}
+              >
+                RecipeBook is your personal digital cookbook that goes everywhere you do. 
+                Save recipes from social media, websites, photos, or create your own - all in one beautiful place.
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                {[
+                  'Cloud-synced across all your devices',
+                  'AI-powered recipe extraction and generation',
+                  'Share with friends and family',
+                  'Completely free with unlimited recipes',
+                  'Your recipes, your data, your control'
+                ].map((item, idx) => (
+                  <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
+                      {item}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              <AppButton
+                variant="primary"
+                size="large"
+                onClick={() => router.push('/signup')}
+              >
+                Start Your Recipe Collection
+              </AppButton>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  borderRadius: '1rem',
+                  overflow: 'hidden',
+                  boxShadow: '0 8px 32px -4px hsl(24 85% 55% / 0.12)',
+                  height: { xs: 300, md: 400 },
+                }}
+              >
+                <img
+                  src="https://images.unsplash.com/photo-1466637574441-749b8f19452f?w=800&h=600&fit=crop"
+                  alt="Organized recipe collection"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                  }}
+                />
+              </Box>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* FAQ Section */}
+      <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 } }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: { xs: '2rem', md: '2.5rem' },
+              fontWeight: 700,
+              color: 'hsl(24, 20%, 15%)',
+              mb: 2,
+            }}
+          >
+            Frequently Asked Questions
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              fontSize: '1.125rem',
+              color: 'text.secondary',
+            }}
+          >
+            Everything you need to know about RecipeBook
+          </Typography>
+        </Box>
+
+        {faqs.map((faq, index) => (
+          <Accordion
+            key={index}
+            elevation={0}
+            sx={{
+              mb: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: '0.5rem !important',
+              '&:before': { display: 'none' },
+              '&.Mui-expanded': {
+                margin: '0 0 8px 0',
+              }
+            }}
+          >
+            <AccordionSummary
+              expandIcon={<ExpandMoreIcon />}
+              sx={{
+                '& .MuiAccordionSummary-content': {
+                  my: 1.5,
+                }
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  color: 'hsl(24, 20%, 15%)',
+                }}
+              >
+                {faq.question}
+              </Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontSize: '0.9375rem',
+                  color: 'text.secondary',
+                  lineHeight: 1.7,
+                }}
+              >
+                {faq.answer}
+              </Typography>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Container>
+
+      {/* Final CTA Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
           <Box sx={{ textAlign: 'center' }}>
@@ -295,30 +537,19 @@ export default function LandingPage() {
                 mb: 1,
               }}
             >
-              Start Building Your
-            </Typography>
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: { xs: '2rem', md: '3rem' },
-                fontWeight: 700,
-                color: 'hsl(24, 85%, 55%)',
-                mb: 3,
-              }}
-            >
-              Recipe Legacy
+              Your Ultimate Kitchen Companion
             </Typography>
             <Typography
               variant="body1"
               sx={{
                 fontSize: { xs: '1rem', md: '1.125rem' },
-                color: 'hsl(24, 20%, 15%)',
+                color: 'text.secondary',
                 mb: 4,
                 maxWidth: 600,
                 mx: 'auto',
               }}
             >
-              Join thousands preserving memories, one recipe at a time
+              Start preserving your culinary memories today. Free forever, with unlimited recipes.
             </Typography>
             <AppButton
               variant="primary"
@@ -328,19 +559,20 @@ export default function LandingPage() {
                 px: 5,
                 py: 2,
                 fontSize: '1.125rem',
+                mb: 2,
               }}
             >
-              Get Started
+              Get Started Free
             </AppButton>
             <Typography
               variant="body2"
               sx={{
-                fontSize: '14px',
-                color: 'text.secondary',
-                mt: 1.5,
+                fontSize: '16px',
+                color: 'hsl(24, 85%, 55%)',
+                fontWeight: 600,
               }}
             >
-              No payment required. 100% free.
+              No payment required • Unlimited recipes • No trials
             </Typography>
           </Box>
         </Container>
