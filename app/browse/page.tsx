@@ -100,14 +100,14 @@ export default function BrowsePage() {
   
   // Main ingredient types with icons (matching auto-tagging categories)
   const MAIN_INGREDIENT_TYPES = [
-    { value: 'fish', label: 'Fish', icon: <FishIcon /> },
-    { value: 'seafood', label: 'Seafood', icon: <FishIcon /> },
-    { value: 'chicken', label: 'Chicken', icon: <EggIcon /> },
-    { value: 'beef', label: 'Beef', icon: <PetsIcon /> },
-    { value: 'pork', label: 'Pork', icon: <PetsIcon /> },
-    { value: 'lamb', label: 'Lamb', icon: <PetsIcon /> },
-    { value: 'vegetarian', label: 'Vegetarian', icon: <SpaIcon /> },
-    { value: 'vegan', label: 'Vegan', icon: <SpaIcon /> },
+    { value: 'fish', label: 'Fish', icon: '🐟' },
+    { value: 'seafood', label: 'Seafood', icon: '🦐' },
+    { value: 'chicken', label: 'Chicken', icon: '🍗' },
+    { value: 'beef', label: 'Beef', icon: '🥩' },
+    { value: 'pork', label: 'Pork', icon: '🥓' },
+    { value: 'lamb', label: 'Lamb', icon: '🍖' },
+    { value: 'vegetarian', label: 'Vegetarian', icon: '🥗' },
+    { value: 'vegan', label: 'Vegan', icon: '🌱' },
   ];
 
   // Calculate counts for each filter option
