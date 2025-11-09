@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -54,6 +56,8 @@ export default function BrowsePage() {
   const { user, loading: authLoading } = useAuth();
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [displayedRecipes, setDisplayedRecipes] = useState<Recipe[]>([]);
@@ -567,17 +571,21 @@ export default function BrowsePage() {
         {!loading && filteredRecipes.length > 0 && (
           <>
             <Grid container spacing={3}>
-              {displayedRecipes.map((recipe, index) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                  <RecipeCard 
-                    recipe={recipe} 
-                    compact 
-                    onClick={() => handleCardClick(recipe)}
-                    onDelete={canAddRecipes ? handleDeleteClick : undefined}
-                    loading={index < 8 ? 'eager' : 'lazy'}
-                  />
-                </Grid>
-              ))}
+              {displayedRecipes.map((recipe, index) => {
+                // Load fewer images eagerly on mobile (4 vs 8)
+                const eagerLoadCount = isMobile ? 4 : 8;
+                return (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                    <RecipeCard 
+                      recipe={recipe} 
+                      compact 
+                      onClick={() => handleCardClick(recipe)}
+                      onDelete={canAddRecipes ? handleDeleteClick : undefined}
+                      loading={index < eagerLoadCount ? 'eager' : 'lazy'}
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
 
             {/* Loading More Indicator */}
