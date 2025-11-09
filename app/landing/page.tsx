@@ -247,7 +247,7 @@ export default function LandingPage() {
                   lineHeight: 1.6,
                 }}
               >
-                Import recipes from socials, websites, scan physical recipes or create new ones with AI.
+                Import recipes from websites, YouTube videos, scan physical recipes, or create your own.
               </Typography>
             </Box>
           </Grid>
@@ -364,7 +364,7 @@ export default function LandingPage() {
                 }}
               >
                 RecipeBook is your personal digital cookbook that goes everywhere you do. 
-                Save recipes from social media, websites, photos, or create your own - all in one beautiful place.
+                Import recipes from websites and YouTube, scan photos of cookbook pages, or create your own - all in one beautiful place.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
