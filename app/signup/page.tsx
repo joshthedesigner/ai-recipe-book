@@ -226,7 +226,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="new-password"
-              helperText="Minimum 12 characters with uppercase, lowercase, number, and special character"
+              helperText="Minimum 6 characters"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
