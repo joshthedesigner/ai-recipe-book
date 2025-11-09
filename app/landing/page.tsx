@@ -111,8 +111,35 @@ export default function LandingPage() {
       </AppBar>
 
       {/* Hero Section */}
-      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
-        <Container maxWidth="lg">
+      <Box sx={{ 
+        bgcolor: 'hsl(0, 0%, 100%)', 
+        py: { xs: 8, md: 12 },
+        position: 'relative',
+        overflow: 'hidden',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: -100,
+          right: -100,
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, hsl(24, 85%, 55%, 0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        },
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          bottom: -150,
+          left: -150,
+          width: 500,
+          height: 500,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, hsl(24, 85%, 55%, 0.06) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }
+      }}>
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             {/* Left Column */}
             <Grid item xs={12} md={6}>
@@ -327,7 +354,11 @@ export default function LandingPage() {
       </Container>
 
       {/* Why RecipeBook Section */}
-      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+      <Box sx={{ 
+        bgcolor: 'hsl(0, 0%, 100%)', 
+        py: { xs: 8, md: 12 },
+        background: 'linear-gradient(180deg, hsl(32, 40%, 98%) 0%, hsl(0, 0%, 100%) 100%)',
+      }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -396,6 +427,12 @@ export default function LandingPage() {
                 variant="primary"
                 size="large"
                 onClick={() => router.push('/signup')}
+                sx={{
+                  boxShadow: '0 8px 24px hsl(24 85% 55% / 0.3)',
+                  '&:hover': {
+                    boxShadow: '0 12px 32px hsl(24 85% 55% / 0.4)',
+                  }
+                }}
               >
                 Start Your Recipe Collection
               </AppButton>
