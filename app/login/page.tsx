@@ -79,7 +79,12 @@ export default function LoginPage() {
           borderColor: 'divider',
         }}
       >
-        <Toolbar sx={{ minHeight: 64 }}>
+        <Toolbar 
+          sx={{ 
+            minHeight: { xs: 56, sm: 64 }, 
+            px: '0 !important',
+          }}
+        >
           <Box
             sx={{
               display: 'flex',
@@ -87,7 +92,7 @@ export default function LoginPage() {
               width: '100%',
               maxWidth: '1536px',
               mx: 'auto',
-              px: 3,
+              px: { xs: 2, sm: 3 },
             }}
           >
             <Link href="/landing" passHref legacyBehavior>
