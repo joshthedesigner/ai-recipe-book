@@ -406,7 +406,7 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="xl" sx={{ pt: 8, pb: 4, flex: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 8 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
