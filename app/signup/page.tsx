@@ -249,6 +249,25 @@ export default function SignupPage() {
             {googleLoading ? 'Connecting to Google...' : 'Continue with Google'}
           </AppButton>
 
+          {/* Terms and Privacy Agreement */}
+          <Box sx={{ textAlign: 'center', mt: 2, mb: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }}>
+              By continuing, you agree to RecipeBook's{' '}
+              <Link href="/terms" passHref legacyBehavior>
+                <MuiLink sx={{ cursor: 'pointer', color: 'primary.main' }}>
+                  Terms of Service
+                </MuiLink>
+              </Link>
+              . Read our{' '}
+              <Link href="/privacy" passHref legacyBehavior>
+                <MuiLink sx={{ cursor: 'pointer', color: 'primary.main' }}>
+                  Privacy Policy
+                </MuiLink>
+              </Link>
+              .
+            </Typography>
+          </Box>
+
           {/* Sign In Link */}
           <Box sx={{ textAlign: 'center', mt: 2 }}>
             <Typography variant="body2" color="text.secondary">
