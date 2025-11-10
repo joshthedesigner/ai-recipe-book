@@ -373,7 +373,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Stop Searching. Start Cooking.
+                Find any recipe in seconds.
               </Typography>
               <Typography
                 variant="body1"
@@ -384,16 +384,16 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                RecipeAssist is your personal digital cookbook that goes everywhere you do. 
-                Import recipes from websites and YouTube, scan photos of cookbook pages, or create your own - all in one beautiful place.
+                Your recipes, organized and ready when you need them. Search by ingredient, 
+                cuisine, or just browse - everything is summarized to get you cooking quickly.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                 {[
-                  'Cloud-synced across all your devices',
-                  'AI-powered recipe extraction and generation',
-                  'Share with friends and family',
-                  'Completely free with unlimited recipes'
+                  'Search recipes by ingredient or cuisine',
+                  'Clean, summarized format for easy cooking',
+                  'Filter by what you have in your kitchen',
+                  'Access from any device, anywhere'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
@@ -409,7 +409,7 @@ export default function LandingPage() {
                 size="large"
                 onClick={() => router.push('/signup')}
               >
-                Start Your Recipe Collection
+                Start Cooking
               </AppButton>
             </Grid>
           </Grid>
