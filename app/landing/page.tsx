@@ -403,14 +403,6 @@ export default function LandingPage() {
                   </Box>
                 ))}
               </Box>
-
-              <AppButton
-                variant="primary"
-                size="large"
-                onClick={() => router.push('/signup')}
-              >
-                Start Cooking
-              </AppButton>
             </Grid>
           </Grid>
         </Container>
@@ -460,14 +452,6 @@ export default function LandingPage() {
                   </Box>
                 ))}
               </Box>
-
-              <AppButton
-                variant="primary"
-                size="large"
-                onClick={() => router.push('/signup')}
-              >
-                Start Sharing Recipes
-              </AppButton>
             </Grid>
 
             <Grid item xs={12} md={6}>
@@ -559,14 +543,6 @@ export default function LandingPage() {
                   </Box>
                 ))}
               </Box>
-
-              <AppButton
-                variant="primary"
-                size="large"
-                onClick={() => router.push('/signup')}
-              >
-                Try It Free
-              </AppButton>
             </Grid>
           </Grid>
         </Container>
