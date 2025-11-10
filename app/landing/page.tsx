@@ -416,6 +416,84 @@ export default function LandingPage() {
         </Container>
       </Box>
 
+      {/* Share with Friends Section */}
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src="/mitch.png"
+                  alt="Share recipes with friends and family"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  fontWeight: 700,
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                }}
+              >
+                Share with friends and family.
+              </Typography>
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: '1.125rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                  lineHeight: 1.7,
+                }}
+              >
+                Keep your recipes private or share them with the people you love. 
+                Browse each other's collections, discover family favorites, and build your culinary legacy together.
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                {[
+                  'Invite friends by email instantly',
+                  'View each other\'s recipe collections',
+                  'Your recipes stay private by default',
+                  'Share culinary traditions across generations'
+                ].map((item, idx) => (
+                  <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
+                      {item}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              <AppButton
+                variant="primary"
+                size="large"
+                onClick={() => router.push('/signup')}
+              >
+                Start Sharing Recipes
+              </AppButton>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
       {/* AI Recipe Management Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
