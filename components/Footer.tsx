@@ -51,7 +51,7 @@ export default function Footer() {
           <Typography
             variant="body2"
             component="a"
-            href="mailto:Support@RecipeHaven.app"
+            href="mailto:Support@Recipeassist.app"
             sx={{ 
               color: 'primary.main',
               cursor: 'pointer',
@@ -59,7 +59,7 @@ export default function Footer() {
               '&:hover': { textDecoration: 'underline' }
             }}
           >
-            Support@RecipeHaven.app
+            Support@Recipeassist.app
           </Typography>
           <Typography variant="body2" color="text.secondary">
             •
