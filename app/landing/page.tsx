@@ -104,6 +104,15 @@ export default function LandingPage() {
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', pt: { xs: 'calc(64px - 12px)', md: 'calc(96px - 12px)' }, pb: 0 }}>
         <Container maxWidth="lg" sx={{ pb: 0 }}>
           <Box sx={{ textAlign: 'center', pb: 0 }}>
+            {/* Hero Logo */}
+            <Box sx={{ mb: 3 }}>
+              <img 
+                src="/logo1.svg" 
+                alt="RecipeAssist" 
+                style={{ height: '144px', width: 'auto' }}
+              />
+            </Box>
+
             <Typography
               variant="h1"
               sx={{
