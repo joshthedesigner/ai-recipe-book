@@ -412,7 +412,7 @@ export default function LandingPage() {
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} sx={{ order: { xs: 2, md: 1 } }}>
               <Typography
                 variant="h2"
                 sx={{
@@ -454,7 +454,7 @@ export default function LandingPage() {
               </Box>
             </Grid>
 
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={6} sx={{ order: { xs: 1, md: 2 } }}>
               <Box
                 sx={{
                   display: 'flex',
