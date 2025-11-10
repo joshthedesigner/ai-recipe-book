@@ -131,7 +131,7 @@ export default function SignupPage() {
               >
                 <img 
                   src="/logo.svg" 
-                  alt="RecipeBook Logo" 
+                  alt="RecipeAssist Logo" 
                   style={{ width: '32px', height: 'auto' }}
                 />
                 <Typography
@@ -141,7 +141,7 @@ export default function SignupPage() {
                     fontWeight: 600,
                   }}
                 >
-                  RecipeBook
+                  RecipeAssist
                 </Typography>
               </Box>
             </Link>
@@ -163,7 +163,7 @@ export default function SignupPage() {
           {/* Title */}
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-              Welcome to RecipeBook!
+              Welcome to RecipeAssist!
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Already have an account?{' '}
@@ -288,7 +288,7 @@ export default function SignupPage() {
           {/* Terms and Privacy Agreement */}
           <Box sx={{ textAlign: 'center', mt: 2, mb: 3 }}>
             <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8125rem' }}>
-              By continuing, you agree to RecipeBook's{' '}
+              By continuing, you agree to RecipeAssist's{' '}
               <Link href="/terms" passHref legacyBehavior>
                 <MuiLink sx={{ cursor: 'pointer', color: 'primary.main' }}>
                   Terms of Service

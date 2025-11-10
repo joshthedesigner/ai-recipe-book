@@ -168,7 +168,7 @@ export async function getUserGroups(
           
           groups.push({
             id: fg.group_id,
-            name: `${fg.friend_name || fg.friend_email}'s RecipeBook`,
+            name: `${fg.friend_name || fg.friend_email}'s RecipeAssist`,
             role: 'read' as UserRole,
             isOwn: false,
             isFriend: true,

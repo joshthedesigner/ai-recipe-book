@@ -65,7 +65,7 @@ export default function Footer() {
             •
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            © {new Date().getFullYear()} RecipeBook
+            © {new Date().getFullYear()} RecipeAssist
           </Typography>
         </Box>
       </Container>

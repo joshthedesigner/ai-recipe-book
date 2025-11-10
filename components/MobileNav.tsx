@@ -242,7 +242,7 @@ export default function MobileNav() {
                 >
                   <img 
                     src="/logo.svg" 
-                    alt="RecipeBook Logo" 
+                    alt="RecipeAssist Logo" 
                     style={{ width: '32px', height: 'auto' }}
                   />
                 </Box>

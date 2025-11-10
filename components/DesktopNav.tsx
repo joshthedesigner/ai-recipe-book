@@ -215,7 +215,7 @@ export default function DesktopNav() {
           >
             <img 
               src="/logo.svg" 
-              alt="RecipeBook Logo" 
+              alt="RecipeAssist Logo" 
               style={{ width: '32px', height: 'auto' }}
             />
             <Typography
@@ -229,7 +229,7 @@ export default function DesktopNav() {
                 },
               }}
             >
-              RecipeBook
+              RecipeAssist
             </Typography>
           </Box>
 

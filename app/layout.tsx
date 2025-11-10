@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'RecipeBook',
+  title: 'RecipeAssist',
   description: 'Your family recipe collection powered by AI',
 };
 

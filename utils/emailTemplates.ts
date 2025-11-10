@@ -27,7 +27,7 @@ export function generateInviteEmail(data: InviteEmailData): { subject: string; h
     ? 'add and view recipes' 
     : 'view recipes';
 
-  const subject = `${data.inviterName} invited you to their RecipeBook collection`;
+  const subject = `${data.inviterName} invited you to their RecipeAssist collection`;
 
   const html = `
 <!DOCTYPE html>
@@ -47,7 +47,7 @@ export function generateInviteEmail(data: InviteEmailData): { subject: string; h
             <td style="padding: 40px 40px 20px 40px; text-align: center; border-bottom: 1px solid #e0e0e0;">
               <div style="font-size: 32px; margin-bottom: 8px;">🍳</div>
               <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #1a1a1a;">
-                RecipeBook
+                RecipeAssist
               </h1>
             </td>
           </tr>
@@ -95,7 +95,7 @@ export function generateInviteEmail(data: InviteEmailData): { subject: string; h
                 This invitation was sent to ${data.inviteeEmail}
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px; line-height: 18px; color: #9e9e9e;">
-                RecipeBook - Your family recipe collection
+                RecipeAssist - Your family recipe collection
               </p>
             </td>
           </tr>
@@ -119,7 +119,7 @@ export function generateInviteEmailText(data: InviteEmailData): string {
     : 'view recipes';
 
   return `
-You've been invited to RecipeBook!
+You've been invited to RecipeAssist!
 
 ${data.inviterName} has invited you to join their recipe collection: ${data.groupName}
 
@@ -133,7 +133,7 @@ If you already have an account, simply sign in and you'll automatically gain acc
 
 ---
 This invitation was sent to ${data.inviteeEmail}
-RecipeBook - Your family recipe collection
+RecipeAssist - Your family recipe collection
   `.trim();
 }
 
@@ -183,7 +183,7 @@ export function friendInviteEmail(
               </h2>
               
               <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 24px; color: #4a4a4a;">
-                <strong>${senderName}</strong> wants to share recipes with you on RecipeBook!
+                <strong>${senderName}</strong> wants to share recipes with you on RecipeAssist!
               </p>
               
               <p style="margin: 0 0 24px 0; font-size: 16px; line-height: 24px; color: #4a4a4a;">
@@ -202,7 +202,7 @@ export function friendInviteEmail(
               </table>
               
               <p style="margin: 24px 0 0 0; font-size: 14px; line-height: 20px; color: #757575;">
-                If you already have a RecipeBook account, just sign in and accept the request.
+                If you already have a RecipeAssist account, just sign in and accept the request.
               </p>
               
               <p style="margin: 16px 0 0 0; font-size: 14px; line-height: 20px; color: #757575;">
@@ -218,7 +218,7 @@ export function friendInviteEmail(
                 This friend request was sent to ${recipientEmail}
               </p>
               <p style="margin: 8px 0 0 0; font-size: 12px; line-height: 18px; color: #9e9e9e;">
-                RecipeBook - Your family recipe collection powered by AI
+                RecipeAssist - Your family recipe collection powered by AI
               </p>
             </td>
           </tr>
@@ -233,17 +233,17 @@ export function friendInviteEmail(
   const text = `
 Hey there! 👋
 
-${senderName} wants to share recipes with you on RecipeBook!
+${senderName} wants to share recipes with you on RecipeAssist!
 
 Click below to accept and start following their cookbook adventures:
 ${acceptUrl}
 
-If you already have a RecipeBook account, just sign in and accept the request.
+If you already have a RecipeAssist account, just sign in and accept the request.
 Don't have an account yet? Sign up with ${recipientEmail} to get started!
 
 ---
 This friend request was sent to ${recipientEmail}
-RecipeBook - Your family recipe collection powered by AI
+RecipeAssist - Your family recipe collection powered by AI
   `.trim();
 
   return { subject, html, text };

@@ -417,7 +417,7 @@ export default function BrowsePage() {
             <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
-                  : 'Your RecipeBook'}
+                  : 'Your RecipeAssist'}
             </Typography>
             {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
           </Box>

@@ -262,7 +262,7 @@ export default function FriendsPage() {
     console.log('  friendName === "null":', friendName === 'null');
     
     // Find the friend's group by matching the name pattern
-    const friendGroupName = `${friendName}'s RecipeBook`;
+    const friendGroupName = `${friendName}'s RecipeAssist`;
     console.log('  searching for group name:', friendGroupName);
     
     // DEBUG: Log all available groups

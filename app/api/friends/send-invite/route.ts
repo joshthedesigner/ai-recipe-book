@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email via Resend
-    const fromEmail = (process.env.RESEND_FROM_EMAIL || 'RecipeBook <onboarding@resend.dev>').trim();
+    const fromEmail = (process.env.RESEND_FROM_EMAIL || 'RecipeAssist <onboarding@resend.dev>').trim();
     const resend = new Resend(process.env.RESEND_API_KEY);
     
     const { data: sentEmail, error: emailError } = await resend.emails.send({

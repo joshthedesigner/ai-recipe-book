@@ -15,20 +15,20 @@ export default function LandingPage() {
 
   const faqs = [
     {
-      question: 'How much does RecipeBook cost?',
-      answer: 'RecipeBook is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve and share their culinary heritage.'
+      question: 'How much does RecipeAssist cost?',
+      answer: 'RecipeAssist is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve and share their culinary heritage.'
     },
     {
       question: 'How does AI help with my recipes?',
-      answer: 'RecipeBook uses AI to extract recipes from images, videos, and websites - turning photos of cookbook pages or URLs into organized digital recipes. You can also chat with our AI assistant for cooking advice, ingredient substitutions, and technique tips.'
+      answer: 'RecipeAssist uses AI to extract recipes from images, videos, and websites - turning photos of cookbook pages or URLs into organized digital recipes. You can also chat with our AI assistant for cooking advice, ingredient substitutions, and technique tips.'
     },
     {
-      question: 'What languages does RecipeBook support?',
-      answer: 'RecipeBook can automatically translate recipes to and from virtually any language. Import a recipe in Italian, German, or Japanese, and read it in English - or vice versa!'
+      question: 'What languages does RecipeAssist support?',
+      answer: 'RecipeAssist can automatically translate recipes to and from virtually any language. Import a recipe in Italian, German, or Japanese, and read it in English - or vice versa!'
     },
     {
       question: 'Are my recipes private?',
-      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeBook is your own personal space. You control exactly what you share and with whom.'
+      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeAssist is your own personal space. You control exactly what you share and with whom.'
     },
     {
       question: 'How does friend sharing work?',
@@ -75,7 +75,7 @@ export default function LandingPage() {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <img 
                 src="/logo.svg" 
-                alt="RecipeBook Logo" 
+                alt="RecipeAssist Logo" 
                 style={{ width: '32px', height: 'auto' }}
               />
               <Typography
@@ -86,7 +86,7 @@ export default function LandingPage() {
                   fontWeight: 600,
                 }}
               >
-                RecipeBook
+                RecipeAssist
               </Typography>
             </Box>
 
@@ -186,7 +186,7 @@ export default function LandingPage() {
             >
               <img
                 src="/hero-app-screenshot.png"
-                alt="RecipeBook app showing recipe collection"
+                alt="RecipeAssist app showing recipe collection"
                 style={{
                   width: '100%',
                   height: 'auto',
@@ -339,7 +339,7 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* Why RecipeBook Section */}
+      {/* Why RecipeAssist Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
@@ -385,7 +385,7 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                RecipeBook is your personal digital cookbook that goes everywhere you do. 
+                RecipeAssist is your personal digital cookbook that goes everywhere you do. 
                 Import recipes from websites and YouTube, scan photos of cookbook pages, or create your own - all in one beautiful place.
               </Typography>
               
@@ -438,7 +438,7 @@ export default function LandingPage() {
               color: 'text.secondary',
             }}
           >
-            Everything you need to know about RecipeBook
+            Everything you need to know about RecipeAssist
           </Typography>
         </Box>
 

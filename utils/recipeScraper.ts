@@ -305,7 +305,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
     // Fetch the webpage
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; RecipeBookBot/1.0)',
+        'User-Agent': 'Mozilla/5.0 (compatible; RecipeAssistBot/1.0)',
       },
       timeout: 10000, // 10 second timeout
       maxRedirects: 5, // Limit redirects to prevent abuse
