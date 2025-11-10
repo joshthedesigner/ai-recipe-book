@@ -339,7 +339,7 @@ export default function LandingPage() {
       </Box>
 
       {/* Why RecipeAssist Section */}
-      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -409,7 +409,7 @@ export default function LandingPage() {
       </Box>
 
       {/* Share with Friends Section */}
-      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
@@ -479,7 +479,7 @@ export default function LandingPage() {
       </Box>
 
       {/* AI Recipe Management Section */}
-      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
