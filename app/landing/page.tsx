@@ -28,7 +28,7 @@ export default function LandingPage() {
     },
     {
       question: 'Are my recipes private?',
-      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your RecipeAssist is your own personal space. You control exactly what you share and with whom.'
+      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your recipes are your own personal space. You control exactly what you share and with whom.'
     },
     {
       question: 'How does friend sharing work?',
@@ -417,20 +417,21 @@ export default function LandingPage() {
       </Box>
 
       {/* AI Recipe Management Section */}
-      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
-        <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
-          <Grid item xs={12} md={6} sx={{ order: { xs: 2, md: 1 } }}>
-            <Typography
-              variant="h2"
-              sx={{
-                fontSize: { xs: '2rem', md: '2.5rem' },
-                fontWeight: 700,
-                color: 'hsl(24, 20%, 15%)',
-                mb: 3,
-              }}
-            >
-              AI That Actually Helps You Cook.
-            </Typography>
+      <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
+            <Grid item xs={12} md={6} sx={{ order: { xs: 2, md: 1 } }}>
+              <Typography
+                variant="h2"
+                sx={{
+                  fontSize: { xs: '2rem', md: '2.5rem' },
+                  fontWeight: 700,
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                }}
+              >
+                Easily add recipes with AI.
+              </Typography>
             <Typography
               variant="body1"
               sx={{
@@ -490,7 +491,8 @@ export default function LandingPage() {
             </Box>
           </Grid>
         </Grid>
-      </Container>
+        </Container>
+      </Box>
 
       {/* FAQ Section */}
       <Container maxWidth="md" sx={{ py: { xs: 8, md: 12 } }}>
