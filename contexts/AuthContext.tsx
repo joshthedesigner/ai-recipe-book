@@ -233,6 +233,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
+      // Track login event
+      if (data.user) {
+        analytics.login(data.user.id, 'email');
+        identifyUser(data.user.id, {
+          email: data.user.email,
+          name: data.user.user_metadata?.name,
+        });
+      }
+
       router.push('/browse');
       return { error: null };
     } catch (error) {
@@ -254,6 +263,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         return { error };
+      }
+
+      // Track signup event
+      if (data.user) {
+        analytics.signup(data.user.id, 'email');
+        identifyUser(data.user.id, {
+          email,
+          name,
+        });
       }
 
       // If email confirmation is disabled, sign them in
