@@ -421,27 +421,6 @@ export default function LandingPage() {
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
             <Grid item xs={12} md={6}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <img
-                  src="/mitch.png"
-                  alt="Share recipes with friends and family"
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    objectFit: 'contain',
-                    display: 'block',
-                  }}
-                />
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
               <Typography
                 variant="h2"
                 sx={{
@@ -490,6 +469,27 @@ export default function LandingPage() {
                 Start Sharing Recipes
               </AppButton>
             </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src="/mitch.png"
+                  alt="Share recipes with friends and family"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </Box>
+            </Grid>
           </Grid>
         </Container>
       </Box>
@@ -498,7 +498,28 @@ export default function LandingPage() {
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 8, md: 12 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
-            <Grid item xs={12} md={6} sx={{ order: { xs: 2, md: 1 } }}>
+            <Grid item xs={12} md={6}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src="/add.png"
+                  alt="AI-powered recipe management"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
               <Typography
                 variant="h2"
                 sx={{
@@ -510,65 +531,44 @@ export default function LandingPage() {
               >
                 Easily add recipes with AI.
               </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                fontSize: '1.125rem',
-                color: 'hsl(24, 20%, 15%)',
-                mb: 3,
-                lineHeight: 1.7,
-              }}
-            >
-              Stop manually typing recipes. Our AI extracts and organizes everything for you - 
-              from handwritten recipe cards to YouTube cooking videos.
-            </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
-              {[
-                'Scan photos of cookbook pages instantly',
-                'Extract recipes from any website or video',
-                'AI organizes ingredients and steps perfectly',
-                'Smart tagging finds recipes when you need them'
-              ].map((item, idx) => (
-                <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
-                  <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
-                    {item}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-
-            <AppButton
-              variant="primary"
-              size="large"
-              onClick={() => router.push('/signup')}
-            >
-              Try It Free
-            </AppButton>
-          </Grid>
-
-          <Grid item xs={12} md={6} sx={{ order: { xs: 1, md: 2 } }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <img
-                src="/add.png"
-                alt="AI-powered recipe management"
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  objectFit: 'contain',
-                  display: 'block',
+              <Typography
+                variant="body1"
+                sx={{
+                  fontSize: '1.125rem',
+                  color: 'hsl(24, 20%, 15%)',
+                  mb: 3,
+                  lineHeight: 1.7,
                 }}
-              />
-            </Box>
+              >
+                Stop manually typing recipes. Our AI extracts and organizes everything for you - 
+                from handwritten recipe cards to YouTube cooking videos.
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
+                {[
+                  'Scan photos of cookbook pages instantly',
+                  'Extract recipes from any website or video',
+                  'AI organizes ingredients and steps perfectly',
+                  'Smart tagging finds recipes when you need them'
+                ].map((item, idx) => (
+                  <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
+                      {item}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+
+              <AppButton
+                variant="primary"
+                size="large"
+                onClick={() => router.push('/signup')}
+              >
+                Try It Free
+              </AppButton>
+            </Grid>
           </Grid>
-        </Grid>
         </Container>
       </Box>
 
