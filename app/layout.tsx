@@ -4,6 +4,11 @@ import { Providers } from './providers';
 export const metadata: Metadata = {
   title: 'RecipeAssist',
   description: 'Your family recipe collection powered by AI',
+  icons: {
+    icon: '/icon1.svg',
+    shortcut: '/icon1.svg',
+    apple: '/icon1.svg',
+  },
 };
 
 export default function RootLayout({

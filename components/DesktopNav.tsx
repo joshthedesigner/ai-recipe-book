@@ -214,23 +214,10 @@ export default function DesktopNav() {
             }}
           >
             <img 
-              src="/logo.svg" 
-              alt="RecipeAssist Logo" 
-              style={{ width: '32px', height: 'auto' }}
+              src="/logo1.svg" 
+              alt="RecipeAssist" 
+              style={{ height: '32px', width: 'auto' }}
             />
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                color: 'text.primary',
-                fontWeight: 600,
-                '&:hover': {
-                  opacity: 0.8,
-                },
-              }}
-            >
-              RecipeAssist
-            </Typography>
           </Box>
 
           {/* Navigation Items - Left (Home/Friends) */}

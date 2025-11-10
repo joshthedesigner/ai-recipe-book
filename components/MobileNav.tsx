@@ -241,9 +241,9 @@ export default function MobileNav() {
                   }}
                 >
                   <img 
-                    src="/logo.svg" 
-                    alt="RecipeAssist Logo" 
-                    style={{ width: '32px', height: 'auto' }}
+                    src="/logo1.svg" 
+                    alt="RecipeAssist" 
+                    style={{ height: '32px', width: 'auto' }}
                   />
                 </Box>
 
