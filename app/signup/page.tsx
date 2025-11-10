@@ -130,19 +130,10 @@ export default function SignupPage() {
                 }}
               >
                 <img 
-                  src="/logo.svg" 
-                  alt="RecipeAssist Logo" 
-                  style={{ width: '32px', height: 'auto' }}
+                  src="/logo1.svg" 
+                  alt="RecipeAssist" 
+                  style={{ height: '40px', width: 'auto' }}
                 />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                  }}
-                >
-                  RecipeAssist
-                </Typography>
               </Box>
             </Link>
           </Box>

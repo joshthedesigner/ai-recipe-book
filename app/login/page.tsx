@@ -110,40 +110,31 @@ export default function LoginPage() {
                 }}
               >
                 <img 
-                  src="/logo.svg" 
-                  alt="RecipeAssist Logo" 
-                  style={{ width: '32px', height: 'auto' }}
+                  src="/logo1.svg" 
+                  alt="RecipeAssist" 
+                  style={{ height: '40px', width: 'auto' }}
                 />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    color: 'text.primary',
-                    fontWeight: 600,
-                  }}
-                >
-                  RecipeAssist
-                </Typography>
               </Box>
             </Link>
           </Box>
         </Toolbar>
       </AppBar>
 
-      <Box
-        sx={{
+    <Box
+      sx={{
           minHeight: 'calc(100vh - 64px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Container maxWidth="sm">
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Container maxWidth="sm">
           {/* Title */}
-          <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
               Welcome Back!
-            </Typography>
+          </Typography>
             <Typography variant="body2" color="text.secondary">
               Don't have an account?{' '}
               <Link href="/signup" passHref legacyBehavior>
@@ -151,8 +142,8 @@ export default function LoginPage() {
                   Sign up
                 </MuiLink>
               </Link>
-            </Typography>
-          </Box>
+          </Typography>
+        </Box>
 
         {/* Error Alert */}
         {error && (
@@ -247,8 +238,8 @@ export default function LoginPage() {
             .
           </Typography>
         </Box>
-        </Container>
-      </Box>
+      </Container>
+    </Box>
     </>
   );
 }
