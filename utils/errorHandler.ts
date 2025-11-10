@@ -6,6 +6,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { trackServerError } from './errorTracking';
 
 interface SafeError {
   message: string;
@@ -16,7 +17,10 @@ interface SafeError {
 /**
  * Convert internal errors to safe user-facing messages
  */
-export function handleError(error: unknown): SafeError {
+export function handleError(error: unknown, context?: Record<string, any>): SafeError {
+  // Track error for monitoring
+  trackServerError(error, context);
+  
   // Log full error server-side
   console.error('API Error:', error);
 

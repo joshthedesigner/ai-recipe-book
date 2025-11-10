@@ -161,5 +161,20 @@ export const analytics = {
   // Group events
   groupSwitched: (groupId: string, groupName: string) => 
     trackEvent('group_switched', { group_id: groupId, group_name: groupName }),
+  
+  // Error tracking
+  error: (error: Error, context?: Record<string, any>) => {
+    if (typeof window === 'undefined') return;
+    
+    posthog.capture('$exception', {
+      $exception_message: error.message,
+      $exception_type: error.name,
+      $exception_stack: error.stack,
+      ...context,
+    });
+    
+    // Also log to console
+    console.error('Tracked error:', error, context);
+  },
 };
 

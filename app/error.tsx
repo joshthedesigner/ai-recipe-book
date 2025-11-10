@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { analytics } from '@/lib/analytics';
 
 interface ErrorProps {
   error: Error & { digest?: string };
@@ -14,7 +15,14 @@ interface ErrorProps {
  */
 export default function Error({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log the error to an error reporting service
+    // Track error in PostHog
+    analytics.error(error, {
+      page: window.location.pathname,
+      digest: error.digest,
+      errorBoundary: 'page',
+    });
+    
+    // Log the error to console
     console.error('Application error:', error);
   }, [error]);
 

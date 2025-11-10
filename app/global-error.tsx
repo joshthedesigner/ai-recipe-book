@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+import { analytics } from '@/lib/analytics';
+
 /**
  * Global error boundary - catches errors in root layout
  * This is different from error.tsx which only catches errors in children
@@ -11,6 +14,17 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Track critical error in PostHog
+    analytics.error(error, {
+      page: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+      digest: error.digest,
+      errorBoundary: 'global',
+      severity: 'critical',
+    });
+    
+    console.error('Global error:', error);
+  }, [error]);
   return (
     <html lang="en">
       <body>
