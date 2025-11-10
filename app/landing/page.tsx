@@ -123,7 +123,7 @@ export default function LandingPage() {
                 lineHeight: 1.2,
               }}
             >
-              A recipe assistant for everyone.
+              Manage all your recipes in a single place!
             </Typography>
             <Typography
               variant="body1"
