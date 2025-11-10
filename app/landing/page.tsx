@@ -109,7 +109,7 @@ export default function LandingPage() {
               <img 
                 src="/logo1.svg" 
                 alt="RecipeAssist" 
-                style={{ height: '144px', width: 'auto' }}
+                style={{ height: '72px', width: 'auto' }}
               />
             </Box>
 
