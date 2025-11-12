@@ -73,10 +73,14 @@ export default function LandingPage() {
           >
             {/* Logo */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <img 
-                src="/logo1.svg" 
-                alt="RecipeAssist" 
-                style={{ height: '40px', width: 'auto' }}
+              <Box
+                component="img"
+                src="/logo1.svg"
+                alt="RecipeAssist"
+                sx={{
+                  height: { xs: '25px', sm: '40px' },
+                  width: 'auto',
+                }}
               />
             </Box>
 
@@ -106,95 +110,99 @@ export default function LandingPage() {
           <Box sx={{ textAlign: 'center', pb: 0 }}>
             {/* Hero Logo */}
             <Box sx={{ mb: 3 }}>
-              <img 
-                src="/logo1.svg" 
-                alt="RecipeAssist" 
-                style={{ height: '72px', width: 'auto' }}
+              <Box
+                component="img"
+                src="/logo1.svg"
+                alt="RecipeAssist"
+                sx={{
+                  height: { xs: '45px', sm: '72px' },
+                  width: 'auto',
+                }}
               />
             </Box>
 
-            <Typography
-              variant="h1"
-              sx={{
-                fontSize: { xs: '2.5rem', md: '3.5rem' },
-                fontWeight: 700,
-                color: 'hsl(24, 85%, 55%)',
-                mb: 2,
-                lineHeight: 1.2,
-              }}
-            >
+                <Typography
+                  variant="h1"
+                  sx={{
+                    fontSize: { xs: '2.5rem', md: '3.5rem' },
+                    fontWeight: 700,
+                    color: 'hsl(24, 85%, 55%)',
+                    mb: 2,
+                    lineHeight: 1.2,
+                  }}
+                >
               Manage all your recipes in a single place!
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{
-                fontSize: { xs: '1.125rem', md: '1.25rem' },
-                color: 'hsl(24, 20%, 15%)',
-                mb: 4,
-                lineHeight: 1.6,
+                </Typography>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontSize: { xs: '1.125rem', md: '1.25rem' },
+                    color: 'hsl(24, 20%, 15%)',
+                    mb: 4,
+                    lineHeight: 1.6,
                 maxWidth: '800px',
                 mx: 'auto',
-              }}
-            >
-              Save recipes from anywhere, organize with AI, and share with the people you love.
-            </Typography>
+                  }}
+                >
+                  Save recipes from anywhere, organize with AI, and share with the people you love.
+                </Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 'calc(16px + 12px)', justifyContent: 'center' }}>
-              <AppButton
-                variant="primary"
-                size="large"
-                onClick={() => router.push('/signup')}
-              >
-                Get Started Free
-              </AppButton>
-              <AppButton
-                variant="secondary"
-                size="large"
-                onClick={() => router.push('/login')}
-              >
-                Sign In
-              </AppButton>
-            </Box>
-            <Typography
-              variant="body2"
-              sx={{
-                fontSize: '16px',
-                color: 'hsl(24, 85%, 55%)',
-                fontWeight: 600,
+                  <AppButton
+                    variant="primary"
+                    size="large"
+                    onClick={() => router.push('/signup')}
+                  >
+                    Get Started Free
+                  </AppButton>
+                  <AppButton
+                    variant="secondary"
+                    size="large"
+                    onClick={() => router.push('/login')}
+                  >
+                    Sign In
+                  </AppButton>
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: '16px',
+                    color: 'hsl(24, 85%, 55%)',
+                    fontWeight: 600,
                 mb: 'calc(32px + 48px)',
-              }}
-            >
-              ✨ 100% Free. Unlimited recipes. No credit card required.
-            </Typography>
-            
+                  }}
+                >
+                  ✨ 100% Free. Unlimited recipes. No credit card required.
+                </Typography>
+
             {/* Hero Image - Cropped and overlapping into tan section */}
-            <Box
-              sx={{
+              <Box
+                sx={{
                 maxWidth: '600px',
                 mx: 'auto',
                 borderRadius: '1rem 1rem 0 0',
-                overflow: 'hidden',
+                  overflow: 'hidden',
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08)',
-                border: '1px solid',
-                borderColor: 'divider',
+                  border: '1px solid',
+                  borderColor: 'divider',
                 borderBottom: 'none',
                 position: 'relative',
                 zIndex: 1,
                 mb: 0,
                 maxHeight: '400px',
-              }}
-            >
-              <img
-                src="/hero-app-screenshot.png"
+                }}
+              >
+                <img
+                  src="/hero-app-screenshot.png"
                 alt="RecipeAssist app showing recipe collection"
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
                   objectFit: 'cover',
                   objectPosition: 'top',
-                }}
-              />
-            </Box>
+                  }}
+                />
+              </Box>
           </Box>
         </Container>
       </Box>
@@ -207,8 +215,8 @@ export default function LandingPage() {
         boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.08)',
         mt: '-1px',
       }}>
-        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
-          <Grid container spacing={4}>
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+        <Grid container spacing={4}>
           {/* Value Prop 1 */}
           <Grid item xs={12} md={4}>
             <Box sx={{ textAlign: 'center' }}>
@@ -335,7 +343,7 @@ export default function LandingPage() {
             </Box>
           </Grid>
         </Grid>
-        </Container>
+      </Container>
       </Box>
 
       {/* Why RecipeAssist Section */}
