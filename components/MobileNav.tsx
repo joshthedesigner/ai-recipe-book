@@ -223,33 +223,10 @@ export default function MobileNav() {
                 </Box>
               </>
             ) : (
-              /* COLLAPSED: Logo + Nav Items */
+              /* COLLAPSED: Nav Items */
               <>
-                {/* Logo */}
-                <Box
-                  onClick={() => {
-                    const ownGroup = groups.find(g => g.isOwn);
-                    if (ownGroup) {
-                      switchGroup(ownGroup.id);
-                      router.push('/browse');
-                    }
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    textDecoration: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <img 
-                    src="/icon1.svg" 
-                    alt="RecipeAssist" 
-                    style={{ height: '20px', width: 'auto' }}
-                  />
-                </Box>
-
                 {/* Navigation Items - Left (Home/Friends) */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {/* Home */}
                   <ButtonBase
                     onClick={handleHomeClick}
