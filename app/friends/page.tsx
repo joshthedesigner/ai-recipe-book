@@ -419,6 +419,48 @@ export default function FriendsPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
+                    {/* Pending Incoming Requests - Show First */}
+                    {pendingIncoming.map((request) => (
+                      <TableRow key={request.id} sx={{ bgcolor: '#fff3e0' }}>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                            <Box>{request.senderName}</Box>
+                            <Chip 
+                              label="Pending" 
+                              size="small" 
+                              color="warning"
+                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+                            />
+                          </Box>
+                          <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
+                            {request.senderEmail}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.senderEmail}</TableCell>
+                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                          <Chip label="Pending" size="small" color="warning" />
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAccept(request.id)}
+                            aria-label="accept"
+                            sx={{ color: 'success.main', mr: 1 }}
+                          >
+                            <CheckIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleReject(request.id)}
+                            aria-label="reject"
+                            sx={{ color: 'error.main' }}
+                          >
+                            <CloseIcon fontSize="small" />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
                     {/* Active Friends */}
                     {friends.map((friend) => (
                       <TableRow key={friend.friend_id}>
@@ -461,48 +503,6 @@ export default function FriendsPage() {
                             sx={{ color: 'error.main' }}
                           >
                             <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-
-                    {/* Pending Incoming Requests */}
-                    {pendingIncoming.map((request) => (
-                      <TableRow key={request.id} sx={{ bgcolor: '#fff3e0' }}>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                            <Box>{request.senderName}</Box>
-                            <Chip 
-                              label="Pending" 
-                              size="small" 
-                              color="warning"
-                              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
-                            />
-                          </Box>
-                          <Box sx={{ display: { xs: 'block', sm: 'none' }, fontSize: '0.875rem', color: 'text.secondary', mt: 0.5 }}>
-                            {request.senderEmail}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{request.senderEmail}</TableCell>
-                        <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                          <Chip label="Pending" size="small" color="warning" />
-                        </TableCell>
-                        <TableCell align="right">
-                          <IconButton
-                            size="small"
-                            onClick={() => handleAccept(request.id)}
-                            aria-label="accept"
-                            sx={{ color: 'success.main', mr: 1 }}
-                          >
-                            <CheckIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            size="small"
-                            onClick={() => handleReject(request.id)}
-                            aria-label="reject"
-                            sx={{ color: 'error.main' }}
-                          >
-                            <CloseIcon fontSize="small" />
                           </IconButton>
                         </TableCell>
                       </TableRow>
