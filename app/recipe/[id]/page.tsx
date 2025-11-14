@@ -24,11 +24,13 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CheckIcon from '@mui/icons-material/Check';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
 import { supabase } from '@/db/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
 import { extractYouTubeId } from '@/utils/youtubeHelpers';
 
 export default function RecipeDetailPage() {
@@ -36,13 +38,19 @@ export default function RecipeDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
+  
+  // Check if recipe belongs to current user
+  const isOwnRecipe = recipe?.user_id === user?.id;
 
   // Check if user came from feed
   const fromFeed = searchParams.get('from') === 'feed';
@@ -110,6 +118,34 @@ export default function RecipeDetailPage() {
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
+  };
+
+  // Handle adding recipe to own cookbook
+  const handleAddRecipe = async () => {
+    if (!recipe?.id || isAdded) return;
+    
+    setIsAdding(true);
+    try {
+      const response = await fetch('/api/recipes/copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeId: recipe.id }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Mark recipe as added (button change is enough confirmation)
+        setIsAdded(true);
+      } else {
+        showToast(data.error || 'Failed to add recipe', 'error');
+      }
+    } catch (err) {
+      console.error('Error adding recipe:', err);
+      showToast('Failed to add recipe', 'error');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   useEffect(() => {
@@ -189,17 +225,60 @@ export default function RecipeDetailPage() {
 
         {/* Title and Tags */}
         <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
             <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
               {recipe.title}
             </Typography>
             
-            <IconButton
-              onClick={handleMenuClick}
-              size="small"
-            >
-              <MoreVertIcon />
-            </IconButton>
+            {/* Show Add button for recipes that don't belong to user */}
+            {!isOwnRecipe && (
+              <Button
+                variant={isAdded ? "contained" : "outlined"}
+                size="small"
+                startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
+                onClick={handleAddRecipe}
+                disabled={isAdding || isAdded}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  minWidth: 90,
+                  opacity: 1,
+                  ...(isAdded ? {
+                    bgcolor: 'success.main',
+                    color: 'white',
+                    '&.Mui-disabled': {
+                      bgcolor: 'success.main',
+                      color: 'white',
+                      opacity: 1,
+                    },
+                  } : {
+                    color: 'text.secondary',
+                    borderColor: 'text.secondary',
+                    '&:hover': {
+                      borderColor: 'text.secondary',
+                      bgcolor: 'action.hover',
+                    },
+                    '&.Mui-disabled': {
+                      opacity: 1,
+                      color: 'text.secondary',
+                      borderColor: 'text.secondary',
+                    },
+                  }),
+                }}
+              >
+                {isAdded ? 'Added' : 'Add'}
+              </Button>
+            )}
+            
+            {/* Show delete menu only for own recipes */}
+            {isOwnRecipe && (
+              <IconButton
+                onClick={handleMenuClick}
+                size="small"
+              >
+                <MoreVertIcon />
+              </IconButton>
+            )}
           </Box>
           
           {/* Tags */}
