@@ -204,99 +204,129 @@ export default function RecipeDetailPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
-        {/* Back Button */}
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={handleBack}
-          sx={{ 
-            mb: 3,
-            textTransform: 'none',
-            color: 'black',
-            '&:hover': {
-              bgcolor: 'transparent',
-              color: 'black',
-              opacity: 0.7,
-            },
-          }}
-        >
-          Back
-        </Button>
+      {/* White Bar - Header Section */}
+      <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
+        <Container maxWidth="xl">
+          {/* Back Button */}
+          <Box sx={{ pt: 3, pb: 2 }}>
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={handleBack}
+              sx={{ 
+                textTransform: 'none',
+                color: 'black',
+                '&:hover': {
+                  bgcolor: 'transparent',
+                  color: 'black',
+                  opacity: 0.7,
+                },
+              }}
+            >
+              Back
+            </Button>
+          </Box>
 
-        {/* Title and Tags */}
-        <Box sx={{ mb: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-            <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
-              {recipe.title}
-            </Typography>
-            
-            {/* Show Add button for recipes that don't belong to user */}
-            {!isOwnRecipe && (
-              <Button
-                variant={isAdded ? "contained" : "outlined"}
-                size="small"
-                startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
-                onClick={handleAddRecipe}
-                disabled={isAdding || isAdded}
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  minWidth: 90,
-                  opacity: 1,
-                  ...(isAdded ? {
-                    bgcolor: 'success.main',
-                    color: 'white',
-                    '&.Mui-disabled': {
+          {/* Title and Tags */}
+          <Box sx={{ pb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+              <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
+                {recipe.title}
+              </Typography>
+              
+              {/* Show Add button for recipes that don't belong to user */}
+              {!isOwnRecipe && (
+                <Button
+                  variant={isAdded ? "contained" : "outlined"}
+                  size="small"
+                  startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
+                  onClick={handleAddRecipe}
+                  disabled={isAdding || isAdded}
+                  sx={{
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    minWidth: 90,
+                    opacity: 1,
+                    ...(isAdded ? {
                       bgcolor: 'success.main',
                       color: 'white',
-                      opacity: 1,
-                    },
-                  } : {
-                    color: 'text.secondary',
-                    borderColor: 'text.secondary',
-                    '&:hover': {
-                      borderColor: 'text.secondary',
-                      bgcolor: 'action.hover',
-                    },
-                    '&.Mui-disabled': {
-                      opacity: 1,
+                      '&.Mui-disabled': {
+                        bgcolor: 'success.main',
+                        color: 'white',
+                        opacity: 1,
+                      },
+                    } : {
                       color: 'text.secondary',
                       borderColor: 'text.secondary',
-                    },
-                  }),
-                }}
-              >
-                {isAdded ? 'Added' : 'Add'}
-              </Button>
-            )}
+                      '&:hover': {
+                        borderColor: 'text.secondary',
+                        bgcolor: 'action.hover',
+                      },
+                      '&.Mui-disabled': {
+                        opacity: 1,
+                        color: 'text.secondary',
+                        borderColor: 'text.secondary',
+                      },
+                    }),
+                  }}
+                >
+                  {isAdded ? 'Added' : 'Add'}
+                </Button>
+              )}
+              
+              {/* Show delete menu only for own recipes */}
+              {isOwnRecipe && (
+                <IconButton
+                  onClick={handleMenuClick}
+                  size="small"
+                >
+                  <MoreVertIcon />
+                </IconButton>
+              )}
+            </Box>
             
-            {/* Show delete menu only for own recipes */}
-            {isOwnRecipe && (
-              <IconButton
-                onClick={handleMenuClick}
-                size="small"
-              >
-                <MoreVertIcon />
-              </IconButton>
+            {/* Tags */}
+            {recipe.tags && recipe.tags.length > 0 && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
+                {recipe.tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    size="medium"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
+              </Box>
+            )}
+
+            {/* Source Link */}
+            {recipe.source_url && (
+              <Box>
+                <Button
+                  href={recipe.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  endIcon={<OpenInNewIcon />}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontSize: '1.5rem',
+                    fontWeight: 400,
+                    p: 0,
+                    '&:hover': {
+                      bgcolor: 'transparent',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  {getSourceName(recipe.source_url)}
+                </Button>
+              </Box>
             )}
           </Box>
-          
-          {/* Tags */}
-          {recipe.tags && recipe.tags.length > 0 && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {recipe.tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  size="medium"
-                  color="primary"
-                  variant="outlined"
-                />
-              ))}
-            </Box>
-          )}
-        </Box>
+        </Container>
+      </Box>
 
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {/* Video Embed - Priority over image */}
         {recipe.video_url && recipe.video_platform === 'youtube' && (
           <Box
@@ -346,31 +376,7 @@ export default function RecipeDetailPage() {
           </Box>
         )}
 
-        {/* Source Link */}
-        {recipe.source_url && (
-          <Box sx={{ mb: 4 }}>
-            <Button
-              href={recipe.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              endIcon={<OpenInNewIcon />}
-              sx={{ 
-                textTransform: 'none',
-                fontSize: '1.5rem',
-                fontWeight: 400,
-                p: 0,
-                '&:hover': {
-                  bgcolor: 'transparent',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              {getSourceName(recipe.source_url)}
-            </Button>
-          </Box>
-        )}
-
-        <Divider sx={{ mb: 4 }} />
+        <Divider sx={{ mb: 4, mt: 3 }} />
 
         {/* Ingredients and Instructions - Two Column Layout */}
         <Grid container spacing={4}>
