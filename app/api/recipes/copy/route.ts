@@ -60,8 +60,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has permission to add recipes
-    const hasPermission = await canUserAddRecipes(supabase, user.id);
+    // Get user's default group first
+    const userGroupId = await getUserDefaultGroup(supabase, user.id);
+    if (!userGroupId) {
+      return NextResponse.json(
+        { success: false, error: 'Could not find your cookbook' },
+        { status: 400 }
+      );
+    }
+
+    // Check if user has permission to add recipes to their own group
+    const hasPermission = await canUserAddRecipes(supabase, user.id, userGroupId);
     if (!hasPermission) {
       return NextResponse.json(
         { 
@@ -69,15 +78,6 @@ export async function POST(request: NextRequest) {
           error: 'You do not have permission to add recipes' 
         },
         { status: 403 }
-      );
-    }
-
-    // Get user's default group
-    const userGroupId = await getUserDefaultGroup(supabase, user.id);
-    if (!userGroupId) {
-      return NextResponse.json(
-        { success: false, error: 'Could not find your cookbook' },
-        { status: 400 }
       );
     }
 
