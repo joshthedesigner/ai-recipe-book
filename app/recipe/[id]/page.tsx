@@ -338,7 +338,7 @@ export default function RecipeDetailPage() {
               aspectRatio: '16/9',
               borderRadius: 2,
               overflow: 'hidden',
-              mb: 3,
+              mb: 5,
               bgcolor: 'black',
             }}
           >
@@ -363,7 +363,7 @@ export default function RecipeDetailPage() {
               height: 425,
               borderRadius: 2,
               overflow: 'hidden',
-              mb: 3,
+              mb: 5,
               position: 'relative',
             }}
           >
