@@ -392,6 +392,9 @@ export default function FeedPage() {
                         opacity: 1, // Fully opaque
                         color: 'text.secondary', // Dark grey text
                         borderColor: 'text.secondary', // Dark grey border
+                        '& .MuiButton-startIcon': {
+                          marginRight: '4px', // Reduce gap by 4px (default is 8px, so 8-4=4)
+                        },
                         '&:hover': {
                           borderColor: 'text.secondary',
                           bgcolor: 'action.hover',

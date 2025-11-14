@@ -261,6 +261,9 @@ export default function RecipeDetailPage() {
                       fontSize: '1rem',
                       fontWeight: 400,
                       opacity: 1,
+                      '& .MuiButton-startIcon': {
+                        marginRight: '4px', // Reduce gap by 4px (default is 8px, so 8-4=4)
+                      },
                       ...(isAdded && {
                         bgcolor: 'success.main',
                         color: 'white',

@@ -158,6 +158,9 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               fontWeight: 600,
               minWidth: 90,
               opacity: 1, // Fully opaque
+              '& .MuiButton-startIcon': {
+                marginRight: '4px', // Reduce gap by 4px (default is 8px, so 8-4=4)
+              },
               '&:hover': {
                 bgcolor: isAdded ? 'success.dark' : 'grey.100',
                 boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)', // Slightly stronger on hover
