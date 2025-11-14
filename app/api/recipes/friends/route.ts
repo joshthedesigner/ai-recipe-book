@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       `)
       .in('group_id', friendGroupIds)
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(6);
 
     console.log('[Friends Feed API] Query result - recipes:', recipes?.length, 'error:', recipesError);
 
