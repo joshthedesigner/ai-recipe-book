@@ -470,10 +470,11 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* White Bar - Header Only */}
+      {/* White Bar - Header, Search, and Filters */}
       <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
         <Container maxWidth="xl">
-          <Box sx={{ py: 3 }}>
+          {/* Header */}
+          <Box sx={{ pt: 3, pb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
               <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                   {activeGroup?.isFriend 
@@ -483,84 +484,85 @@ export default function BrowsePage() {
               {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
             </Box>
           </Box>
+
+          {/* Search and Filters */}
+          <Box sx={{ pb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Search Bar */}
+            <TextField
+              placeholder="Search recipes, ingredients, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchQuery('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              sx={{ width: { xs: '100%', sm: 400 } }}
+            />
+
+            {/* Filter Buttons */}
+            {/* Cuisine Filter Button */}
+            <Chip
+              label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
+              onClick={handleCuisineOpen}
+              onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
+              deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
+              icon={<ExpandMoreIcon />}
+              sx={{
+                height: 40,
+                px: 2,
+                fontWeight: 600,
+                bgcolor: filterCuisine ? 'primary.main' : 'background.paper',
+                color: filterCuisine ? 'white' : 'text.primary',
+                border: '1px solid',
+                borderColor: filterCuisine ? 'primary.main' : 'divider',
+                '&:hover': {
+                  bgcolor: filterCuisine ? 'primary.dark' : 'action.hover',
+                },
+                '& .MuiChip-icon': {
+                  color: filterCuisine ? 'white' : 'text.secondary',
+                },
+              }}
+            />
+
+            {/* Ingredient Filter Button */}
+            <Chip
+              label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
+              onClick={handleIngredientOpen}
+              onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
+              deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
+              icon={<ExpandMoreIcon />}
+              sx={{
+                height: 40,
+                px: 2,
+                fontWeight: 600,
+                bgcolor: filterMainIngredient ? 'primary.main' : 'background.paper',
+                color: filterMainIngredient ? 'white' : 'text.primary',
+                border: '1px solid',
+                borderColor: filterMainIngredient ? 'primary.main' : 'divider',
+                '&:hover': {
+                  bgcolor: filterMainIngredient ? 'primary.dark' : 'action.hover',
+                },
+                '& .MuiChip-icon': {
+                  color: filterMainIngredient ? 'white' : 'text.secondary',
+                },
+              }}
+            />
+          </Box>
         </Container>
       </Box>
 
-      <Container maxWidth="xl" sx={{ pt: 4, pb: 4, flex: 1 }}>
-        {/* Search and Filters */}
-        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Search Bar */}
-          <TextField
-            placeholder="Search recipes, ingredients, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-              endAdornment: searchQuery && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchQuery('')}>
-                    <ClearIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            size="small"
-            sx={{ width: { xs: '100%', sm: 400 } }}
-          />
-
-          {/* Filter Buttons */}
-          {/* Cuisine Filter Button */}
-          <Chip
-            label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
-            onClick={handleCuisineOpen}
-            onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
-            deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
-            icon={<ExpandMoreIcon />}
-            sx={{
-              height: 40,
-              px: 2,
-              fontWeight: 600,
-              bgcolor: filterCuisine ? 'primary.main' : 'background.paper',
-              color: filterCuisine ? 'white' : 'text.primary',
-              border: '1px solid',
-              borderColor: filterCuisine ? 'primary.main' : 'divider',
-              '&:hover': {
-                bgcolor: filterCuisine ? 'primary.dark' : 'action.hover',
-              },
-              '& .MuiChip-icon': {
-                color: filterCuisine ? 'white' : 'text.secondary',
-              },
-            }}
-          />
-
-          {/* Ingredient Filter Button */}
-          <Chip
-            label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
-            onClick={handleIngredientOpen}
-            onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
-            deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
-            icon={<ExpandMoreIcon />}
-            sx={{
-              height: 40,
-              px: 2,
-              fontWeight: 600,
-              bgcolor: filterMainIngredient ? 'primary.main' : 'background.paper',
-              color: filterMainIngredient ? 'white' : 'text.primary',
-              border: '1px solid',
-              borderColor: filterMainIngredient ? 'primary.main' : 'divider',
-              '&:hover': {
-                bgcolor: filterMainIngredient ? 'primary.dark' : 'action.hover',
-              },
-              '& .MuiChip-icon': {
-                color: filterMainIngredient ? 'white' : 'text.secondary',
-              },
-            }}
-          />
-        </Box>
+      <Container maxWidth="xl" sx={{ pt: 8, pb: 4, flex: 1 }}>
         {/* Loading State */}
         {loading && (
           <Grid container spacing={3}>
