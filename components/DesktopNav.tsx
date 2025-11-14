@@ -292,18 +292,6 @@ export default function DesktopNav() {
               </Box>
             )}
 
-            {/* Divider */}
-            {user && (
-              <Divider 
-                orientation="vertical" 
-                flexItem 
-                sx={{ 
-                  my: 1,
-                  bgcolor: 'divider',
-                }} 
-              />
-            )}
-
             {/* User Menu */}
             {user && <UserAvatarMenu />}
           </Box>
