@@ -36,6 +36,8 @@ export interface Recipe {
   contributor_name: string;
   created_at?: string;
   updated_at?: string;
+  friend_name?: string; // Added by feed API for display
+  group_name?: string; // Added by feed API for display
 }
 
 // ========================================

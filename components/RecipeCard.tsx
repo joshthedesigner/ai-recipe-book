@@ -30,7 +30,7 @@ import { Recipe } from '@/types';
 import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
 
 interface RecipeCardProps {
-  recipe: Recipe & { friend_name?: string };
+  recipe: Recipe;
   compact?: boolean;
   onClick?: () => void;
   onDelete?: (recipeId: string) => void;
