@@ -17,6 +17,7 @@
 import posthog from 'posthog-js';
 
 // Initialize PostHog (only on client-side)
+// Optimized for performance: lazy loads after initial page render
 export function initPostHog() {
   if (typeof window === 'undefined') return;
 
@@ -31,6 +32,26 @@ export function initPostHog() {
     return;
   }
 
+  // Defer PostHog initialization until after initial render
+  // Uses requestIdleCallback for better performance, falls back to setTimeout
+  const deferInit = () => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(() => {
+        initializePostHog(apiKey, apiHost);
+      }, { timeout: 2000 });
+    } else {
+      setTimeout(() => {
+        initializePostHog(apiKey, apiHost);
+      }, 1000);
+    }
+  };
+
+  deferInit();
+}
+
+function initializePostHog(apiKey: string, apiHost: string) {
+  if (posthog.__loaded) return;
+
   posthog.init(apiKey, {
     api_host: apiHost,
     
@@ -39,16 +60,21 @@ export function initPostHog() {
     capture_pageview: true, // Captures page views
     capture_pageleave: true, // Captures time on page
     
-    // Session recording (optional - enable in PostHog dashboard)
-    session_recording: {
-      recordCrossOriginIframes: false,
-    },
+    // Session recording - disabled by default for performance
+    // Set to false to prevent loading unused recording scripts
+    // Can be enabled in PostHog dashboard if needed (will override)
+    session_recording: false,
     
     // Privacy
     respect_dnt: true, // Respect Do Not Track
     opt_out_capturing_by_default: false,
     
-    // Performance
+    // Performance optimizations
+    advanced_disable_decide: false, // Keep decide for feature flags if needed
+    disable_persistence: false, // Keep persistence for user identification
+    capture_performance: false, // Disable performance capture (reduces overhead)
+    
+    // Callback after initialization
     loaded: (posthog) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('✅ PostHog analytics initialized');

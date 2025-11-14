@@ -209,25 +209,52 @@ export default function BrowsePage() {
   }, [filteredRecipes]);
 
   // Infinite scroll: Load more recipes when user scrolls near bottom
+  // Optimized for performance: uses passive listeners and handles bfcache
   useEffect(() => {
+    let ticking = false;
+    
     const handleScroll = () => {
-      // Don't load if already loading, no more recipes, or initial load
-      if (loadingMore || !hasMore || loading) return;
+      if (ticking) return;
+      
+      // Use requestAnimationFrame for better performance
+      requestAnimationFrame(() => {
+        ticking = false;
+        
+        // Don't load if already loading, no more recipes, or initial load
+        if (loadingMore || !hasMore || loading) return;
 
-      // Calculate distance from bottom
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
+        // Calculate distance from bottom
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const windowHeight = window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
 
-      // Load more if within threshold
-      if (distanceFromBottom < SCROLL_THRESHOLD) {
-        loadMoreRecipes();
-      }
+        // Load more if within threshold
+        if (distanceFromBottom < SCROLL_THRESHOLD) {
+          loadMoreRecipes();
+        }
+      });
+      
+      ticking = true;
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Use passive listener for better performance and bfcache compatibility
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Handle page visibility for bfcache restoration
+    const handleVisibilityChange = () => {
+      if (!document.hidden && hasMore && !loading && !loadingMore) {
+        // Check if we need to load more when page becomes visible
+        handleScroll();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [loadingMore, hasMore, loading, currentPage, filteredRecipes]);
 
   const loadMoreRecipes = () => {
