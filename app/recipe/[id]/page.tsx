@@ -291,17 +291,14 @@ export default function RecipeDetailPage() {
                   href={recipe.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  variant="outlined"
+                  color="secondary"
                   endIcon={<OpenInNewIcon />}
                   sx={{ 
                     textTransform: 'none',
-                    fontSize: '1.5rem',
-                    fontWeight: 400,
-                    p: 0,
+                    fontSize: '1rem',
+                    fontWeight: 600,
                     ml: 'auto',
-                    '&:hover': {
-                      bgcolor: 'transparent',
-                      textDecoration: 'underline',
-                    },
                   }}
                 >
                   {getSourceName(recipe.source_url)}
