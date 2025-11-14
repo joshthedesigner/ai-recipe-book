@@ -19,7 +19,6 @@ import {
   IconButton,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
-import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
@@ -355,10 +354,11 @@ export default function FeedPage() {
                         minWidth: 90,
                         bgcolor: 'success.main',
                         color: 'white',
+                        opacity: 1, // Fully opaque
                         '&.Mui-disabled': {
                           bgcolor: 'success.main',
                           color: 'white',
-                          opacity: 0.9,
+                          opacity: 1, // Fully opaque even when disabled
                         },
                       }}
                     >
@@ -368,13 +368,17 @@ export default function FeedPage() {
                     <Button
                       variant="outlined"
                       size="small"
-                      startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : <AddIcon />}
+                      startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : null}
                       onClick={(e) => handleAddRecipe(recipe.id!, e)}
                       disabled={addingRecipe === recipe.id}
-                      sx={{ 
+                      sx={{
                         textTransform: 'none',
                         fontWeight: 600,
                         minWidth: 90,
+                        opacity: 1, // Fully opaque
+                        '&.Mui-disabled': {
+                          opacity: 1, // Fully opaque even when disabled
+                        },
                       }}
                     >
                       Add
