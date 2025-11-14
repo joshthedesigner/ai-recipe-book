@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, MouseEvent } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
   Box,
   Container,
@@ -34,6 +34,7 @@ import { extractYouTubeId } from '@/utils/youtubeHelpers';
 export default function RecipeDetailPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,10 +44,13 @@ export default function RecipeDetailPage() {
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
 
-  // Detect if user came from feed page
+  // Check if user came from feed
+  const fromFeed = searchParams.get('from') === 'feed';
+
+  // Smart back navigation
   const handleBack = () => {
-    if (window.history.length > 1 && document.referrer.includes('/feed')) {
-      router.back(); // Go back to preserve scroll position
+    if (fromFeed) {
+      router.push('/feed'); // Return to feed, scroll position will be restored
     } else {
       router.push('/browse'); // Default to browse
     }

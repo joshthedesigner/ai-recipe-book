@@ -77,7 +77,11 @@ export default function FeedPage() {
 
   // Handle clicking on recipe card - navigate to full page
   const handleRecipeClick = (recipe: Recipe) => {
-    router.push(`/recipe/${recipe.id}`);
+    // Save current scroll position before navigating
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('feedScrollPosition', String(window.scrollY));
+    }
+    router.push(`/recipe/${recipe.id}?from=feed`);
   };
 
   // Handle adding recipe to own cookbook
@@ -155,6 +159,20 @@ export default function FeedPage() {
 
     fetchFeed();
   }, [user]); // Removed showToast from dependencies to prevent reload loop
+
+  // Restore scroll position when returning from recipe page
+  useEffect(() => {
+    if (typeof window === 'undefined' || loading) return;
+
+    const savedPosition = sessionStorage.getItem('feedScrollPosition');
+    if (savedPosition) {
+      // Use setTimeout to ensure DOM is ready
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPosition, 10));
+        sessionStorage.removeItem('feedScrollPosition');
+      }, 100);
+    }
+  }, [loading]); // Restore after loading is complete
 
   // Load more recipes
   const loadMore = useCallback(async () => {
