@@ -234,46 +234,6 @@ export default function RecipeDetailPage() {
                   {recipe.title}
                 </Typography>
                 
-                {/* Show Add button for recipes that don't belong to user */}
-                {!isOwnRecipe && (
-                  <Button
-                    variant={isAdded ? "contained" : "outlined"}
-                    size="small"
-                    startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
-                    onClick={handleAddRecipe}
-                    disabled={isAdding || isAdded}
-                    sx={{
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      minWidth: 90,
-                      opacity: 1,
-                      ...(isAdded ? {
-                        bgcolor: 'success.main',
-                        color: 'white',
-                        '&.Mui-disabled': {
-                          bgcolor: 'success.main',
-                          color: 'white',
-                          opacity: 1,
-                        },
-                      } : {
-                        color: 'text.secondary',
-                        borderColor: 'text.secondary',
-                        '&:hover': {
-                          borderColor: 'text.secondary',
-                          bgcolor: 'action.hover',
-                        },
-                        '&.Mui-disabled': {
-                          opacity: 1,
-                          color: 'text.secondary',
-                          borderColor: 'text.secondary',
-                        },
-                      }),
-                    }}
-                  >
-                    {isAdded ? 'Added' : 'Add'}
-                  </Button>
-                )}
-                
                 {/* Show delete menu only for own recipes */}
                 {isOwnRecipe && (
                   <IconButton
@@ -285,30 +245,61 @@ export default function RecipeDetailPage() {
                 )}
               </Box>
 
-              {/* Source Link - Right Aligned */}
-              {recipe.source_url && (
-                <Button
-                  variant="outlined"
-                  href={recipe.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  endIcon={<OpenInNewIcon />}
-                  sx={{ 
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 400,
-                    ml: 'auto',
-                    color: 'text.secondary',
-                    borderColor: 'text.secondary',
-                    '&:hover': {
+              {/* Action Buttons - Right Aligned */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: 'auto' }}>
+                {/* Show Add button for recipes that don't belong to user */}
+                {!isOwnRecipe && (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
+                    onClick={handleAddRecipe}
+                    disabled={isAdding || isAdded}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      minWidth: 90,
+                      opacity: 1,
+                      ...(isAdded && {
+                        bgcolor: 'success.main',
+                        color: 'white',
+                        '&.Mui-disabled': {
+                          bgcolor: 'success.main',
+                          color: 'white',
+                          opacity: 1,
+                        },
+                      }),
+                    }}
+                  >
+                    {isAdded ? 'Added' : 'Add'}
+                  </Button>
+                )}
+
+                {/* Source Link */}
+                {recipe.source_url && (
+                  <Button
+                    variant="outlined"
+                    href={recipe.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    endIcon={<OpenInNewIcon />}
+                    sx={{ 
+                      textTransform: 'none',
+                      fontSize: '1rem',
+                      fontWeight: 400,
+                      color: 'text.secondary',
                       borderColor: 'text.secondary',
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  {getSourceName(recipe.source_url)}
-                </Button>
-              )}
+                      '&:hover': {
+                        borderColor: 'text.secondary',
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    {getSourceName(recipe.source_url)}
+                  </Button>
+                )}
+              </Box>
             </Box>
             
             {/* Tags */}
