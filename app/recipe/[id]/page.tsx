@@ -252,14 +252,13 @@ export default function RecipeDetailPage() {
                   <Button
                     variant="contained"
                     color="primary"
-                    size="small"
                     startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
                     onClick={handleAddRecipe}
                     disabled={isAdding || isAdded}
                     sx={{
                       textTransform: 'none',
-                      fontWeight: 600,
-                      minWidth: 90,
+                      fontSize: '1rem',
+                      fontWeight: 400,
                       opacity: 1,
                       ...(isAdded && {
                         bgcolor: 'success.main',
