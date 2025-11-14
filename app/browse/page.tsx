@@ -474,7 +474,7 @@ export default function BrowsePage() {
       <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
         <Container maxWidth="xl">
           {/* Header */}
-          <Box sx={{ pt: 3, pb: 2 }}>
+          <Box sx={{ pt: 3, pb: 3.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
               <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                   {activeGroup?.isFriend 
