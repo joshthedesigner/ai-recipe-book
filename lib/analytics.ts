@@ -61,9 +61,9 @@ function initializePostHog(apiKey: string, apiHost: string) {
     capture_pageleave: true, // Captures time on page
     
     // Session recording - disabled by default for performance
-    // Set to false to prevent loading unused recording scripts
-    // Can be enabled in PostHog dashboard if needed (will override)
-    session_recording: false,
+    // Prevents loading unused recording scripts (saves ~221KB)
+    // Can be enabled in PostHog dashboard if needed
+    disable_session_recording: true,
     
     // Privacy
     respect_dnt: true, // Respect Do Not Track
