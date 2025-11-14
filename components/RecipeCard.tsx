@@ -24,18 +24,39 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PersonIcon from '@mui/icons-material/Person';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
 
 interface RecipeCardProps {
-  recipe: Recipe;
+  recipe: Recipe & { friend_name?: string };
   compact?: boolean;
   onClick?: () => void;
   onDelete?: (recipeId: string) => void;
   loading?: 'lazy' | 'eager';
+  showFriendBadge?: boolean;
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy' }: RecipeCardProps) {
+// Simple relative time formatter
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
+
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -166,11 +187,34 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               )}
             </Box>
 
-            <Box sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption" color="text.secondary">
-                By {recipe.contributor_name}
-              </Typography>
-              {recipe.cookbook_name ? (
+            <Box sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
+              {/* Friend Badge */}
+              {showFriendBadge && recipe.friend_name && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                  <PersonIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                  <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 600 }}>
+                    {recipe.friend_name}
+                  </Typography>
+                  {recipe.created_at && (
+                    <>
+                      <Typography variant="caption" color="text.secondary">•</Typography>
+                      <AccessTimeIcon sx={{ fontSize: 12, color: 'text.secondary' }} />
+                      <Typography variant="caption" color="text.secondary">
+                        {formatRelativeTime(recipe.created_at)}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              )}
+              
+              {/* Contributor and Source */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
+                {!showFriendBadge && (
+                  <Typography variant="caption" color="text.secondary">
+                    By {recipe.contributor_name}
+                  </Typography>
+                )}
+                {recipe.cookbook_name ? (
                 <Typography 
                   variant="caption"
                   sx={{ 
@@ -209,6 +253,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   <OpenInNewIcon sx={{ fontSize: 12 }} />
                 </Box>
               ) : null}
+              </Box>
             </Box>
           </CardContent>
         </CardActionArea>

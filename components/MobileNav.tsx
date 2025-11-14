@@ -24,6 +24,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeIcon from '@mui/icons-material/Home';
+import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import PeopleIcon from '@mui/icons-material/People';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
@@ -295,6 +296,55 @@ export default function MobileNav() {
                       Home
                     </Typography>
                   </ButtonBase>
+
+                  {/* Feed */}
+                  {user && (
+                    <ButtonBase
+                      onClick={() => router.push('/feed')}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 0.25,
+                        p: 0.75,
+                        borderRadius: 1,
+                        position: 'relative',
+                        '&:hover': {
+                          bgcolor: 'action.hover',
+                        },
+                        // Selected state indicator
+                        '&::after': pathname === '/feed' ? {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: 0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          width: '80%',
+                          height: '3px',
+                          bgcolor: 'text.primary',
+                          borderRadius: '2px 2px 0 0',
+                        } : {},
+                      }}
+                    >
+                      <DynamicFeedIcon 
+                        sx={{ 
+                          fontSize: 20, 
+                          color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
+                        }} 
+                      />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: '10px',
+                          color: pathname === '/feed' ? 'text.primary' : 'text.secondary',
+                          fontWeight: pathname === '/feed' ? 600 : 400,
+                          lineHeight: 1,
+                        }}
+                      >
+                        Feed
+                      </Typography>
+                    </ButtonBase>
+                  )}
 
                   {/* Friends */}
                   {user && (
