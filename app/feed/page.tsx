@@ -376,8 +376,16 @@ export default function FeedPage() {
                         fontWeight: 600,
                         minWidth: 90,
                         opacity: 1, // Fully opaque
+                        color: 'text.secondary', // Dark grey text
+                        borderColor: 'text.secondary', // Dark grey border
+                        '&:hover': {
+                          borderColor: 'text.secondary',
+                          bgcolor: 'action.hover',
+                        },
                         '&.Mui-disabled': {
                           opacity: 1, // Fully opaque even when disabled
+                          color: 'text.secondary',
+                          borderColor: 'text.secondary',
                         },
                       }}
                     >
