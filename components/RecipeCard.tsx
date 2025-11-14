@@ -29,7 +29,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
-import SaveIcon from '@mui/icons-material/Save';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
 
@@ -145,7 +145,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               onAdd(recipe.id!, e);
             }}
             disabled={isAdding || isAdded}
-            startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <SaveIcon />}
+            startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <BookmarkIcon />}
             sx={{
               position: 'absolute',
               top: 8,
