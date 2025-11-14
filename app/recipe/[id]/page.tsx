@@ -379,8 +379,6 @@ export default function RecipeDetailPage() {
           </Box>
         )}
 
-        <Divider sx={{ mb: 4, mt: 3 }} />
-
         {/* Ingredients and Instructions - Two Column Layout */}
         <Grid container spacing={4}>
           {/* Ingredients - 1/3 width */}
