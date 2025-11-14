@@ -155,24 +155,24 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             {imageUrl ? (
               <CardMedia
                 component="img"
-                height="356"
+                height={isEmbedded ? "356" : "200"}
                 image={imageUrl}
                 alt={recipe.title}
                 loading={loading}
                 sx={{
                   objectFit: 'cover',
-                  borderRadius: 0,
+                  borderRadius: isEmbedded ? 0 : undefined,
                 }}
               />
             ) : (
               <Box
                 sx={{
-                  height: 356,
+                  height: isEmbedded ? 356 : 200,
                   bgcolor: 'grey.100',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  borderRadius: 0,
+                  borderRadius: isEmbedded ? 0 : undefined,
                 }}
               >
                 <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
