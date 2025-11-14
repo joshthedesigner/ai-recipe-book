@@ -24,7 +24,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
-import RecipeDetailModal from '@/components/RecipeDetailModal';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -62,8 +61,6 @@ export default function FeedPage() {
   const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set()); // Track which recipes have been added
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
 
   // Handle clicking on friend name - navigate to their cookbook
   const handleFriendClick = (friendName: string) => {
@@ -78,16 +75,9 @@ export default function FeedPage() {
     }
   };
 
-  // Handle clicking on recipe card - open modal
+  // Handle clicking on recipe card - navigate to full page
   const handleRecipeClick = (recipe: Recipe) => {
-    setSelectedRecipe(recipe);
-    setModalOpen(true);
-  };
-
-  // Handle closing recipe modal
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setSelectedRecipe(null);
+    router.push(`/recipe/${recipe.id}`);
   };
 
   // Handle adding recipe to own cookbook
@@ -404,13 +394,6 @@ export default function FeedPage() {
           </Box>
         )}
       </Container>
-
-      {/* Recipe Detail Modal */}
-      <RecipeDetailModal
-        recipe={selectedRecipe}
-        open={modalOpen}
-        onClose={handleModalClose}
-      />
     </Box>
   );
 }

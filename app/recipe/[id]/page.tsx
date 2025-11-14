@@ -43,6 +43,15 @@ export default function RecipeDetailPage() {
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
 
+  // Detect if user came from feed page
+  const handleBack = () => {
+    if (window.history.length > 1 && document.referrer.includes('/feed')) {
+      router.back(); // Go back to preserve scroll position
+    } else {
+      router.push('/browse'); // Default to browse
+    }
+  };
+
   // Extract and format domain name from URL
   const getSourceName = (url: string): string => {
     try {
@@ -84,7 +93,7 @@ export default function RecipeDetailPage() {
 
       if (data.success) {
         setDeleteDialogOpen(false);
-        router.push('/browse');
+        handleBack(); // Go back to previous page
       } else {
         throw new Error(data.error || 'Failed to delete recipe');
       }
@@ -141,10 +150,10 @@ export default function RecipeDetailPage() {
           <Typography variant="h5">Recipe not found</Typography>
           <Button
             startIcon={<ArrowBackIcon />}
-            onClick={() => router.push('/browse')}
+            onClick={handleBack}
             sx={{ mt: 2 }}
           >
-            Back to Recipes
+            Back
           </Button>
         </Container>
       </Box>
@@ -159,7 +168,7 @@ export default function RecipeDetailPage() {
         {/* Back Button */}
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => router.push('/browse')}
+          onClick={handleBack}
           sx={{ 
             mb: 3,
             textTransform: 'none',
@@ -171,7 +180,7 @@ export default function RecipeDetailPage() {
             },
           }}
         >
-          Back to Recipes
+          Back
         </Button>
 
         {/* Title and Tags */}
