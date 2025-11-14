@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
+      console.error('[Friends Feed API] Auth error:', authError);
       return NextResponse.json(
         {
           success: false,
@@ -30,10 +31,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check rate limit (reuse existing recipe list limit)
+    console.log('[Friends Feed API] User authenticated:', user.id);
+
+    // Check rate limit (use general API limit)
     const rateLimitResult = await checkRateLimit(
       request,
-      RATE_LIMITS.recipeList,
+      RATE_LIMITS.general,
       user.id
     );
 
@@ -42,10 +45,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all groups user has access to
+    console.log('[Friends Feed API] Fetching user groups...');
     const allGroups = await getUserGroups(supabase, user.id);
+    console.log('[Friends Feed API] Total groups:', allGroups.length);
     
     // Filter to only friend groups
     const friendGroups = allGroups.filter(g => g.isFriend);
+    console.log('[Friends Feed API] Friend groups:', friendGroups.length);
     
     if (friendGroups.length === 0) {
       return NextResponse.json(
@@ -59,6 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     const friendGroupIds = friendGroups.map(g => g.id);
+    console.log('[Friends Feed API] Fetching recipes from group IDs:', friendGroupIds);
 
     // Fetch recipes from all friend groups
     const { data: recipes, error: recipesError } = await supabase
@@ -85,18 +92,22 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .limit(50);
 
+    console.log('[Friends Feed API] Query result - recipes:', recipes?.length, 'error:', recipesError);
+
     if (recipesError) {
-      console.error('Error fetching friend recipes:', recipesError);
+      console.error('[Friends Feed API] Error fetching friend recipes:', recipesError);
       return NextResponse.json(
         {
           success: false,
           error: 'Failed to fetch recipes from friends',
+          details: recipesError.message,
         },
         { status: 500 }
       );
     }
 
     // Format recipes with friend information
+    console.log('[Friends Feed API] Formatting recipes...');
     const formattedRecipes = recipes?.map(recipe => {
       // Find the matching friend group to get the friend's name
       const friendGroup = friendGroups.find(g => g.id === recipe.group_id);
@@ -118,11 +129,13 @@ export async function GET(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Unexpected error in friends feed API:', error);
+    console.error('[Friends Feed API] Unexpected error:', error);
+    console.error('[Friends Feed API] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
+        details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
     );
