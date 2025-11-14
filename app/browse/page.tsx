@@ -470,11 +470,10 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* White Bar - Header, Search, and Filters */}
+      {/* White Bar - Header Only */}
       <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
         <Container maxWidth="xl">
-          {/* Header */}
-          <Box sx={{ pt: 3, pb: 2 }}>
+          <Box sx={{ py: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
               <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                   {activeGroup?.isFriend 
@@ -484,9 +483,12 @@ export default function BrowsePage() {
               {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
             </Box>
           </Box>
+        </Container>
+      </Box>
 
-          {/* Search and Filters */}
-          <Box sx={{ pb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+      <Container maxWidth="xl" sx={{ pt: 4, pb: 4, flex: 1 }}>
+        {/* Search and Filters */}
+        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Search Bar */}
           <TextField
             placeholder="Search recipes, ingredients, or tags..."
@@ -558,11 +560,7 @@ export default function BrowsePage() {
               },
             }}
           />
-          </Box>
-        </Container>
-      </Box>
-
-      <Container maxWidth="xl" sx={{ pt: 8, pb: 4, flex: 1 }}>
+        </Box>
         {/* Loading State */}
         {loading && (
           <Grid container spacing={3}>
