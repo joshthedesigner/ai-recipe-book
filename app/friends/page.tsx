@@ -353,16 +353,6 @@ export default function FriendsPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
       <Container maxWidth="md" sx={{ py: 4, flex: 1 }}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-          Friends
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Connect with friends to share recipes and cookbook adventures
-        </Typography>
-      </Box>
-
       {/* Invite Friend Form */}
       <Card sx={{ mb: 4 }}>
         <CardContent>
