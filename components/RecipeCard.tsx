@@ -37,6 +37,7 @@ interface RecipeCardProps {
   loading?: 'lazy' | 'eager';
   showFriendBadge?: boolean;
   showFriendHeader?: boolean; // Show friend name/date overlaid on image
+  isEmbedded?: boolean; // If true, removes border/elevation (card is inside another card)
 }
 
 // Simple relative time formatter
@@ -57,7 +58,7 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false, showFriendHeader = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -117,10 +118,10 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
           flexDirection: 'column',
           transition: 'all 0.2s ease',
           position: 'relative',
-          bgcolor: 'white',
-          border: '1px solid',
+          bgcolor: isEmbedded ? 'transparent' : 'white',
+          border: isEmbedded ? 'none' : '1px solid',
           borderColor: 'divider',
-          '&:hover': {
+          '&:hover': isEmbedded ? {} : {
             transform: 'translateY(-4px)',
             boxShadow: 4,
           },

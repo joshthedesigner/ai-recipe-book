@@ -15,6 +15,7 @@ import {
   CircularProgress,
   Alert,
   Button,
+  Card,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import TopNav from '@/components/TopNav';
@@ -23,6 +24,24 @@ import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+
+// Simple relative time formatter
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
 
 export default function FeedPage() {
   const router = useRouter();
@@ -158,13 +177,60 @@ export default function FeedPage() {
         {!loading && recipes.length > 0 && (
           <Box sx={{ maxWidth: 600, mx: 'auto' }}>
             {recipes.map((recipe) => (
-              <Box key={recipe.id} sx={{ mb: 3 }}>
+              <Card 
+                key={recipe.id} 
+                elevation={0}
+                sx={{ 
+                  mb: 3,
+                  bgcolor: 'white',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                {/* Friend Header - Above Image */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1.5,
+                    p: 2,
+                    pb: 1.5,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    {recipe.friend_name?.charAt(0).toUpperCase() || 'F'}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                      {recipe.friend_name || recipe.contributor_name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {recipe.created_at && formatRelativeTime(recipe.created_at)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Recipe Card Content */}
                 <RecipeCard 
                   recipe={recipe}
                   compact={true}
-                  showFriendHeader={true}
+                  showFriendHeader={false}
+                  isEmbedded={true}
                 />
-              </Box>
+              </Card>
             ))}
           </Box>
         )}
