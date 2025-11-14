@@ -204,8 +204,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   position: 'relative',
                   width: '100%',
                   height: isEmbedded 
-                    ? { xs: 237, md: 356 }  // Mobile: 1/3 shorter (356 - 119), Desktop: original
-                    : 200,
+                    ? { xs: 296, md: 445 }  // Mobile: 296 (237 * 1.25), Desktop: 445 (356 * 1.25) - increased by 1/4
+                    : 250,  // Increased from 200 to 250 (25% increase)
                   borderRadius: isEmbedded ? 0 : undefined,
                   overflow: 'hidden',
                 }}
@@ -215,8 +215,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   alt={recipe.title}
                   fill
                   sizes={isEmbedded 
-                    ? '(max-width: 768px) 237px, 356px' 
-                    : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 400px'}
+                    ? '(max-width: 768px) 296px, 445px' 
+                    : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 500px'}
                   style={{ objectFit: 'cover' }}
                   loading={loading}
                   priority={loading === 'eager'}
@@ -227,8 +227,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               <Box
                 sx={{
                   height: isEmbedded 
-                    ? { xs: 237, md: 356 }  // Mobile: 1/3 shorter (356 - 119), Desktop: original
-                    : 200,
+                    ? { xs: 296, md: 445 }  // Mobile: 296 (237 * 1.25), Desktop: 445 (356 * 1.25) - increased by 1/4
+                    : 250,  // Increased from 200 to 250 (25% increase)
                   bgcolor: 'grey.100',
                   display: 'flex',
                   alignItems: 'center',
