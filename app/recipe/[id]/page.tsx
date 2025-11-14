@@ -288,16 +288,16 @@ export default function RecipeDetailPage() {
               {/* Source Link - Right Aligned */}
               {recipe.source_url && (
                 <Button
+                  variant="outlined"
+                  color="secondary"
                   href={recipe.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  variant="outlined"
-                  color="secondary"
                   endIcon={<OpenInNewIcon />}
                   sx={{ 
                     textTransform: 'none',
                     fontSize: '1rem',
-                    fontWeight: 600,
+                    fontWeight: 400,
                     ml: 'auto',
                   }}
                 >
