@@ -16,18 +16,12 @@ import {
   ButtonBase,
   Typography,
   Badge,
-  Divider,
-  Menu,
-  MenuItem,
-  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import HomeIcon from '@mui/icons-material/Home';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import PeopleIcon from '@mui/icons-material/People';
-import CheckIcon from '@mui/icons-material/Check';
-import CloseIcon from '@mui/icons-material/Close';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -51,9 +45,7 @@ export default function MobileNav() {
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const handleSearchExpand = () => setSearchExpanded(true);
   const handleSearchCollapse = () => setSearchExpanded(false);
@@ -64,14 +56,6 @@ export default function MobileNav() {
       switchGroup(ownGroup.id);
     }
     router.push('/browse');
-  };
-
-  const handleFriendsClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
   };
 
   // Load pending requests
@@ -120,61 +104,6 @@ export default function MobileNav() {
     };
   }, [user?.email]);
 
-  // Accept friend request
-  const handleAccept = async (inviteId: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/friends/respond', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteId, action: 'accept' }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast('Friend request accepted!', 'success');
-        loadPendingRequests();
-        // Notify GroupContext to reload (friend's group is now available)
-        window.dispatchEvent(new Event('groups-refresh'));
-      } else {
-        showToast(data.error || 'Failed to accept request', 'error');
-      }
-    } catch (error) {
-      console.error('Error accepting invite:', error);
-      showToast('Failed to accept request', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Reject friend request
-  const handleReject = async (inviteId: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/friends/respond', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inviteId, action: 'reject' }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        showToast('Friend request rejected', 'info');
-        loadPendingRequests();
-      } else {
-        showToast(data.error || 'Failed to reject request', 'error');
-      }
-    } catch (error) {
-      console.error('Error rejecting invite:', error);
-      showToast('Failed to reject request', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const open = Boolean(anchorEl);
   const count = pendingRequests.length;
 
   return (
@@ -325,9 +254,8 @@ export default function MobileNav() {
 
                   {/* Friends */}
                   {user && (
-                    <>
-                      <ButtonBase
-                        onClick={handleFriendsClick}
+                    <ButtonBase
+                      onClick={() => router.push('/friends')}
                         sx={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -383,103 +311,6 @@ export default function MobileNav() {
                           Friends
                         </Typography>
                       </ButtonBase>
-
-                      <Menu
-                        anchorEl={anchorEl}
-                        open={open}
-                        onClose={handleClose}
-                        anchorOrigin={{
-                          vertical: 'bottom',
-                          horizontal: 'right',
-                        }}
-                        transformOrigin={{
-                          vertical: 'top',
-                          horizontal: 'right',
-                        }}
-                        PaperProps={{
-                          sx: { width: 360, maxHeight: 480 },
-                        }}
-                      >
-                        <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}>
-                          <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600 }}>
-                            Friend Requests
-                          </Typography>
-                        </Box>
-
-                        {count === 0 ? (
-                          <Box sx={{ px: 2, py: 3, textAlign: 'left' }}>
-                            <Typography variant="body2" color="text.secondary">
-                              No pending requests
-                            </Typography>
-                          </Box>
-                        ) : (
-                          pendingRequests.map((request, index) => (
-                            <Box key={request.id}>
-                              {index > 0 && <Divider />}
-                              <MenuItem
-                                sx={{
-                                  px: 2,
-                                  py: 1.5,
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'stretch',
-                                }}
-                                disableRipple
-                              >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                  <Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                      {request.senderName}
-                                    </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                      {request.senderEmail}
-                                    </Typography>
-                                  </Box>
-                                </Box>
-                                
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                  <Button
-                                    size="small"
-                                    variant="contained"
-                                    color="success"
-                                    startIcon={<CheckIcon />}
-                                    onClick={() => handleAccept(request.id)}
-                                    disabled={loading}
-                                    fullWidth
-                                  >
-                                    Accept
-                                  </Button>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<CloseIcon />}
-                                    onClick={() => handleReject(request.id)}
-                                    disabled={loading}
-                                    fullWidth
-                                  >
-                                    Reject
-                                  </Button>
-                                </Box>
-                              </MenuItem>
-                            </Box>
-                          ))
-                        )}
-
-                        <Divider />
-                        <MenuItem
-                          onClick={() => {
-                            handleClose();
-                            router.push('/friends');
-                          }}
-                          sx={{ justifyContent: 'flex-start', py: 1.5, px: 2 }}
-                        >
-                          <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                            View All Friends
-                          </Typography>
-                        </MenuItem>
-                      </Menu>
-                    </>
                   )}
                 </Box>
 
