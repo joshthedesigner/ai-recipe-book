@@ -282,7 +282,7 @@ export default function RecipeDetailPage() {
                     href={recipe.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    endIcon={<OpenInNewIcon />}
+                    endIcon={<OpenInNewIcon sx={{ fontSize: '1rem' }} />}
                     sx={{ 
                       textTransform: 'none',
                       fontSize: '1rem',
