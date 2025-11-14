@@ -307,7 +307,7 @@ export default function FeedPage() {
                       height: 40,
                       borderRadius: '50%',
                       bgcolor: 'primary.main',
-                      display: 'flex',
+                      display: { xs: 'none', md: 'flex' }, // Hide avatar on mobile
                       alignItems: 'center',
                       justifyContent: 'center',
                       color: 'white',

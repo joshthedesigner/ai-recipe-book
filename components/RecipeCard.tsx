@@ -197,11 +197,13 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             {imageUrl ? (
               <CardMedia
                 component="img"
-                height={isEmbedded ? "356" : "200"}
                 image={imageUrl}
                 alt={recipe.title}
                 loading={loading}
                 sx={{
+                  height: isEmbedded 
+                    ? { xs: 237, md: 356 }  // Mobile: 1/3 shorter (356 - 119), Desktop: original
+                    : 200,
                   objectFit: 'cover',
                   borderRadius: isEmbedded ? 0 : undefined,
                 }}
@@ -209,7 +211,9 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             ) : (
               <Box
                 sx={{
-                  height: isEmbedded ? 356 : 200,
+                  height: isEmbedded 
+                    ? { xs: 237, md: 356 }  // Mobile: 1/3 shorter (356 - 119), Desktop: original
+                    : 200,
                   bgcolor: 'grey.100',
                   display: 'flex',
                   alignItems: 'center',
@@ -285,7 +289,12 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mb: 2 }}>
+            <Box sx={{ 
+              display: { xs: isEmbedded ? 'none' : 'flex', md: 'flex' }, // Hide tags on mobile when embedded (feed)
+              gap: 0.5, 
+              flexWrap: 'wrap', 
+              mb: 2 
+            }}>
               {recipe.tags.slice(0, 3).map((tag) => (
                 <Chip key={tag} label={tag} size="small" color="primary" variant="outlined" />
               ))}
