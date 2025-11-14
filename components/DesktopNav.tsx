@@ -222,7 +222,7 @@ export default function DesktopNav() {
           </Box>
 
           {/* Navigation Items - Left (Home/Friends) */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', ml: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', ml: 3 }}>
             {/* Home */}
             <ButtonBase
               onClick={handleHomeClick}
