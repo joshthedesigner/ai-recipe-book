@@ -16,8 +16,10 @@ import {
   Alert,
   Button,
   Card,
+  IconButton,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
+import AddIcon from '@mui/icons-material/Add';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -53,6 +55,7 @@ export default function FeedPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [addingRecipe, setAddingRecipe] = useState<string | null>(null); // Track which recipe is being added
 
   // Handle clicking on friend name - navigate to their cookbook
   const handleFriendClick = (friendName: string) => {
@@ -64,6 +67,36 @@ export default function FeedPage() {
       router.push('/browse');
     } else {
       showToast('Could not find friend\'s cookbook', 'error');
+    }
+  };
+
+  // Handle adding recipe to own cookbook
+  const handleAddRecipe = async (recipeId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (!recipeId) return;
+    
+    try {
+      setAddingRecipe(recipeId);
+      
+      const response = await fetch('/api/recipes/copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Recipe added to your cookbook!', 'success');
+      } else {
+        showToast(data.error || 'Failed to add recipe', 'error');
+      }
+    } catch (err) {
+      console.error('Error adding recipe:', err);
+      showToast('Failed to add recipe', 'error');
+    } finally {
+      setAddingRecipe(null);
     }
   };
 
@@ -237,6 +270,22 @@ export default function FeedPage() {
                       {recipe.created_at && formatRelativeTime(recipe.created_at)}
                     </Typography>
                   </Box>
+                  
+                  {/* Add to Cookbook Button */}
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : <AddIcon />}
+                    onClick={(e) => handleAddRecipe(recipe.id!, e)}
+                    disabled={addingRecipe === recipe.id}
+                    sx={{ 
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      minWidth: 80,
+                    }}
+                  >
+                    Add
+                  </Button>
                 </Box>
 
                 {/* Recipe Card Content */}
