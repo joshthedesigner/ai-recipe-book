@@ -346,18 +346,6 @@ export default function MobileNav() {
                     </ButtonBase>
                   )}
 
-                  {/* Divider */}
-                  {user && (
-                    <Divider 
-                      orientation="vertical" 
-                      flexItem 
-                      sx={{ 
-                        my: 0.75,
-                        bgcolor: 'divider',
-                      }} 
-                    />
-                  )}
-
                   {/* User Menu */}
                   {user && <UserAvatarMenu />}
                 </Box>
