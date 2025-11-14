@@ -121,6 +121,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
           bgcolor: isEmbedded ? 'transparent' : 'white',
           border: isEmbedded ? 'none' : '1px solid',
           borderColor: 'divider',
+          borderRadius: isEmbedded ? 0 : 1,
           '&:hover': isEmbedded ? {} : {
             transform: 'translateY(-4px)',
             boxShadow: 4,
@@ -160,6 +161,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                 loading={loading}
                 sx={{
                   objectFit: 'cover',
+                  borderRadius: 0,
                 }}
               />
             ) : (
@@ -170,6 +172,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  borderRadius: 0,
                 }}
               >
                 <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
