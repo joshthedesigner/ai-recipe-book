@@ -24,6 +24,7 @@ import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useGroup } from '@/contexts/GroupContext';
 
 // Simple relative time formatter
 function formatRelativeTime(timestamp: string): string {
@@ -47,10 +48,24 @@ export default function FeedPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
+  const { groups, switchGroup } = useGroup();
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle clicking on friend name - navigate to their cookbook
+  const handleFriendClick = (friendName: string) => {
+    const friendGroupName = `${friendName}'s recipes`;
+    const friendGroup = groups.find(g => g.isFriend && g.name === friendGroupName);
+    
+    if (friendGroup) {
+      switchGroup(friendGroup.id);
+      router.push('/browse');
+    } else {
+      showToast('Could not find friend\'s cookbook', 'error');
+    }
+  };
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -210,7 +225,22 @@ export default function FeedPage() {
                     {recipe.friend_name?.charAt(0).toUpperCase() || 'F'}
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography variant="body1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                    <Typography 
+                      variant="body1" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFriendClick(recipe.friend_name || recipe.contributor_name);
+                      }}
+                      sx={{ 
+                        fontWeight: 600, 
+                        lineHeight: 1.2,
+                        cursor: 'pointer',
+                        '&:hover': {
+                          textDecoration: 'underline',
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
                       {recipe.friend_name || recipe.contributor_name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
