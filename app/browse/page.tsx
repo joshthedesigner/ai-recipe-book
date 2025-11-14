@@ -562,7 +562,7 @@ export default function BrowsePage() {
         {loading && (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+              <Grid item xs={12} sm={4} md={4} lg={4} key={index}>
                 <RecipeCardSkeleton />
               </Grid>
             ))}
@@ -635,7 +635,7 @@ export default function BrowsePage() {
                 // Load fewer images eagerly on mobile (4 vs 8)
                 const eagerLoadCount = isMobile ? 4 : 8;
                 return (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                  <Grid item xs={12} sm={4} md={4} lg={4} key={recipe.id}>
                     <RecipeCard 
                       recipe={recipe} 
                       compact 
