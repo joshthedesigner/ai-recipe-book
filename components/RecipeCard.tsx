@@ -169,7 +169,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               },
             }}
           >
-            {isAdded ? 'Added' : 'Add'}
+            {isAdded ? 'Saved' : 'Save'}
           </Button>
         ) : onDelete ? (
           <IconButton

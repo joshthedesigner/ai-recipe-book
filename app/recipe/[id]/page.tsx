@@ -271,7 +271,7 @@ export default function RecipeDetailPage() {
                       }),
                     }}
                   >
-                    {isAdded ? 'Added' : 'Add'}
+                    {isAdded ? 'Saved' : 'Save'}
                   </Button>
                 )}
 
