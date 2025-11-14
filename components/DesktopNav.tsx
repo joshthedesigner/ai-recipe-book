@@ -266,7 +266,7 @@ export default function DesktopNav() {
                   lineHeight: 1,
                 }}
               >
-                Home
+                Your Recipes
               </Typography>
             </ButtonBase>
 

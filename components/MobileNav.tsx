@@ -293,7 +293,7 @@ export default function MobileNav() {
                         lineHeight: 1,
                       }}
                     >
-                      Home
+                      Your Recipes
                     </Typography>
                   </ButtonBase>
 
