@@ -231,55 +231,62 @@ export default function DesktopNav() {
 
             {/* Friends */}
             {user && (
-              <Badge
-                badgeContent={count}
-                color="error"
+              <ButtonBase
+                onClick={() => router.push('/friends')}
                 sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '10px',
-                    height: '18px',
-                    minWidth: '18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 1,
+                  position: 'relative',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
                   },
+                  // Selected state indicator
+                  '&::after': pathname === '/friends' ? {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '80%',
+                    height: '3px',
+                    bgcolor: 'text.primary',
+                    borderRadius: '2px 2px 0 0',
+                  } : {},
                 }}
               >
-                <ButtonBase
-                  onClick={() => router.push('/friends')}
+                <Typography
+                  variant="body2"
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    px: 1.5,
-                    py: 1,
-                    borderRadius: 1,
-                    position: 'relative',
-                    '&:hover': {
-                      bgcolor: 'action.hover',
-                    },
-                    // Selected state indicator
-                    '&::after': pathname === '/friends' ? {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '80%',
-                      height: '3px',
-                      bgcolor: 'text.primary',
-                      borderRadius: '2px 2px 0 0',
-                    } : {},
+                    fontSize: '14px',
+                    color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
+                    fontWeight: pathname === '/friends' ? 600 : 400,
                   }}
                 >
-                  <Typography
-                    variant="body2"
+                  Friends
+                </Typography>
+                {count > 0 && (
+                  <Box
                     sx={{
-                      fontSize: '14px',
-                      color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
-                      fontWeight: pathname === '/friends' ? 600 : 400,
+                      bgcolor: 'error.main',
+                      color: 'white',
+                      borderRadius: '10px',
+                      px: 0.75,
+                      py: 0.25,
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      minWidth: '20px',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
                     }}
                   >
-                    Friends
-                  </Typography>
-                </ButtonBase>
-              </Badge>
+                    {count}
+                  </Box>
+                )}
+              </ButtonBase>
             )}
           </Box>
 
