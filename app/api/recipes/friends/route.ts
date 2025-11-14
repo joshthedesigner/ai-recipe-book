@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
     const friendGroupIds = friendGroups.map(g => g.id);
 
     // Fetch recipes from all friend groups
-    // Include group and user data for displaying friend names
     const { data: recipes, error: recipesError } = await supabase
       .from('recipes')
       .select(`
@@ -80,9 +79,7 @@ export async function GET(request: NextRequest) {
         cookbook_page,
         contributor_name,
         created_at,
-        updated_at,
-        recipe_groups!inner(name, owner_id),
-        users:recipe_groups(owner_id, users!inner(name))
+        updated_at
       `)
       .in('group_id', friendGroupIds)
       .order('created_at', { ascending: false })
