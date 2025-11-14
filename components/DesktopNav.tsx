@@ -228,10 +228,9 @@ export default function DesktopNav() {
               onClick={handleHomeClick}
               sx={{
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
-                gap: 0.5,
-                p: 1,
+                px: 1.5,
+                py: 1,
                 borderRadius: 1,
                 position: 'relative',
                 '&:hover': {
@@ -251,19 +250,12 @@ export default function DesktopNav() {
                 } : {},
               }}
             >
-              <HomeIcon 
-                sx={{ 
-                  fontSize: 24, 
-                  color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary'
-                }} 
-              />
               <Typography
-                variant="caption"
+                variant="body2"
                 sx={{
-                  fontSize: '12px',
+                  fontSize: '14px',
                   color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary',
                   fontWeight: (pathname === '/browse' && activeGroup?.isOwn) ? 600 : 400,
-                  lineHeight: 1,
                 }}
               >
                 Your Recipes
@@ -276,10 +268,9 @@ export default function DesktopNav() {
                 onClick={() => router.push('/feed')}
                 sx={{
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 0.5,
-                  p: 1,
+                  px: 1.5,
+                  py: 1,
                   borderRadius: 1,
                   position: 'relative',
                   '&:hover': {
@@ -299,19 +290,12 @@ export default function DesktopNav() {
                   } : {},
                 }}
               >
-                <DynamicFeedIcon 
-                  sx={{ 
-                    fontSize: 24, 
-                    color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
-                  }} 
-                />
                 <Typography
-                  variant="caption"
+                  variant="body2"
                   sx={{
-                    fontSize: '12px',
+                    fontSize: '14px',
                     color: pathname === '/feed' ? 'text.primary' : 'text.secondary',
                     fontWeight: pathname === '/feed' ? 600 : 400,
-                    lineHeight: 1,
                   }}
                 >
                   Feed
@@ -322,63 +306,55 @@ export default function DesktopNav() {
             {/* Friends */}
             {user && (
               <>
-                <ButtonBase
-                  onClick={handleFriendsClick}
+                <Badge
+                  badgeContent={count}
+                  color="error"
                   sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    p: 1,
-                    borderRadius: 1,
-                    position: 'relative',
-                    '&:hover': {
-                      bgcolor: 'action.hover',
+                    '& .MuiBadge-badge': {
+                      fontSize: '10px',
+                      height: '18px',
+                      minWidth: '18px',
                     },
-                    // Selected state indicator
-                    '&::after': pathname === '/friends' ? {
-                      content: '""',
-                      position: 'absolute',
-                      bottom: 0,
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      width: '80%',
-                      height: '3px',
-                      bgcolor: 'text.primary',
-                      borderRadius: '2px 2px 0 0',
-                    } : {},
                   }}
                 >
-                  <Badge
-                    badgeContent={count}
-                    color="error"
+                  <ButtonBase
+                    onClick={handleFriendsClick}
                     sx={{
-                      '& .MuiBadge-badge': {
-                        fontSize: '10px',
-                        height: '18px',
-                        minWidth: '18px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      position: 'relative',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
                       },
+                      // Selected state indicator
+                      '&::after': pathname === '/friends' ? {
+                        content: '""',
+                        position: 'absolute',
+                        bottom: 0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: '80%',
+                        height: '3px',
+                        bgcolor: 'text.primary',
+                        borderRadius: '2px 2px 0 0',
+                      } : {},
                     }}
                   >
-                    <PeopleIcon 
-                      sx={{ 
-                        fontSize: 24, 
-                        color: pathname === '/friends' ? 'text.primary' : 'text.secondary'
-                      }} 
-                    />
-                  </Badge>
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '12px',
-                      color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
-                      fontWeight: pathname === '/friends' ? 600 : 400,
-                      lineHeight: 1,
-                    }}
-                  >
-                    Friends
-                  </Typography>
-                </ButtonBase>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '14px',
+                        color: pathname === '/friends' ? 'text.primary' : 'text.secondary',
+                        fontWeight: pathname === '/friends' ? 600 : 400,
+                      }}
+                    >
+                      Friends
+                    </Typography>
+                  </ButtonBase>
+                </Badge>
 
                 <Menu
                   anchorEl={anchorEl}
