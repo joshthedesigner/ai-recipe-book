@@ -155,7 +155,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             {imageUrl ? (
               <CardMedia
                 component="img"
-                height="267"
+                height="356"
                 image={imageUrl}
                 alt={recipe.title}
                 loading={loading}
@@ -167,7 +167,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             ) : (
               <Box
                 sx={{
-                  height: 267,
+                  height: 356,
                   bgcolor: 'grey.100',
                   display: 'flex',
                   alignItems: 'center',
