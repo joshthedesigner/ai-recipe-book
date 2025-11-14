@@ -13,7 +13,6 @@ import {
   Container,
   Typography,
   CircularProgress,
-  Grid,
   Alert,
   Button,
 } from '@mui/material';
@@ -24,6 +23,24 @@ import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
+
+// Simple relative time formatter
+function formatRelativeTime(timestamp: string): string {
+  const now = new Date();
+  const date = new Date(timestamp);
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+  
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString();
+}
 
 export default function FeedPage() {
   const router = useRouter();
@@ -120,13 +137,13 @@ export default function FeedPage() {
 
         {/* Loading State */}
         {loading && (
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Grid item xs={12} sm={6} md={4} key={i}>
+          <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+            {[1, 2, 3].map((i) => (
+              <Box key={i} sx={{ mb: 3 }}>
                 <RecipeCardSkeleton />
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         )}
 
         {/* Empty State - No Friends */}
@@ -155,18 +172,56 @@ export default function FeedPage() {
           </Box>
         )}
 
-        {/* Recipe Grid */}
+        {/* Recipe Feed - Stacked Cards */}
         {!loading && recipes.length > 0 && (
-          <Grid container spacing={3}>
+          <Box sx={{ maxWidth: 600, mx: 'auto' }}>
             {recipes.map((recipe) => (
-              <Grid item xs={12} sm={6} md={4} key={recipe.id}>
+              <Box key={recipe.id} sx={{ mb: 3 }}>
+                {/* Friend Header */}
+                <Box 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1.5,
+                    mb: 1.5,
+                    px: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '1.1rem',
+                    }}
+                  >
+                    {recipe.friend_name?.charAt(0).toUpperCase() || 'F'}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body1" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                      {recipe.friend_name || recipe.contributor_name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {recipe.created_at && formatRelativeTime(recipe.created_at)}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Recipe Card */}
                 <RecipeCard 
                   recipe={recipe}
-                  showFriendBadge={true}
+                  compact={true}
+                  showFriendBadge={false}
                 />
-              </Grid>
+              </Box>
             ))}
-          </Grid>
+          </Box>
         )}
       </Container>
     </Box>
