@@ -102,8 +102,7 @@ export default function FeedPage() {
       const data = await response.json();
 
       if (data.success) {
-        showToast('Recipe added to your cookbook!', 'success');
-        // Mark recipe as added
+        // Mark recipe as added (button change is enough confirmation)
         setAddedRecipes(prev => new Set([...prev, recipeId]));
       } else {
         showToast(data.error || 'Failed to add recipe', 'error');
