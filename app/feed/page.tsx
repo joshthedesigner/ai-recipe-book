@@ -114,16 +114,12 @@ export default function FeedPage() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
-      
-      <Container maxWidth="lg" sx={{ py: 4, flex: 1 }}>
+      <Container maxWidth="md" sx={{ py: 4, flex: 1 }}>
         {/* Header */}
         <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <PeopleIcon sx={{ fontSize: 32, color: 'primary.main' }} />
-            <Typography variant="h4" sx={{ fontWeight: 600 }}>
-              Friends' Recipes
-            </Typography>
-          </Box>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
+            Friends' Recipes
+          </Typography>
           <Typography variant="body1" color="text.secondary">
             See what your friends are cooking
           </Typography>
@@ -138,7 +134,7 @@ export default function FeedPage() {
 
         {/* Loading State */}
         {loading && (
-          <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+          <Box>
             {[1, 2, 3].map((i) => (
               <Box key={i} sx={{ mb: 3 }}>
                 <RecipeCardSkeleton />
@@ -175,7 +171,7 @@ export default function FeedPage() {
 
         {/* Recipe Feed - Stacked Cards */}
         {!loading && recipes.length > 0 && (
-          <Box sx={{ maxWidth: 600, mx: 'auto' }}>
+          <Box>
             {recipes.map((recipe) => (
               <Card 
                 key={recipe.id} 
