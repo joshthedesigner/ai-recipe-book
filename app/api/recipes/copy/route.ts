@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
 import { canUserAddRecipes, getUserDefaultGroup } from '@/utils/permissions';
-import { generateEmbedding } from '@/vector/embeddings';
+import { generateEmbedding } from '@/vector/embed';
 
 // Force dynamic rendering - this route uses cookies for auth
 export const dynamic = 'force-dynamic';
