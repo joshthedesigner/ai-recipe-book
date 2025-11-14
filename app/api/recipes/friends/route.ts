@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
 
     console.log('[Friends Feed API] User authenticated:', user.id);
 
+    // Get pagination parameters
+    const searchParams = request.nextUrl.searchParams;
+    const limit = 6;
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+
     // Check rate limit (use general API limit)
     const rateLimitResult = await checkRateLimit(
       request,
@@ -67,7 +72,7 @@ export async function GET(request: NextRequest) {
     const friendGroupIds = friendGroups.map(g => g.id);
     console.log('[Friends Feed API] Fetching recipes from group IDs:', friendGroupIds);
 
-    // Fetch recipes from all friend groups
+    // Fetch recipes from all friend groups with pagination
     const { data: recipes, error: recipesError } = await supabase
       .from('recipes')
       .select(`
@@ -90,7 +95,7 @@ export async function GET(request: NextRequest) {
       `)
       .in('group_id', friendGroupIds)
       .order('created_at', { ascending: false })
-      .limit(6);
+      .range(offset, offset + limit - 1);
 
     console.log('[Friends Feed API] Query result - recipes:', recipes?.length, 'error:', recipesError);
 
@@ -124,6 +129,8 @@ export async function GET(request: NextRequest) {
         success: true,
         recipes: formattedRecipes,
         count: formattedRecipes.length,
+        hasMore: formattedRecipes.length === limit,
+        offset: offset,
       },
       { status: 200 }
     );

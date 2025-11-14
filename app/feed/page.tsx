@@ -6,7 +6,7 @@
  * Displays recipes from all friends in chronological order
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -55,9 +55,12 @@ export default function FeedPage() {
   
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addingRecipe, setAddingRecipe] = useState<string | null>(null); // Track which recipe is being added
   const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set()); // Track which recipes have been added
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
   // Handle clicking on friend name - navigate to their cookbook
   const handleFriendClick = (friendName: string) => {
@@ -111,7 +114,7 @@ export default function FeedPage() {
     }
   }, [user, authLoading, router]);
 
-  // Fetch feed recipes
+  // Fetch initial feed recipes
   useEffect(() => {
     if (!user) return;
 
@@ -119,12 +122,14 @@ export default function FeedPage() {
       try {
         setLoading(true);
         setError(null);
+        setOffset(0);
         
-        const response = await fetch('/api/recipes/friends');
+        const response = await fetch('/api/recipes/friends?offset=0');
         const data = await response.json();
 
         if (data.success) {
           setRecipes(data.recipes || []);
+          setHasMore(data.hasMore || false);
           
           // Show friendly message if no friends yet (only once)
           if (data.message && data.recipes?.length === 0) {
@@ -145,6 +150,46 @@ export default function FeedPage() {
 
     fetchFeed();
   }, [user]); // Removed showToast from dependencies to prevent reload loop
+
+  // Load more recipes
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+
+    try {
+      setLoadingMore(true);
+      const newOffset = offset + 6;
+      
+      const response = await fetch(`/api/recipes/friends?offset=${newOffset}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setRecipes(prev => [...prev, ...(data.recipes || [])]);
+        setHasMore(data.hasMore || false);
+        setOffset(newOffset);
+      }
+    } catch (err) {
+      console.error('Error loading more recipes:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore, offset]);
+
+  // Infinite scroll - detect when near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollHeight = document.documentElement.scrollHeight;
+      const scrollTop = document.documentElement.scrollTop;
+      const clientHeight = document.documentElement.clientHeight;
+
+      // Load more when within 300px of bottom
+      if (scrollHeight - scrollTop - clientHeight < 300) {
+        loadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadMore]);
 
   // Show loading state
   if (authLoading) {
@@ -324,6 +369,22 @@ export default function FeedPage() {
                 />
               </Card>
             ))}
+
+            {/* Loading More Indicator */}
+            {loadingMore && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                <CircularProgress />
+              </Box>
+            )}
+
+            {/* End of Feed Message */}
+            {!hasMore && recipes.length > 0 && (
+              <Box sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" color="text.secondary">
+                  You've seen all recent recipes from your friends
+                </Typography>
+              </Box>
+            )}
           </Box>
         )}
       </Container>
