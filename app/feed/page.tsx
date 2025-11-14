@@ -130,16 +130,6 @@ export default function FeedPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
       <Container maxWidth="md" sx={{ py: 4, flex: 1 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 600 }}>
-            Friends' Recipes
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            See what your friends are cooking
-          </Typography>
-        </Box>
-
         {/* Error State */}
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
