@@ -18,6 +18,8 @@ import {
   MenuItem,
   ListItemIcon,
   ListItemText as MenuItemText,
+  Button,
+  CircularProgress,
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -26,6 +28,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AddIcon from '@mui/icons-material/Add';
+import CheckIcon from '@mui/icons-material/Check';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
 
@@ -34,10 +38,14 @@ interface RecipeCardProps {
   compact?: boolean;
   onClick?: () => void;
   onDelete?: (recipeId: string) => void;
+  onAdd?: (recipeId: string, e: React.MouseEvent) => void; // Add callback for friend pages
   loading?: 'lazy' | 'eager';
   showFriendBadge?: boolean;
   showFriendHeader?: boolean; // Show friend name/date overlaid on image
   isEmbedded?: boolean; // If true, removes border/elevation (card is inside another card)
+  isFriendView?: boolean; // If true, show Add button instead of overflow menu
+  isAdded?: boolean; // If true, show "Added" state
+  isAdding?: boolean; // If true, show loading state
 }
 
 // Simple relative time formatter
@@ -58,7 +66,7 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -128,8 +136,40 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
           },
         }}
       >
-        {/* Menu button positioned absolutely to avoid button nesting */}
-        {onDelete && (
+        {/* Add button for friend pages OR Menu button for own recipes */}
+        {isFriendView && onAdd && recipe.id ? (
+          <Button
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAdd(recipe.id!, e);
+            }}
+            disabled={isAdding || isAdded}
+            startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <AddIcon />}
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1,
+              bgcolor: isAdded ? 'success.main' : 'white',
+              color: isAdded ? 'white' : 'text.primary',
+              boxShadow: 2,
+              textTransform: 'none',
+              fontWeight: 600,
+              minWidth: 90,
+              '&:hover': {
+                bgcolor: isAdded ? 'success.dark' : 'grey.100',
+              },
+              '&.Mui-disabled': {
+                bgcolor: isAdded ? 'success.main' : 'white',
+                color: isAdded ? 'white' : 'text.primary',
+                opacity: isAdded ? 0.9 : 0.6,
+              },
+            }}
+          >
+            {isAdded ? 'Added' : 'Add'}
+          </Button>
+        ) : onDelete ? (
           <IconButton
             size="small"
             onClick={handleMenuClick}
@@ -147,7 +187,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
           >
             <MoreVertIcon fontSize="small" />
           </IconButton>
-        )}
+        ) : null}
         
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           {/* Image with optional friend header overlay */}

@@ -79,6 +79,8 @@ export default function BrowsePage() {
   const [ingredientAnchorEl, setIngredientAnchorEl] = useState<HTMLElement | null>(null);
   const [tempCuisine, setTempCuisine] = useState('');
   const [tempIngredient, setTempIngredient] = useState('');
+  const [addingRecipe, setAddingRecipe] = useState<string | null>(null);
+  const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set());
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -406,6 +408,37 @@ export default function BrowsePage() {
     }, 2000);
   };
 
+  // Handle adding recipe from friend's cookbook
+  const handleAddRecipe = async (recipeId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (addingRecipe || addedRecipes.has(recipeId)) return;
+
+    try {
+      setAddingRecipe(recipeId);
+      
+      const response = await fetch('/api/recipes/copy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeId }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Mark recipe as added (button change is enough confirmation)
+        setAddedRecipes(prev => new Set([...prev, recipeId]));
+      } else {
+        showToast(data.error || 'Failed to add recipe', 'error');
+      }
+    } catch (err) {
+      console.error('Error adding recipe:', err);
+      showToast('Failed to add recipe', 'error');
+    } finally {
+      setAddingRecipe(null);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
@@ -581,6 +614,10 @@ export default function BrowsePage() {
                       compact 
                       onClick={() => handleCardClick(recipe)}
                       onDelete={canAddRecipes ? handleDeleteClick : undefined}
+                      onAdd={activeGroup?.isFriend ? handleAddRecipe : undefined}
+                      isFriendView={activeGroup?.isFriend || false}
+                      isAdded={addedRecipes.has(recipe.id!)}
+                      isAdding={addingRecipe === recipe.id}
                       loading={index < eagerLoadCount ? 'eager' : 'lazy'}
                     />
                   </Grid>
