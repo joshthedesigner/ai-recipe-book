@@ -289,7 +289,6 @@ export default function RecipeDetailPage() {
               {recipe.source_url && (
                 <Button
                   variant="outlined"
-                  color="secondary"
                   href={recipe.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -299,6 +298,12 @@ export default function RecipeDetailPage() {
                     fontSize: '1rem',
                     fontWeight: 400,
                     ml: 'auto',
+                    color: 'text.secondary',
+                    borderColor: 'text.secondary',
+                    '&:hover': {
+                      borderColor: 'text.secondary',
+                      bgcolor: 'action.hover',
+                    },
                   }}
                 >
                   {getSourceName(recipe.source_url)}
