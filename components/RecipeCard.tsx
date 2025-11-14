@@ -152,20 +152,20 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               zIndex: 1,
               bgcolor: isAdded ? 'success.main' : 'white',
               color: isAdded ? 'white' : 'text.primary',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Drop shadow to stand out from image
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', // Lighter, softer drop shadow
               textTransform: 'none',
               fontWeight: 600,
               minWidth: 90,
               opacity: 1, // Fully opaque
               '&:hover': {
                 bgcolor: isAdded ? 'success.dark' : 'grey.100',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)', // Slightly stronger on hover
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)', // Slightly stronger on hover
               },
               '&.Mui-disabled': {
                 bgcolor: isAdded ? 'success.main' : 'white',
                 color: isAdded ? 'white' : 'text.primary',
                 opacity: 1, // Fully opaque even when disabled
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)', // Keep shadow when disabled
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)', // Keep shadow when disabled
               },
             }}
           >
