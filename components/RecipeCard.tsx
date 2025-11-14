@@ -36,6 +36,7 @@ interface RecipeCardProps {
   onDelete?: (recipeId: string) => void;
   loading?: 'lazy' | 'eager';
   showFriendBadge?: boolean;
+  showFriendHeader?: boolean; // Show friend name/date overlaid on image
 }
 
 // Simple relative time formatter
@@ -56,7 +57,7 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, loading = 'lazy', showFriendBadge = false, showFriendHeader = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -147,30 +148,90 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
         )}
         
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
-          {imageUrl ? (
-            <CardMedia
-              component="img"
-              height="200"
-              image={imageUrl}
-              alt={recipe.title}
-              loading={loading}
-              sx={{
-                objectFit: 'cover',
-              }}
-            />
-          ) : (
-            <Box
-              sx={{
-                height: 200,
-                bgcolor: 'grey.100',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
-            </Box>
-          )}
+          {/* Image with optional friend header overlay */}
+          <Box sx={{ position: 'relative' }}>
+            {imageUrl ? (
+              <CardMedia
+                component="img"
+                height="200"
+                image={imageUrl}
+                alt={recipe.title}
+                loading={loading}
+                sx={{
+                  objectFit: 'cover',
+                }}
+              />
+            ) : (
+              <Box
+                sx={{
+                  height: 200,
+                  bgcolor: 'grey.100',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <RestaurantIcon sx={{ fontSize: 60, color: 'grey.400' }} />
+              </Box>
+            )}
+            
+            {/* Friend Header Overlay */}
+            {showFriendHeader && recipe.friend_name && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  background: 'linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)',
+                  p: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: '50%',
+                    bgcolor: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'primary.main',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    border: '2px solid white',
+                  }}
+                >
+                  {recipe.friend_name.charAt(0).toUpperCase()}
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      lineHeight: 1.2, 
+                      color: 'white',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {recipe.friend_name}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    sx={{ 
+                      color: 'white',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {recipe.created_at && formatRelativeTime(recipe.created_at)}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
+          </Box>
           <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5, gap: 1 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
