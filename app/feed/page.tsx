@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import AddIcon from '@mui/icons-material/Add';
+import CheckIcon from '@mui/icons-material/Check';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -56,6 +57,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [addingRecipe, setAddingRecipe] = useState<string | null>(null); // Track which recipe is being added
+  const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set()); // Track which recipes have been added
 
   // Handle clicking on friend name - navigate to their cookbook
   const handleFriendClick = (friendName: string) => {
@@ -74,7 +76,7 @@ export default function FeedPage() {
   const handleAddRecipe = async (recipeId: string, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     
-    if (!recipeId) return;
+    if (!recipeId || addedRecipes.has(recipeId)) return;
     
     try {
       setAddingRecipe(recipeId);
@@ -89,6 +91,8 @@ export default function FeedPage() {
 
       if (data.success) {
         showToast('Recipe added to your cookbook!', 'success');
+        // Mark recipe as added
+        setAddedRecipes(prev => new Set([...prev, recipeId]));
       } else {
         showToast(data.error || 'Failed to add recipe', 'error');
       }
@@ -122,8 +126,8 @@ export default function FeedPage() {
         if (data.success) {
           setRecipes(data.recipes || []);
           
-          // Show friendly message if no friends yet
-          if (data.message) {
+          // Show friendly message if no friends yet (only once)
+          if (data.message && data.recipes?.length === 0) {
             showToast(data.message, 'info');
           }
         } else {
@@ -140,7 +144,7 @@ export default function FeedPage() {
     };
 
     fetchFeed();
-  }, [user, showToast]);
+  }, [user]); // Removed showToast from dependencies to prevent reload loop
 
   // Show loading state
   if (authLoading) {
@@ -272,20 +276,43 @@ export default function FeedPage() {
                   </Box>
                   
                   {/* Add to Cookbook Button */}
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : <AddIcon />}
-                    onClick={(e) => handleAddRecipe(recipe.id!, e)}
-                    disabled={addingRecipe === recipe.id}
-                    sx={{ 
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      minWidth: 80,
-                    }}
-                  >
-                    Add
-                  </Button>
+                  {addedRecipes.has(recipe.id!) ? (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      startIcon={<CheckIcon />}
+                      disabled
+                      sx={{ 
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        minWidth: 90,
+                        bgcolor: 'success.main',
+                        color: 'white',
+                        '&.Mui-disabled': {
+                          bgcolor: 'success.main',
+                          color: 'white',
+                          opacity: 0.9,
+                        },
+                      }}
+                    >
+                      Added
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : <AddIcon />}
+                      onClick={(e) => handleAddRecipe(recipe.id!, e)}
+                      disabled={addingRecipe === recipe.id}
+                      sx={{ 
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        minWidth: 90,
+                      }}
+                    >
+                      Add
+                    </Button>
+                  )}
                 </Box>
 
                 {/* Recipe Card Content */}
