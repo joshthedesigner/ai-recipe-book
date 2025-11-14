@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, MouseEvent } from 'react';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
   CardActionArea,
-  CardMedia,
   Typography,
   Chip,
   Box,
@@ -193,21 +193,32 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
         
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           {/* Image with optional friend header overlay */}
-          <Box sx={{ position: 'relative' }}>
+          <Box sx={{ position: 'relative', overflow: 'hidden' }}>
             {imageUrl ? (
-              <CardMedia
-                component="img"
-                image={imageUrl}
-                alt={recipe.title}
-                loading={loading}
+              <Box
                 sx={{
+                  position: 'relative',
+                  width: '100%',
                   height: isEmbedded 
                     ? { xs: 237, md: 356 }  // Mobile: 1/3 shorter (356 - 119), Desktop: original
                     : 200,
-                  objectFit: 'cover',
                   borderRadius: isEmbedded ? 0 : undefined,
+                  overflow: 'hidden',
                 }}
-              />
+              >
+                <Image
+                  src={imageUrl}
+                  alt={recipe.title}
+                  fill
+                  sizes={isEmbedded 
+                    ? '(max-width: 768px) 237px, 356px' 
+                    : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 400px'}
+                  style={{ objectFit: 'cover' }}
+                  loading={loading}
+                  priority={loading === 'eager'}
+                  unoptimized={!imageUrl.includes('recipeassist.app') && !imageUrl.includes('i.ytimg.com')}
+                />
+              </Box>
             ) : (
               <Box
                 sx={{
@@ -421,17 +432,25 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
         {/* Recipe Image */}
         <Box sx={{ mt: 2, mb: 2 }}>
           {imageUrl ? (
-            <CardMedia
-              component="img"
-              image={imageUrl}
-              alt={recipe.title}
+            <Box
               sx={{
+                position: 'relative',
                 width: '100%',
-                maxHeight: 400,
-                objectFit: 'cover',
+                height: { xs: 250, sm: 300, md: 400 },
                 borderRadius: 1,
+                overflow: 'hidden',
               }}
-            />
+            >
+              <Image
+                src={imageUrl}
+                alt={recipe.title}
+                fill
+                sizes="(max-width: 600px) 100vw, (max-width: 960px) 80vw, 1200px"
+                style={{ objectFit: 'cover' }}
+                priority={loading === 'eager'}
+                unoptimized={imageUrl.startsWith('http') && !imageUrl.includes('recipeassist.app')}
+              />
+            </Box>
           ) : (
             <Box
               sx={{
