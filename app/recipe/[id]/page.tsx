@@ -25,6 +25,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
+import SaveIcon from '@mui/icons-material/Save';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
@@ -252,7 +253,7 @@ export default function RecipeDetailPage() {
                   <Button
                     variant="contained"
                     color="primary"
-                    startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
+                    startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <SaveIcon />}
                     onClick={handleAddRecipe}
                     disabled={isAdding || isAdded}
                     sx={{
