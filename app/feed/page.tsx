@@ -243,7 +243,7 @@ export default function FeedPage() {
 
         {/* Loading State */}
         {loading && (
-          <Box sx={{ maxWidth: 500, mx: 'auto' }}>
+          <Box sx={{ maxWidth: 625, mx: 'auto' }}>
             {[1, 2, 3].map((i) => (
               <Box key={i} sx={{ mb: 3 }}>
                 <RecipeCardSkeleton />
@@ -280,7 +280,7 @@ export default function FeedPage() {
 
         {/* Recipe Feed - Stacked Cards */}
         {!loading && recipes.length > 0 && (
-          <Box sx={{ maxWidth: 500, mx: 'auto' }}>
+          <Box sx={{ maxWidth: 625, mx: 'auto' }}>
             {recipes.map((recipe) => (
               <Card 
                 key={recipe.id} 
