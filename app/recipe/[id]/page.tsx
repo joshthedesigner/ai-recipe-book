@@ -228,80 +228,65 @@ export default function RecipeDetailPage() {
 
           {/* Title and Tags */}
           <Box sx={{ pb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
-              <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
-                {recipe.title}
-              </Typography>
-              
-              {/* Show Add button for recipes that don't belong to user */}
-              {!isOwnRecipe && (
-                <Button
-                  variant={isAdded ? "contained" : "outlined"}
-                  size="small"
-                  startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
-                  onClick={handleAddRecipe}
-                  disabled={isAdding || isAdded}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    minWidth: 90,
-                    opacity: 1,
-                    ...(isAdded ? {
-                      bgcolor: 'success.main',
-                      color: 'white',
-                      '&.Mui-disabled': {
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap', flex: 1 }}>
+                <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
+                  {recipe.title}
+                </Typography>
+                
+                {/* Show Add button for recipes that don't belong to user */}
+                {!isOwnRecipe && (
+                  <Button
+                    variant={isAdded ? "contained" : "outlined"}
+                    size="small"
+                    startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : null}
+                    onClick={handleAddRecipe}
+                    disabled={isAdding || isAdded}
+                    sx={{
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      minWidth: 90,
+                      opacity: 1,
+                      ...(isAdded ? {
                         bgcolor: 'success.main',
                         color: 'white',
-                        opacity: 1,
-                      },
-                    } : {
-                      color: 'text.secondary',
-                      borderColor: 'text.secondary',
-                      '&:hover': {
-                        borderColor: 'text.secondary',
-                        bgcolor: 'action.hover',
-                      },
-                      '&.Mui-disabled': {
-                        opacity: 1,
+                        '&.Mui-disabled': {
+                          bgcolor: 'success.main',
+                          color: 'white',
+                          opacity: 1,
+                        },
+                      } : {
                         color: 'text.secondary',
                         borderColor: 'text.secondary',
-                      },
-                    }),
-                  }}
-                >
-                  {isAdded ? 'Added' : 'Add'}
-                </Button>
-              )}
-              
-              {/* Show delete menu only for own recipes */}
-              {isOwnRecipe && (
-                <IconButton
-                  onClick={handleMenuClick}
-                  size="small"
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              )}
-            </Box>
-            
-            {/* Tags */}
-            {recipe.tags && recipe.tags.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                {recipe.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    size="medium"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
+                        '&:hover': {
+                          borderColor: 'text.secondary',
+                          bgcolor: 'action.hover',
+                        },
+                        '&.Mui-disabled': {
+                          opacity: 1,
+                          color: 'text.secondary',
+                          borderColor: 'text.secondary',
+                        },
+                      }),
+                    }}
+                  >
+                    {isAdded ? 'Added' : 'Add'}
+                  </Button>
+                )}
+                
+                {/* Show delete menu only for own recipes */}
+                {isOwnRecipe && (
+                  <IconButton
+                    onClick={handleMenuClick}
+                    size="small"
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                )}
               </Box>
-            )}
 
-            {/* Source Link */}
-            {recipe.source_url && (
-              <Box>
+              {/* Source Link - Right Aligned */}
+              {recipe.source_url && (
                 <Button
                   href={recipe.source_url}
                   target="_blank"
@@ -312,6 +297,7 @@ export default function RecipeDetailPage() {
                     fontSize: '1.5rem',
                     fontWeight: 400,
                     p: 0,
+                    ml: 'auto',
                     '&:hover': {
                       bgcolor: 'transparent',
                       textDecoration: 'underline',
@@ -320,6 +306,21 @@ export default function RecipeDetailPage() {
                 >
                   {getSourceName(recipe.source_url)}
                 </Button>
+              )}
+            </Box>
+            
+            {/* Tags */}
+            {recipe.tags && recipe.tags.length > 0 && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {recipe.tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    size="medium"
+                    color="primary"
+                    variant="outlined"
+                  />
+                ))}
               </Box>
             )}
           </Box>
