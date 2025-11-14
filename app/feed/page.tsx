@@ -318,24 +318,37 @@ export default function FeedPage() {
                     {recipe.friend_name?.charAt(0).toUpperCase() || 'F'}
                   </Box>
                   <Box sx={{ flex: 1 }}>
-                    <Typography 
-                      variant="body1" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFriendClick(recipe.friend_name || recipe.contributor_name);
-                      }}
-                      sx={{ 
-                        fontWeight: 600, 
-                        lineHeight: 1.2,
-                        cursor: 'pointer',
-                        '&:hover': {
-                          textDecoration: 'underline',
-                          color: 'primary.main',
-                        },
-                      }}
-                    >
-                      {recipe.friend_name || recipe.contributor_name}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
+                      <Typography 
+                        component="span"
+                        variant="body1" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFriendClick(recipe.friend_name || recipe.contributor_name);
+                        }}
+                        sx={{ 
+                          fontWeight: 600, 
+                          lineHeight: 1.2,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                            color: 'primary.main',
+                          },
+                        }}
+                      >
+                        {recipe.friend_name || recipe.contributor_name}
+                      </Typography>
+                      <Typography 
+                        component="span"
+                        variant="body1" 
+                        sx={{ 
+                          fontWeight: 400,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        added a new recipe
+                      </Typography>
+                    </Box>
                     <Typography variant="caption" color="text.secondary">
                       {recipe.created_at && formatRelativeTime(recipe.created_at)}
                     </Typography>
