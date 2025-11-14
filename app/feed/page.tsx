@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import CheckIcon from '@mui/icons-material/Check';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -354,7 +355,7 @@ export default function FeedPage() {
                     </Typography>
                   </Box>
                   
-                  {/* Add to Cookbook Button */}
+                  {/* Save to Cookbook Button */}
                   {addedRecipes.has(recipe.id!) ? (
                     <Button
                       variant="contained"
@@ -375,13 +376,13 @@ export default function FeedPage() {
                         },
                       }}
                     >
-                      Added
+                      Saved
                     </Button>
                   ) : (
                     <Button
                       variant="outlined"
                       size="small"
-                      startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : null}
+                      startIcon={addingRecipe === recipe.id ? <CircularProgress size={16} /> : <BookmarkIcon />}
                       onClick={(e) => handleAddRecipe(recipe.id!, e)}
                       disabled={addingRecipe === recipe.id}
                       sx={{
@@ -402,7 +403,7 @@ export default function FeedPage() {
                         },
                       }}
                     >
-                      Add
+                      Save
                     </Button>
                   )}
                 </Box>
