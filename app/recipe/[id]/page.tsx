@@ -251,8 +251,8 @@ export default function RecipeDetailPage() {
                 {/* Show Add button for recipes that don't belong to user */}
                 {!isOwnRecipe && (
                   <Button
-                    variant="contained"
-                    color="primary"
+                    variant={fromFeed ? "outlined" : "contained"}
+                    color={fromFeed ? undefined : "primary"}
                     startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <BookmarkIcon />}
                     onClick={handleAddRecipe}
                     disabled={isAdding || isAdded}
@@ -264,12 +264,22 @@ export default function RecipeDetailPage() {
                       '& .MuiButton-startIcon': {
                         marginRight: '4px', // Reduce gap by 4px (default is 8px, so 8-4=4)
                       },
+                      ...(fromFeed && !isAdded && {
+                        color: 'text.secondary',
+                        borderColor: 'text.secondary',
+                        '&:hover': {
+                          borderColor: 'text.secondary',
+                          bgcolor: 'action.hover',
+                        },
+                      }),
                       ...(isAdded && {
                         bgcolor: 'success.main',
                         color: 'white',
+                        borderColor: 'success.main',
                         '&.Mui-disabled': {
                           bgcolor: 'success.main',
                           color: 'white',
+                          borderColor: 'success.main',
                           opacity: 1,
                         },
                       }),
