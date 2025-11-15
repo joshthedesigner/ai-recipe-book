@@ -246,8 +246,8 @@ export default function RecipeDetailPage() {
               )}
             </Box>
 
-            {/* Action Buttons - Below Title, Right Aligned */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+            {/* Action Buttons - Below Title, Left Aligned */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
               {/* Show Add button for recipes that don't belong to user */}
               {!isOwnRecipe && (
                 <Button
