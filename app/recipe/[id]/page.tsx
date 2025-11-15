@@ -314,21 +314,6 @@ export default function RecipeDetailPage() {
                 )}
               </Box>
             </Box>
-            
-            {/* Tags */}
-            {recipe.tags && recipe.tags.length > 0 && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {recipe.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={tag}
-                    size="medium"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </Box>
-            )}
           </Box>
         </Container>
       </Box>
@@ -342,7 +327,7 @@ export default function RecipeDetailPage() {
               aspectRatio: '16/9',
               borderRadius: 2,
               overflow: 'hidden',
-              mb: 5,
+              mb: 3,
               bgcolor: 'black',
             }}
           >
@@ -367,7 +352,7 @@ export default function RecipeDetailPage() {
               height: 425,
               borderRadius: 2,
               overflow: 'hidden',
-              mb: 5,
+              mb: 3,
               position: 'relative',
             }}
           >
@@ -380,6 +365,21 @@ export default function RecipeDetailPage() {
                 objectFit: 'cover',
               }}
             />
+          </Box>
+        )}
+
+        {/* Tags - Below image/video */}
+        {recipe.tags && recipe.tags.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 5 }}>
+            {recipe.tags.map((tag) => (
+              <Chip
+                key={tag}
+                label={tag}
+                size="medium"
+                color="primary"
+                variant="outlined"
+              />
+            ))}
           </Box>
         )}
 
