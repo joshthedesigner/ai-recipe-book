@@ -173,6 +173,41 @@ export default function FeedPage() {
     }
   }, [loading]); // Restore after loading is complete
 
+  // Mark feed as viewed when user scrolls (backup - nav already marks on navigation)
+  useEffect(() => {
+    if (!user || !recipes.length || loading) return;
+
+    let markedAsViewed = false;
+
+    const markViewed = async () => {
+      if (markedAsViewed) return;
+      markedAsViewed = true;
+
+      try {
+        await fetch('/api/feed/mark-viewed', { method: 'POST' });
+        // Dispatch custom event to notify nav components to refresh count
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('feedViewed'));
+        }
+      } catch (error) {
+        console.error('Error marking feed as viewed:', error);
+      }
+    };
+
+    // Mark as viewed after user scrolls (backup if nav didn't mark it)
+    const handleScroll = () => {
+      if (window.scrollY > 200) { // Scrolled past some content
+        markViewed();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { once: true, passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [user, recipes, loading]);
+
   // Load more recipes
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
@@ -417,6 +452,7 @@ export default function FeedPage() {
                   compact={true}
                   showFriendHeader={false}
                   isEmbedded={true}
+                  isNew={recipe.is_new ?? false}
                   onClick={() => handleRecipeClick(recipe)}
                 />
               </Card>

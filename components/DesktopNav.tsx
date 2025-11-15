@@ -39,6 +39,7 @@ export default function DesktopNav() {
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [feedUnreadCount, setFeedUnreadCount] = useState(0);
 
   const handleHomeClick = () => {
     const ownGroup = groups.find(g => g.isOwn);
@@ -93,6 +94,73 @@ export default function DesktopNav() {
       supabase.removeChannel(channel);
     };
   }, [user?.email]);
+
+  // Load feed unread count
+  const loadFeedUnreadCount = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/feed/unread-count');
+      const data = await response.json();
+
+      if (data.success) {
+        setFeedUnreadCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading feed unread count:', error);
+    }
+  };
+
+  // Initial load of feed unread count
+  useEffect(() => {
+    loadFeedUnreadCount();
+  }, [user]);
+
+  // Poll for feed updates every 30 seconds (skip if on feed page)
+  useEffect(() => {
+    if (!user || pathname === '/feed') return;
+
+    const interval = setInterval(() => {
+      loadFeedUnreadCount();
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user, pathname]);
+
+  // Mark feed as viewed immediately when navigating to feed page
+  useEffect(() => {
+    if (pathname === '/feed' && user) {
+      // Mark as viewed immediately when user navigates to feed
+      fetch('/api/feed/mark-viewed', { method: 'POST' })
+        .then(() => {
+          loadFeedUnreadCount(); // Refresh count immediately to hide badge
+        })
+        .catch((error) => {
+          console.error('Error marking feed as viewed:', error);
+        });
+    }
+  }, [pathname, user]);
+
+  // Refresh unread count when leaving feed page or when feed is marked as viewed
+  useEffect(() => {
+    if (!user) return;
+
+    const handleFeedViewed = () => {
+      loadFeedUnreadCount();
+    };
+
+    // Listen for feed viewed event (backup from feed page scroll handler)
+    window.addEventListener('feedViewed', handleFeedViewed);
+
+    // Refresh count when user navigates away from feed
+    if (pathname !== '/feed') {
+      loadFeedUnreadCount();
+    }
+
+    return () => {
+      window.removeEventListener('feedViewed', handleFeedViewed);
+    };
+  }, [pathname, user]);
 
   const count = pendingRequests.length;
 
@@ -195,6 +263,7 @@ export default function DesktopNav() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
+                  gap: 0.5,
                   px: 1.5,
                   py: 1,
                   borderRadius: 1,
@@ -226,6 +295,24 @@ export default function DesktopNav() {
                 >
                   Feed
                 </Typography>
+                {feedUnreadCount > 0 && (
+                  <Box
+                    sx={{
+                      bgcolor: 'error.main',
+                      color: 'white',
+                      borderRadius: '10px',
+                      px: 0.75,
+                      py: 0.25,
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      minWidth: '20px',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {feedUnreadCount}
+                  </Box>
+                )}
               </ButtonBase>
             )}
 

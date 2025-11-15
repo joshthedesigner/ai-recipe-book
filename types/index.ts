@@ -38,6 +38,7 @@ export interface Recipe {
   updated_at?: string;
   friend_name?: string; // Added by feed API for display
   group_name?: string; // Added by feed API for display
+  is_new?: boolean; // Added by feed API to indicate new recipe since last view
 }
 
 // ========================================

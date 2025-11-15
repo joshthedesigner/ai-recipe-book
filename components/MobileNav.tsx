@@ -46,6 +46,7 @@ export default function MobileNav() {
   const { showToast } = useToast();
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [feedUnreadCount, setFeedUnreadCount] = useState(0);
 
   const handleSearchExpand = () => setSearchExpanded(true);
   const handleSearchCollapse = () => setSearchExpanded(false);
@@ -103,6 +104,73 @@ export default function MobileNav() {
       supabase.removeChannel(channel);
     };
   }, [user?.email]);
+
+  // Load feed unread count
+  const loadFeedUnreadCount = async () => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/feed/unread-count');
+      const data = await response.json();
+
+      if (data.success) {
+        setFeedUnreadCount(data.count || 0);
+      }
+    } catch (error) {
+      console.error('Error loading feed unread count:', error);
+    }
+  };
+
+  // Initial load of feed unread count
+  useEffect(() => {
+    loadFeedUnreadCount();
+  }, [user]);
+
+  // Poll for feed updates every 30 seconds (skip if on feed page)
+  useEffect(() => {
+    if (!user || pathname === '/feed') return;
+
+    const interval = setInterval(() => {
+      loadFeedUnreadCount();
+    }, 30000); // Poll every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user, pathname]);
+
+  // Mark feed as viewed immediately when navigating to feed page
+  useEffect(() => {
+    if (pathname === '/feed' && user) {
+      // Mark as viewed immediately when user navigates to feed
+      fetch('/api/feed/mark-viewed', { method: 'POST' })
+        .then(() => {
+          loadFeedUnreadCount(); // Refresh count immediately to hide badge
+        })
+        .catch((error) => {
+          console.error('Error marking feed as viewed:', error);
+        });
+    }
+  }, [pathname, user]);
+
+  // Refresh unread count when leaving feed page or when feed is marked as viewed
+  useEffect(() => {
+    if (!user) return;
+
+    const handleFeedViewed = () => {
+      loadFeedUnreadCount();
+    };
+
+    // Listen for feed viewed event (backup from feed page scroll handler)
+    window.addEventListener('feedViewed', handleFeedViewed);
+
+    // Refresh count when user navigates away from feed
+    if (pathname !== '/feed') {
+      loadFeedUnreadCount();
+    }
+
+    return () => {
+      window.removeEventListener('feedViewed', handleFeedViewed);
+    };
+  }, [pathname, user]);
 
   const count = pendingRequests.length;
 
@@ -232,12 +300,24 @@ export default function MobileNav() {
                         } : {},
                       }}
                     >
-                      <DynamicFeedIcon 
-                        sx={{ 
-                          fontSize: 20, 
-                          color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
-                        }} 
-                      />
+                      <Badge
+                        badgeContent={feedUnreadCount}
+                        color="error"
+                        sx={{
+                          '& .MuiBadge-badge': {
+                            fontSize: '9px',
+                            height: '16px',
+                            minWidth: '16px',
+                          },
+                        }}
+                      >
+                        <DynamicFeedIcon 
+                          sx={{ 
+                            fontSize: 20, 
+                            color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
+                          }} 
+                        />
+                      </Badge>
                       <Typography
                         variant="caption"
                         sx={{

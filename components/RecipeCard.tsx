@@ -46,6 +46,7 @@ interface RecipeCardProps {
   isFriendView?: boolean; // If true, show Add button instead of overflow menu
   isAdded?: boolean; // If true, show "Added" state
   isAdding?: boolean; // If true, show loading state
+  isNew?: boolean; // If true, show red dot indicator for new recipe
 }
 
 // Simple relative time formatter
@@ -66,7 +67,7 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false, isNew = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
@@ -194,6 +195,24 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             <MoreVertIcon fontSize="small" />
           </IconButton>
         ) : null}
+        
+        {/* New Recipe Indicator - Red Dot */}
+        {isNew && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: 'error.main',
+              border: '2px solid white',
+              zIndex: 2,
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+            }}
+          />
+        )}
         
         <CardActionArea onClick={onClick} sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
           {/* Image with optional friend header overlay */}

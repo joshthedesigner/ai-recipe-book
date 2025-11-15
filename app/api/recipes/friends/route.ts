@@ -49,6 +49,15 @@ export async function GET(request: NextRequest) {
       return rateLimitResponse(rateLimitResult);
     }
 
+    // Get user's last feed view timestamp (for is_new flag)
+    const { data: userRecord } = await supabase
+      .from('users')
+      .select('last_feed_view_at')
+      .eq('id', user.id)
+      .single();
+
+    const lastViewAt = userRecord?.last_feed_view_at || null;
+
     // Get all groups user has access to
     console.log('[Friends Feed API] Fetching user groups...');
     const allGroups = await getUserGroups(supabase, user.id);
@@ -111,16 +120,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Format recipes with friend information
+    // Format recipes with friend information and is_new flag
     console.log('[Friends Feed API] Formatting recipes...');
     const formattedRecipes = recipes?.map(recipe => {
       // Find the matching friend group to get the friend's name
       const friendGroup = friendGroups.find(g => g.id === recipe.group_id);
       
+      // Determine if recipe is new (created after last feed view)
+      // If lastViewAt is NULL, all recipes are new (user never viewed feed)
+      const isNew = lastViewAt
+        ? new Date(recipe.created_at) > new Date(lastViewAt)
+        : true;
+      
       return {
         ...recipe,
         friend_name: friendGroup?.name.replace("'s recipes", '') || recipe.contributor_name,
         group_name: friendGroup?.name || 'Unknown',
+        is_new: isNew,
       };
     }) || [];
 
