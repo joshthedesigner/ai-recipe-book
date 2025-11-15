@@ -7,7 +7,7 @@
  * Includes expanding search pattern for mobile
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -47,6 +47,7 @@ export default function MobileNav() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [feedUnreadCount, setFeedUnreadCount] = useState(0);
+  const fetchControllerRef = useRef<AbortController | null>(null);
 
   const handleSearchExpand = () => setSearchExpanded(true);
   const handleSearchCollapse = () => setSearchExpanded(false);
@@ -109,15 +110,31 @@ export default function MobileNav() {
   const loadFeedUnreadCount = async () => {
     if (!user) return;
 
+    // Cancel previous fetch if exists
+    if (fetchControllerRef.current) {
+      fetchControllerRef.current.abort();
+    }
+
+    // Create new controller for this fetch
+    fetchControllerRef.current = new AbortController();
+
     try {
-      const response = await fetch('/api/feed/unread-count');
+      const response = await fetch('/api/feed/unread-count', {
+        signal: fetchControllerRef.current.signal
+      });
       const data = await response.json();
 
       if (data.success) {
+        // Don't update if we're on feed page (mark-viewed is handling it)
+        // This prevents stale data from overwriting state after navigation
+        if (pathname === '/feed') return;
         setFeedUnreadCount(data.count || 0);
       }
-    } catch (error) {
-      console.error('Error loading feed unread count:', error);
+    } catch (error: any) {
+      // Ignore abort errors (expected when cancelling)
+      if (error.name !== 'AbortError') {
+        console.error('Error loading feed unread count:', error);
+      }
     }
   };
 
@@ -125,6 +142,14 @@ export default function MobileNav() {
   useEffect(() => {
     loadFeedUnreadCount();
   }, [user]);
+
+  // Cancel in-flight fetches when navigating to feed page
+  useEffect(() => {
+    if (pathname === '/feed' && fetchControllerRef.current) {
+      fetchControllerRef.current.abort();
+      fetchControllerRef.current = null;
+    }
+  }, [pathname]);
 
   // Poll for feed updates every 30 seconds (skip if on feed page)
   useEffect(() => {
