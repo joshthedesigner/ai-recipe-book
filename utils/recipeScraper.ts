@@ -18,6 +18,7 @@ interface ScrapedRecipe {
   tags: string[];
   source_url: string;
   image_url?: string;
+  sections?: Array<{ title: string; ingredients?: string[]; steps?: string[] }>;
 }
 
 /**
@@ -326,10 +327,13 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       console.log(`Validated steps: ${validSteps.length}/${schemaRecipe.steps.length} are valid`);
       
       // Step 3: If we have enough valid steps, condense and use them
+      // Try to extract group sections from common plugins (e.g., WPRM)
+      const sections = extractPluginSections($);
+      
       if (validSteps.length >= 3) {
         console.log('Condensing steps for clarity...');
         const condensedSteps = await condenseSteps(validSteps);
-        return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
+        return applyAutoTags({ ...schemaRecipe, steps: condensedSteps, sections });
       }
       
       // Step 4: Try HTML fallback
@@ -341,7 +345,8 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
         if (validHtmlSteps.length >= 3) {
           console.log('Using HTML-parsed steps, condensing...');
           const condensedSteps = await condenseSteps(validHtmlSteps);
-          return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
+          // Keep any sections we might have detected
+          return applyAutoTags({ ...schemaRecipe, steps: condensedSteps, sections });
         }
       }
       
@@ -367,7 +372,7 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       
       console.log('Condensing final validated steps...');
       const condensedSteps = await condenseSteps(validSteps);
-      return applyAutoTags({ ...schemaRecipe, steps: condensedSteps });
+      return applyAutoTags({ ...schemaRecipe, steps: condensedSteps, sections });
     }
 
     // No schema found: Fallback to full OpenAI parsing
@@ -380,12 +385,103 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
       fullRecipe.steps = await condenseSteps(fullRecipe.steps);
     }
     
-    return applyAutoTags(fullRecipe);
+    // Try to add plugin sections even in AI fallback
+    const sections = extractPluginSections($);
+    return applyAutoTags({ ...fullRecipe, sections });
 
   } catch (error) {
     console.error('Error scraping recipe:', error);
     throw new Error(`Failed to scrape recipe from URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+/**
+ * Extract section groups from popular recipe plugins (WPRM; basic Tasty fallback)
+ */
+function extractPluginSections($: cheerio.CheerioAPI): Array<{ title: string; ingredients?: string[]; steps?: string[] }> {
+  const byTitle: Record<string, { title: string; ingredients?: string[]; steps?: string[] }> = {};
+
+  // WPRM ingredient groups
+  const ingGroups = $('.wprm-recipe-ingredient-group');
+  if (ingGroups.length > 0) {
+    ingGroups.each((_, el) => {
+      const title = ($(el).find('.wprm-recipe-group-name').text().trim()) || 'Ingredients';
+      const items = $(el)
+        .find('.wprm-recipe-ingredient')
+        .map((i, li) => $(li).text().trim())
+        .get()
+        .filter(Boolean);
+      if (!byTitle[title]) byTitle[title] = { title };
+      if (items.length > 0) byTitle[title].ingredients = items;
+    });
+  } else {
+    // Single ingredient list fallback (still place under one section)
+    const items = $('.wprm-recipe-ingredient')
+      .map((i, li) => $(li).text().trim())
+      .get()
+      .filter(Boolean);
+    if (items.length > 0) {
+      const title = 'Ingredients';
+      if (!byTitle[title]) byTitle[title] = { title };
+      byTitle[title].ingredients = items;
+    }
+  }
+
+  // WPRM instruction groups
+  const instGroups = $('.wprm-recipe-instruction-group');
+  if (instGroups.length > 0) {
+    instGroups.each((_, el) => {
+      const title = ($(el).find('.wprm-recipe-group-name').text().trim()) || 'Instructions';
+      const steps = $(el)
+        .find('.wprm-recipe-instruction-text')
+        .map((i, li) => $(li).text().trim())
+        .get()
+        .filter(Boolean);
+      if (!byTitle[title]) byTitle[title] = { title };
+      if (steps.length > 0) byTitle[title].steps = steps;
+    });
+  } else {
+    // Single instructions fallback (selector already used elsewhere)
+    const steps = $('.wprm-recipe-instruction-text')
+      .map((i, li) => $(li).text().trim())
+      .get()
+      .filter(Boolean);
+    if (steps.length > 0) {
+      const title = 'Instructions';
+      if (!byTitle[title]) byTitle[title] = { title };
+      byTitle[title].steps = steps;
+    }
+  }
+
+  // Basic Tasty fallback (labels sometimes present)
+  $('.tasty-recipes-ingredient-group, .tasty-recipes-instruction-group').each((_, el) => {
+    const label = $(el).find('.tasty-recipes-label').text().trim();
+    const title = label || 'Section';
+    const ingredients = $(el)
+      .find('.tasty-recipes-ingredients li')
+      .map((i, li) => $(li).text().trim())
+      .get()
+      .filter(Boolean);
+    const steps = $(el)
+      .find('.tasty-recipes-instructions li')
+      .map((i, li) => $(li).text().trim())
+      .get()
+      .filter(Boolean);
+    if (!byTitle[title]) byTitle[title] = { title };
+    if (ingredients.length > 0) byTitle[title].ingredients = ingredients;
+    if (steps.length > 0) byTitle[title].steps = steps;
+  });
+
+  // Assemble sections with at least some content
+  const sections = Object.values(byTitle).filter(
+    (s) => (s.ingredients && s.ingredients.length > 0) || (s.steps && s.steps.length > 0)
+  );
+
+  if (sections.length > 0) {
+    console.log(`Extracted ${sections.length} section group(s) from plugin markup.`);
+  }
+
+  return sections;
 }
 
 /**

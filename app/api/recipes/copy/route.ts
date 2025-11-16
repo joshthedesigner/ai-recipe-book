@@ -81,6 +81,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for existing copy (idempotent behavior)
+    const { data: existing, error: existingError } = await supabase
+      .from('recipes')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('group_id', userGroupId)
+      .eq('title', originalRecipe.title)
+      .eq('source_url', originalRecipe.source_url);
+
+    if (!existingError && existing && existing.length > 0) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: 'Recipe already in your cookbook.',
+          recipe: existing[0],
+          alreadyHad: true,
+        },
+        { status: 200 }
+      );
+    }
+
     // Generate embedding for the copied recipe
     const searchText = createRecipeSearchText(originalRecipe);
     const embedding = await generateEmbedding(searchText);

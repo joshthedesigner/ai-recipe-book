@@ -136,3 +136,4 @@ const isShowingRecents = !hasSearchInput && recentSearches.length > 0;
 - No performance impact (localStorage operations are synchronous but minimal)
 
 
+

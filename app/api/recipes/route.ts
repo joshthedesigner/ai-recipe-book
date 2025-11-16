@@ -107,9 +107,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query - exclude embedding vector for performance (6KB per recipe!)
-    let query = supabase
-      .from('recipes')
-      .select('id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at');
+    const selectWithSections = 'id, user_id, group_id, title, ingredients, steps, tags, sections, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at';
+    const selectWithoutSections = 'id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at';
+
+    let query = supabase.from('recipes').select(selectWithSections);
 
     // Filter by group_id if provided
     if (groupId) {
@@ -136,7 +137,27 @@ export async function GET(request: NextRequest) {
     query = query.range(offset, offset + limit - 1);
 
     // Execute query
-    const { data, error, count } = await query;
+    let { data, error, count } = await query;
+
+    // Fallback: if sections column is missing (migration not applied yet), retry without it
+    if (error && typeof error.message === 'string' && /column.*sections.*does not exist/i.test(error.message)) {
+      let retry = supabase.from('recipes').select(selectWithoutSections);
+      if (groupId) {
+        retry = retry.eq('group_id', groupId);
+      } else {
+        retry = retry.or(`group_id.is.null,user_id.eq.${user.id}`);
+      }
+      if (tag) retry = retry.contains('tags', [tag]);
+      if (contributor) retry = retry.eq('contributor_name', contributor);
+      retry = retry.order(sortBy, { ascending: sortOrder === 'asc' });
+      retry = retry.range(offset, offset + limit - 1);
+      const retryResult = await retry;
+      data = retryResult.data as any;
+      // @ts-expect-error supabase type
+      count = retryResult.count as any;
+      error = null as any;
+      console.warn('Recipes API: sections column missing; served results without sections. Apply DB migration to enable sections.');
+    }
 
     if (error) {
       return NextResponse.json(
