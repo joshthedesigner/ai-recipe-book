@@ -189,7 +189,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               bgcolor: 'background.paper',
               boxShadow: 1,
               '&:hover': {
-                bgcolor: 'action.hover',
+                bgcolor: 'grey.100',
               },
             }}
           >
