@@ -152,9 +152,9 @@ export async function GET(request: NextRequest) {
       retry = retry.order(sortBy, { ascending: sortOrder === 'asc' });
       retry = retry.range(offset, offset + limit - 1);
       const retryResult = await retry;
-      data = retryResult.data as any;
-      // @ts-expect-error supabase type
-      count = retryResult.count as any;
+      const retryAny = retryResult as unknown as { data: unknown[] | null; count?: number | null; error?: unknown };
+      data = retryAny.data as any;
+      count = (retryAny.count ?? 0) as any;
       error = null as any;
       console.warn('Recipes API: sections column missing; served results without sections. Apply DB migration to enable sections.');
     }
