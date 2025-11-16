@@ -80,18 +80,32 @@ export async function generateEmbeddingsBatch(texts: string[]): Promise<number[]
  * Create a searchable text representation of a recipe
  * Combines title, ingredients, steps, and tags into one string
  */
-export function createRecipeSearchText(recipe: {
-  title: string;
-  ingredients: string[];
-  steps: string[];
-  tags: string[];
-}): string {
+export function createRecipeSearchText(recipe: any): string {
+  const title = recipe.title || '';
+  const ingredients: string[] = recipe.ingredients || [];
+  const steps: string[] = recipe.steps || [];
+  const tags: string[] = recipe.tags || [];
+
+  // Include sections if present
+  const sections = Array.isArray(recipe.sections) ? recipe.sections : [];
+  const sectionText = sections
+    .map((s: any) => {
+      const stitle = s?.title ? `Section: ${s.title}` : 'Section';
+      const sings = Array.isArray(s?.ingredients) ? s.ingredients.join(', ') : '';
+      const ssteps = Array.isArray(s?.steps) ? s.steps.join(' ') : '';
+      return [stitle, sings ? `Ingredients: ${sings}` : '', ssteps ? `Steps: ${ssteps}` : '']
+        .filter(Boolean)
+        .join('\n');
+    })
+    .join('\n');
+
   const parts = [
-    `Title: ${recipe.title}`,
-    `Ingredients: ${recipe.ingredients.join(', ')}`,
-    `Steps: ${recipe.steps.join(' ')}`,
-    `Tags: ${recipe.tags.join(', ')}`,
-  ];
+    `Title: ${title}`,
+    sectionText ? sectionText : '',
+    `Ingredients: ${ingredients.join(', ')}`,
+    `Steps: ${steps.join(' ')}`,
+    `Tags: ${tags.join(', ')}`,
+  ].filter(Boolean);
   
   return parts.join('\n');
 }

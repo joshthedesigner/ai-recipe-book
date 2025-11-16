@@ -228,6 +228,7 @@ export async function saveConfirmedRecipe(
         cookbook_page: recipe.cookbook_page || null,
         contributor_name: recipe.contributor_name,
         embedding: embedding,
+        sections: (recipe as any).sections || null,
       })
       .select()
       .single();
@@ -429,6 +430,11 @@ Would you still like to save this video link so you can easily find it in the fu
             image_url: scrapedRecipe.image_url,
             incomplete: false,
           };
+          // Attach sections from scraper when available
+          const scrapedSections = (scrapedRecipe as any)?.sections;
+          if (Array.isArray(scrapedSections) && scrapedSections.length > 0) {
+            (extractedRecipe as any).sections = scrapedSections;
+          }
 
           // Validate we got required fields
           if (!extractedRecipe.ingredients || extractedRecipe.ingredients.length === 0 ||
@@ -452,6 +458,7 @@ Would you still like to save this video link so you can easily find it in the fu
               cookbook_name: cookbookName || null,
               cookbook_page: cookbookPage || null,
               contributor_name: contributorName,
+              sections: (extractedRecipe as any).sections || undefined,
             };
 
             const preview = generateRecipePreview(previewRecipe);
@@ -526,6 +533,7 @@ Would you still like to save this video link so you can easily find it in the fu
               cookbook_page: cookbookPage || null,
               contributor_name: contributorName,
               embedding: embedding,
+              sections: (extractedRecipe as any).sections || null,
             })
             .select()
             .single();
@@ -618,6 +626,7 @@ Would you still like to save this video link so you can easily find it in the fu
         cookbook_name: cookbookName || null,
         cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
+        sections: (extractedRecipe as any).sections || undefined,
       };
 
       const preview = generateRecipePreview(previewRecipe);
@@ -692,6 +701,7 @@ Would you still like to save this video link so you can easily find it in the fu
         cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
         embedding: embedding,
+        sections: (extractedRecipe as any).sections || null,
       })
       .select()
       .single();
@@ -819,6 +829,27 @@ function generateRecipePreview(recipe: Recipe): string {
   const stepList = recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n');
   const tagList = recipe.tags.join(', ');
 
+  // If sections exist, render sections-only; else render flat
+  const sectionsText = Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0
+    ? (recipe as any).sections.map((s: any) => {
+        const sIng = Array.isArray(s.ingredients) && s.ingredients.length > 0
+          ? s.ingredients.map((ing: string, i: number) => `  ${i + 1}. ${ing}`).join('\n')
+          : '';
+        const sSteps = Array.isArray(s.steps) && s.steps.length > 0
+          ? s.steps.map((st: string, i: number) => `  ${i + 1}. ${st}`).join('\n')
+          : '';
+        return [
+          `### ${s.title || 'Section'}`,
+          sIng ? `Ingredients:\n${sIng}` : '',
+          sSteps ? `Instructions:\n${sSteps}` : '',
+        ].filter(Boolean).join('\n');
+      }).join('\n\n')
+    : '';
+
+  const body = sectionsText
+    ? `🧩 **Sections**\n\n${sectionsText}`
+    : `📝 **Ingredients** (${recipe.ingredients.length}):\n${ingredientList}\n\n👨‍🍳 **Instructions** (${recipe.steps.length}):\n${stepList}`;
+
   return `📋 **Recipe Preview**
 
 **${recipe.title}**
@@ -826,11 +857,7 @@ ${recipe.source_url ? `🔗 Source: ${recipe.source_url}` : ''}
 
 🏷️ **Tags:** ${tagList}
 
-📝 **Ingredients** (${recipe.ingredients.length}):
-${ingredientList}
-
-👨‍🍳 **Instructions** (${recipe.steps.length}):
-${stepList}
+${body}
 
 ---
 ✅ **Does this look correct?** Click the buttons below to save or cancel.`;

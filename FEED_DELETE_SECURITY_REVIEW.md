@@ -92,3 +92,4 @@ Only logs to console → User sees no feedback
 
 The security is solid, but the UX needs improvement.
 
+

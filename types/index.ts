@@ -19,6 +19,12 @@ export interface IntentClassification {
 // RECIPE TYPES
 // ========================================
 
+export interface RecipeSection {
+  title: string;
+  ingredients?: string[];
+  steps?: string[];
+}
+
 export interface Recipe {
   id?: string;
   user_id?: string;
@@ -39,6 +45,7 @@ export interface Recipe {
   friend_name?: string; // Added by feed API for display
   group_name?: string; // Added by feed API for display
   is_new?: boolean; // Added by feed API to indicate new recipe since last view
+  sections?: RecipeSection[]; // Optional structured sections when detected
 }
 
 // ========================================

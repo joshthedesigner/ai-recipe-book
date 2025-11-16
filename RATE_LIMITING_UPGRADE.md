@@ -112,3 +112,4 @@ curl -X POST http://localhost:3000/api/chat ...
 - Scales to paid tiers as needed
 
 
+

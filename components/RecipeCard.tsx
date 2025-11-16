@@ -494,48 +494,107 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Ingredients */}
-        <Typography variant="h6" gutterBottom>
-          Ingredients ({recipe.ingredients.length})
-        </Typography>
-        <List dense>
-          {recipe.ingredients.map((ingredient, index) => (
-            <ListItem key={index}>
-              <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
-              <ListItemText primary={ingredient} />
-            </ListItem>
-          ))}
-        </List>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Steps */}
-        <Typography variant="h6" gutterBottom>
-          Instructions ({recipe.steps.length} steps)
-        </Typography>
-        <List>
-          {recipe.steps.map((step, index) => (
-            <ListItem key={index} alignItems="flex-start">
-              <Box
-                sx={{
-                  minWidth: 28,
-                  height: 28,
-                  borderRadius: '50%',
-                  bgcolor: 'primary.main',
-                  color: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mr: 2,
-                  fontWeight: 600,
-                }}
-              >
-                {index + 1}
+        {/* Ingredients / Steps - section-aware */}
+        {recipe.sections && recipe.sections.length > 0 ? (
+          <>
+            {recipe.sections.map((section, sIdx) => (
+              <Box key={sIdx} sx={{ mb: 2 }}>
+                <Typography variant="h6" gutterBottom>
+                  {section.title || 'Section'}
+                </Typography>
+                {section.ingredients && section.ingredients.length > 0 && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                      Ingredients ({section.ingredients.length})
+                    </Typography>
+                    <List dense>
+                      {section.ingredients.map((ing, i) => (
+                        <ListItem key={i}>
+                          <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
+                          <ListItemText primary={ing} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </>
+                )}
+                {section.steps && section.steps.length > 0 && (
+                  <>
+                    <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>
+                      Instructions ({section.steps.length} steps)
+                    </Typography>
+                    <List>
+                      {section.steps.map((st, i) => (
+                        <ListItem key={i} alignItems="flex-start">
+                          <Box
+                            sx={{
+                              minWidth: 28,
+                              height: 28,
+                              borderRadius: '50%',
+                              bgcolor: 'primary.main',
+                              color: 'white',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              mr: 2,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {i + 1}
+                          </Box>
+                          <ListItemText primary={st} />
+                        </ListItem>
+                      ))}
+                    </List>
+                  </>
+                )}
+                {sIdx < recipe.sections!.length - 1 && <Divider sx={{ my: 2 }} />}
               </Box>
-              <ListItemText primary={step} />
-            </ListItem>
-          ))}
-        </List>
+            ))}
+          </>
+        ) : (
+          <>
+            <Typography variant="h6" gutterBottom>
+              Ingredients ({recipe.ingredients.length})
+            </Typography>
+            <List dense>
+              {recipe.ingredients.map((ingredient, index) => (
+                <ListItem key={index}>
+                  <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
+                  <ListItemText primary={ingredient} />
+                </ListItem>
+              ))}
+            </List>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="h6" gutterBottom>
+              Instructions ({recipe.steps.length} steps)
+            </Typography>
+            <List>
+              {recipe.steps.map((step, index) => (
+                <ListItem key={index} alignItems="flex-start">
+                  <Box
+                    sx={{
+                      minWidth: 28,
+                      height: 28,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mr: 2,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {index + 1}
+                  </Box>
+                  <ListItemText primary={step} />
+                </ListItem>
+              ))}
+            </List>
+          </>
+        )}
 
         {/* Footer */}
         <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>

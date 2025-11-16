@@ -197,3 +197,4 @@ const NavText = ({ children, isActive }: { children: React.ReactNode, isActive: 
 
 Apply this fix to all nav items for consistency, not just "Your Recipes".
 
+

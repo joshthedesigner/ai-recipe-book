@@ -325,3 +325,4 @@ const NavText = ({ children, isActive }: { children: React.ReactNode, isActive: 
 
 **Start with Option 1a** (minWidth) for immediate fix, then consider **Option 4** (component) if you add more nav items or want better maintainability.
 
+
