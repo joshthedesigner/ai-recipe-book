@@ -334,14 +334,14 @@ export default function MobileNav() {
                             height: '16px',
                             minWidth: '16px',
                           },
-                        }}
-                      >
-                        <DynamicFeedIcon 
-                          sx={{ 
-                            fontSize: 20, 
-                            color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
-                          }} 
-                        />
+                      }}
+                    >
+                      <DynamicFeedIcon 
+                        sx={{ 
+                          fontSize: 20, 
+                          color: pathname === '/feed' ? 'text.primary' : 'text.secondary'
+                        }} 
+                      />
                       </Badge>
                       <Typography
                         variant="caption"
