@@ -132,14 +132,18 @@ export default function BrowsePage() {
   const availableIngredients = MAIN_INGREDIENT_TYPES.filter(i => getIngredientCount(i.value) > 0);
 
   // Fetch recipes from API
-  const fetchRecipes = useCallback(async (silent = false) => {
+  const fetchRecipes = useCallback(async (silent = false, noCache = false) => {
     if (!activeGroup) return;
     
     try {
       if (!silent) {
         setLoading(true);
       }
-      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
+      // Add cache-busting when needed (after delete/add operations)
+      const cacheBuster = noCache ? `&_t=${Date.now()}` : '';
+      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}${cacheBuster}`, {
+        ...(noCache && { cache: 'no-store' })
+      });
       const data = await response.json();
 
       if (data.success) {
@@ -349,8 +353,8 @@ export default function BrowsePage() {
         setRecipeToDelete(null);
         showToast('Recipe deleted successfully', 'success');
         
-        // Silently refetch in background for consistency (no loading state)
-        fetchRecipes(true);
+        // Silently refetch in background with cache-busting to ensure fresh data
+        fetchRecipes(true, true);
       } else {
         showToast('Failed to delete recipe', 'error');
       }
@@ -413,8 +417,8 @@ export default function BrowsePage() {
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
     
-    // Silently refetch immediately (no loading state, no delay)
-    fetchRecipes(true);
+    // Silently refetch immediately with cache-busting to ensure new recipe appears
+    fetchRecipes(true, true);
   };
 
   return (
