@@ -30,15 +30,26 @@ export async function DELETE(
     }
 
     // Delete the recipe (RLS will ensure user can only delete their own recipes)
-    const { error } = await supabase
+    // Use .select() to get deleted rows - if RLS blocks, data will be empty
+    const { data, error } = await supabase
       .from('recipes')
       .delete()
-      .eq('id', recipeId);
+      .eq('id', recipeId)
+      .select();
 
     if (error) {
       console.error('Error deleting recipe:', error);
       // Use centralized error handler (prevents information leakage)
       return errorResponse(error);
+    }
+
+    // Check if any rows were actually deleted
+    // If RLS blocks the delete, data will be empty (no error, but no deletion)
+    if (!data || data.length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'Recipe not found or you do not have permission to delete it' },
+        { status: 403 }
+      );
     }
 
     return NextResponse.json(
