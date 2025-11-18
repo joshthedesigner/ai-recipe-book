@@ -32,6 +32,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
+import { isOptimizedImageDomain } from '@/utils/imageOptimization';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -79,6 +80,9 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
   };
 
   const imageUrl = getImageUrl();
+  
+  // Check if image domain should be optimized (whitelisted in next.config.js)
+  const shouldOptimizeImage = isOptimizedImageDomain(imageUrl);
 
   const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click
@@ -240,7 +244,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   style={{ objectFit: 'cover' }}
                   loading={loading}
                   priority={loading === 'eager'}
-                  unoptimized={!imageUrl.includes('recipeassist.app') && !imageUrl.includes('i.ytimg.com')}
+                  unoptimized={!shouldOptimizeImage}
                 />
               </Box>
             ) : (
@@ -472,7 +476,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                 sizes="(max-width: 600px) 100vw, (max-width: 960px) 80vw, 1200px"
                 style={{ objectFit: 'cover' }}
                 priority={loading === 'eager'}
-                unoptimized={imageUrl.startsWith('http') && !imageUrl.includes('recipeassist.app')}
+                unoptimized={!shouldOptimizeImage}
               />
             </Box>
           ) : (
@@ -497,59 +501,101 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
         {/* Ingredients / Steps - section-aware */}
         {recipe.sections && recipe.sections.length > 0 ? (
           <>
-            {recipe.sections.map((section, sIdx) => (
-              <Box key={sIdx} sx={{ mb: 2 }}>
-                <Typography variant="h6" gutterBottom>
-                  {section.title || 'Section'}
-                </Typography>
-                {section.ingredients && section.ingredients.length > 0 && (
-                  <>
-                    <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Ingredients ({section.ingredients.length})
-                    </Typography>
-                    <List dense>
-                      {section.ingredients.map((ing, i) => (
-                        <ListItem key={i}>
-                          <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
-                          <ListItemText primary={ing} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </>
-                )}
-                {section.steps && section.steps.length > 0 && (
-                  <>
-                    <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>
-                      Instructions ({section.steps.length} steps)
-                    </Typography>
-                    <List>
-                      {section.steps.map((st, i) => (
-                        <ListItem key={i} alignItems="flex-start">
-                          <Box
-                            sx={{
-                              minWidth: 28,
-                              height: 28,
-                              borderRadius: '50%',
-                              bgcolor: 'primary.main',
-                              color: 'white',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              mr: 2,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {i + 1}
-                          </Box>
-                          <ListItemText primary={st} />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </>
-                )}
-                {sIdx < recipe.sections!.length - 1 && <Divider sx={{ my: 2 }} />}
-              </Box>
-            ))}
+            {(() => {
+              // Check if sections have any instruction sections
+              const hasInstructionSections = recipe.sections.some(s => s.steps && s.steps.length > 0);
+              
+              return (
+                <>
+                  {recipe.sections.map((section, sIdx) => (
+                    <Box key={sIdx} sx={{ mb: 2 }}>
+                      <Typography variant="h6" gutterBottom>
+                        {section.title || 'Section'}
+                      </Typography>
+                      {section.ingredients && section.ingredients.length > 0 && (
+                        <>
+                          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                            Ingredients ({section.ingredients.length})
+                          </Typography>
+                          <List dense>
+                            {section.ingredients.map((ing, i) => (
+                              <ListItem key={i}>
+                                <CheckCircleIcon sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
+                                <ListItemText primary={ing} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </>
+                      )}
+                      {section.steps && section.steps.length > 0 && (
+                        <>
+                          <Typography variant="subtitle2" sx={{ mt: 1, mb: 0.5 }}>
+                            Instructions ({section.steps.length} steps)
+                          </Typography>
+                          <List>
+                            {section.steps.map((st, i) => (
+                              <ListItem key={i} alignItems="flex-start">
+                                <Box
+                                  sx={{
+                                    minWidth: 28,
+                                    height: 28,
+                                    borderRadius: '50%',
+                                    bgcolor: 'primary.main',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    mr: 2,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {i + 1}
+                                </Box>
+                                <ListItemText primary={st} />
+                              </ListItem>
+                            ))}
+                          </List>
+                        </>
+                      )}
+                      {sIdx < recipe.sections!.length - 1 && <Divider sx={{ my: 2 }} />}
+                    </Box>
+                  ))}
+                  
+                  {/* Fallback: If sections exist but no instruction sections found, render flat steps */}
+                  {!hasInstructionSections && recipe.steps && recipe.steps.length > 0 && (
+                    <>
+                      <Divider sx={{ my: 2 }} />
+                      <Typography variant="h6" gutterBottom>
+                        Instructions ({recipe.steps.length} steps)
+                      </Typography>
+                      <List>
+                        {recipe.steps.map((step, index) => (
+                          <ListItem key={index} alignItems="flex-start">
+                            <Box
+                              sx={{
+                                minWidth: 28,
+                                height: 28,
+                                borderRadius: '50%',
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                mr: 2,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {index + 1}
+                            </Box>
+                            <ListItemText primary={step} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                </>
+              );
+            })()}
           </>
         ) : (
           <>

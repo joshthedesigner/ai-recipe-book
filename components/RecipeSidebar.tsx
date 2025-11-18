@@ -172,6 +172,14 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         if (data.response.needsReview && data.response.pendingRecipe) {
           setPendingRecipe(data.response.pendingRecipe);
         }
+        
+        // Check if recipe was saved directly (URL scraping, etc.)
+        if (data.response.recipe && !data.response.needsReview) {
+          // Recipe was saved directly, trigger refresh
+          if (onRecipeAdded) {
+            onRecipeAdded();
+          }
+        }
       } else {
         throw new Error(data.error || 'Failed to get response');
       }

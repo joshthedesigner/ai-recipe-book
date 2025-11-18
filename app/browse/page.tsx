@@ -79,8 +79,6 @@ export default function BrowsePage() {
   const [ingredientAnchorEl, setIngredientAnchorEl] = useState<HTMLElement | null>(null);
   const [tempCuisine, setTempCuisine] = useState('');
   const [tempIngredient, setTempIngredient] = useState('');
-  const [addingRecipe, setAddingRecipe] = useState<string | null>(null);
-  const [addedRecipes, setAddedRecipes] = useState<Set<string>>(new Set());
 
   // TODO: Adjust page size based on screen size or user preference
   const PAGE_SIZE = 12;
@@ -134,25 +132,33 @@ export default function BrowsePage() {
   const availableIngredients = MAIN_INGREDIENT_TYPES.filter(i => getIngredientCount(i.value) > 0);
 
   // Fetch recipes from API
-  const fetchRecipes = useCallback(async () => {
+  const fetchRecipes = useCallback(async (silent = false) => {
     if (!activeGroup) return;
     
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const response = await fetch(`/api/recipes?groupId=${activeGroup.id}`);
       const data = await response.json();
 
       if (data.success) {
         setRecipes(data.recipes || []);
       } else {
-        showToast(data.error || 'Failed to load recipes', 'error');
+        if (!silent) {
+          showToast(data.error || 'Failed to load recipes', 'error');
+        }
         setRecipes([]);
       }
     } catch (error) {
-      showToast('Unable to connect to server', 'error');
+      if (!silent) {
+        showToast('Unable to connect to server', 'error');
+      }
       setRecipes([]);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [activeGroup, showToast]);
 
@@ -209,52 +215,25 @@ export default function BrowsePage() {
   }, [filteredRecipes]);
 
   // Infinite scroll: Load more recipes when user scrolls near bottom
-  // Optimized for performance: uses passive listeners and handles bfcache
   useEffect(() => {
-    let ticking = false;
-    
     const handleScroll = () => {
-      if (ticking) return;
-      
-      // Use requestAnimationFrame for better performance
-      requestAnimationFrame(() => {
-        ticking = false;
-        
-        // Don't load if already loading, no more recipes, or initial load
-        if (loadingMore || !hasMore || loading) return;
+      // Don't load if already loading, no more recipes, or initial load
+      if (loadingMore || !hasMore || loading) return;
 
-        // Calculate distance from bottom
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const windowHeight = window.innerHeight;
-        const documentHeight = document.documentElement.scrollHeight;
-        const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
+      // Calculate distance from bottom
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
 
-        // Load more if within threshold
-        if (distanceFromBottom < SCROLL_THRESHOLD) {
-          loadMoreRecipes();
-        }
-      });
-      
-      ticking = true;
-    };
-
-    // Use passive listener for better performance and bfcache compatibility
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    // Handle page visibility for bfcache restoration
-    const handleVisibilityChange = () => {
-      if (!document.hidden && hasMore && !loading && !loadingMore) {
-        // Check if we need to load more when page becomes visible
-        handleScroll();
+      // Load more if within threshold
+      if (distanceFromBottom < SCROLL_THRESHOLD) {
+        loadMoreRecipes();
       }
     };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingMore, hasMore, loading, currentPage, filteredRecipes]);
 
   const loadMoreRecipes = () => {
@@ -351,30 +330,35 @@ export default function BrowsePage() {
     if (!recipeToDelete?.id) return;
 
     setDeletingRecipe(true);
+    const deletedRecipeId = recipeToDelete.id;
 
     try {
-      const response = await fetch(`/api/recipes/${recipeToDelete.id}`, {
+      const response = await fetch(`/api/recipes/${deletedRecipeId}`, {
         method: 'DELETE',
       });
 
       const data = await response.json();
 
       if (data.success) {
+        // Optimistically remove recipe from all state arrays immediately
+        setRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+        setFilteredRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+        setDisplayedRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+        
         setDeleteDialogOpen(false);
         setRecipeToDelete(null);
-        
-        
         showToast('Recipe deleted successfully', 'success');
         
-        // Wait for database, then refresh
-        setTimeout(() => {
-          fetchRecipes();
-        }, 2000);
+        // Silently refetch in background for consistency (no loading state)
+        fetchRecipes(true);
       } else {
         showToast('Failed to delete recipe', 'error');
       }
     } catch (error) {
       showToast('Failed to delete recipe', 'error');
+      // Restore recipe on error (optimistic update rollback)
+      // Note: This is a simple approach - in production, you might want to
+      // store the deleted recipe temporarily and restore it if needed
     } finally {
       setDeletingRecipe(false);
     }
@@ -429,145 +413,107 @@ export default function BrowsePage() {
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
     
-    // Wait for database, then refresh
-    setTimeout(() => {
-      fetchRecipes();
-    }, 2000);
-  };
-
-  // Handle adding recipe from friend's cookbook
-  const handleAddRecipe = async (recipeId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (addingRecipe || addedRecipes.has(recipeId)) return;
-
-    try {
-      setAddingRecipe(recipeId);
-      
-      const response = await fetch('/api/recipes/copy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipeId }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Mark recipe as added (button change is enough confirmation)
-        setAddedRecipes(prev => new Set([...prev, recipeId]));
-      } else {
-        showToast(data.error || 'Failed to add recipe', 'error');
-      }
-    } catch (err) {
-      console.error('Error adding recipe:', err);
-      showToast('Failed to add recipe', 'error');
-    } finally {
-      setAddingRecipe(null);
-    }
+    // Silently refetch immediately (no loading state, no delay)
+    fetchRecipes(true);
   };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* White Bar - Header, Search, and Filters */}
-      <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-        <Container maxWidth="xl">
-          {/* Header */}
-          <Box sx={{ pt: 3, pb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
-                  {activeGroup?.isFriend 
-                    ? `${activeGroup.name}` 
-                    : 'Your recipes'}
-              </Typography>
-              {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
-            </Box>
-          </Box>
-
-          {/* Search and Filters */}
-          <Box sx={{ pb: 3, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Search Bar */}
-            <TextField
-              placeholder="Search recipes, ingredients, or tags..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-                endAdornment: searchQuery && (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchQuery('')}>
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              size="small"
-              sx={{ width: { xs: '100%', sm: 400 } }}
-            />
-
-            {/* Filter Buttons */}
-            {/* Cuisine Filter Button */}
-            <Chip
-              label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
-              onClick={handleCuisineOpen}
-              onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
-              deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
-              icon={<ExpandMoreIcon />}
-              sx={{
-                height: 40,
-                px: 2,
-                fontWeight: 600,
-                bgcolor: filterCuisine ? 'primary.main' : 'background.paper',
-                color: filterCuisine ? 'white' : 'text.primary',
-                border: '1px solid',
-                borderColor: filterCuisine ? 'primary.main' : 'divider',
-                '&:hover': {
-                  bgcolor: filterCuisine ? 'primary.dark' : 'action.hover',
-                },
-                '& .MuiChip-icon': {
-                  color: filterCuisine ? 'white' : 'text.secondary',
-                },
-              }}
-            />
-
-            {/* Ingredient Filter Button */}
-            <Chip
-              label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
-              onClick={handleIngredientOpen}
-              onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
-              deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
-              icon={<ExpandMoreIcon />}
-              sx={{
-                height: 40,
-                px: 2,
-                fontWeight: 600,
-                bgcolor: filterMainIngredient ? 'primary.main' : 'background.paper',
-                color: filterMainIngredient ? 'white' : 'text.primary',
-                border: '1px solid',
-                borderColor: filterMainIngredient ? 'primary.main' : 'divider',
-                '&:hover': {
-                  bgcolor: filterMainIngredient ? 'primary.dark' : 'action.hover',
-                },
-                '& .MuiChip-icon': {
-                  color: filterMainIngredient ? 'white' : 'text.secondary',
-                },
-              }}
-            />
-          </Box>
-        </Container>
-      </Box>
-
       <Container maxWidth="xl" sx={{ pt: 8, pb: 4, flex: 1 }}>
+        {/* Header */}
+        <Box sx={{ mb: 8 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
+                {activeGroup?.isFriend 
+                  ? `${activeGroup.name}` 
+                  : 'Your recipes'}
+            </Typography>
+            {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+          </Box>
+        </Box>
+
+        {/* Search and Filters */}
+        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Search Bar */}
+          <TextField
+            placeholder="Search recipes, ingredients, or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery && (
+                <InputAdornment position="end">
+                  <IconButton size="small" onClick={() => setSearchQuery('')}>
+                    <ClearIcon />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            size="small"
+            sx={{ width: { xs: '100%', sm: 400 } }}
+          />
+
+          {/* Filter Buttons */}
+          {/* Cuisine Filter Button */}
+          <Chip
+            label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
+            onClick={handleCuisineOpen}
+            onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
+            deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
+            icon={<ExpandMoreIcon />}
+            sx={{
+              height: 40,
+              px: 2,
+              fontWeight: 600,
+              bgcolor: filterCuisine ? 'primary.main' : 'background.paper',
+              color: filterCuisine ? 'white' : 'text.primary',
+              border: '1px solid',
+              borderColor: filterCuisine ? 'primary.main' : 'divider',
+              '&:hover': {
+                bgcolor: filterCuisine ? 'primary.dark' : 'action.hover',
+              },
+              '& .MuiChip-icon': {
+                color: filterCuisine ? 'white' : 'text.secondary',
+              },
+            }}
+          />
+
+          {/* Ingredient Filter Button */}
+          <Chip
+            label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
+            onClick={handleIngredientOpen}
+            onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
+            deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
+            icon={<ExpandMoreIcon />}
+            sx={{
+              height: 40,
+              px: 2,
+              fontWeight: 600,
+              bgcolor: filterMainIngredient ? 'primary.main' : 'background.paper',
+              color: filterMainIngredient ? 'white' : 'text.primary',
+              border: '1px solid',
+              borderColor: filterMainIngredient ? 'primary.main' : 'divider',
+              '&:hover': {
+                bgcolor: filterMainIngredient ? 'primary.dark' : 'action.hover',
+              },
+              '& .MuiChip-icon': {
+                color: filterMainIngredient ? 'white' : 'text.secondary',
+              },
+            }}
+          />
+        </Box>
+
         {/* Loading State */}
         {loading && (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
-              <Grid item xs={12} sm={4} md={4} lg={4} key={index}>
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
                 <RecipeCardSkeleton />
               </Grid>
             ))}
@@ -640,16 +586,12 @@ export default function BrowsePage() {
                 // Load fewer images eagerly on mobile (4 vs 8)
                 const eagerLoadCount = isMobile ? 4 : 8;
                 return (
-                  <Grid item xs={12} sm={4} md={4} lg={4} key={recipe.id}>
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
                     <RecipeCard 
                       recipe={recipe} 
                       compact 
                       onClick={() => handleCardClick(recipe)}
                       onDelete={canAddRecipes ? handleDeleteClick : undefined}
-                      onAdd={activeGroup?.isFriend ? handleAddRecipe : undefined}
-                      isFriendView={activeGroup?.isFriend || false}
-                      isAdded={addedRecipes.has(recipe.id!)}
-                      isAdding={addingRecipe === recipe.id}
                       loading={index < eagerLoadCount ? 'eager' : 'lazy'}
                     />
                   </Grid>

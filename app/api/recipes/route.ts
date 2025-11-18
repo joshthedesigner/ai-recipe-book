@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: true,
         recipes: data || [],
@@ -182,6 +182,11 @@ export async function GET(request: NextRequest) {
       },
       { status: 200 }
     );
+    
+    // Set surrogate cache headers for list browsing
+    // Auth is enforced, but CDN can cache per cookie-less requests; adjust if needed
+    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    return response;
 
   } catch (error) {
     return NextResponse.json(

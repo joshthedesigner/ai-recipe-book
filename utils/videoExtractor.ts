@@ -7,6 +7,8 @@
 import OpenAI from 'openai';
 import { getYouTubeCaptions, extractYouTubeId, isYouTubeUrl, getYouTubeMetadata } from '@/utils/youtubeHelpers';
 import { scrapeRecipe } from '@/utils/recipeScraper';
+import { extractSectionHeaderHints } from '@/utils/sectionDetector';
+import { RecipeSection } from '@/types';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -27,46 +29,70 @@ interface ExtractedRecipe {
   ingredients: string[];
   steps: string[];
   tags: string[];
+  sections?: RecipeSection[]; // Optional structured sections
   incomplete?: boolean;
   reason?: string;
   video_url: string;
   video_platform: string;
 }
 
-async function extractRecipeFromTranscript(transcript: string): Promise<Omit<ExtractedRecipe, 'video_url' | 'video_platform'>> {
+async function extractRecipeFromTranscript(
+  transcript: string,
+  sectionHints?: string[]
+): Promise<Omit<ExtractedRecipe, 'video_url' | 'video_platform'>> {
   const client = getOpenAIClient();
+  
+  // Build section detection instructions
+  let sectionHintsText = '';
+  if (sectionHints && sectionHints.length > 0) {
+    sectionHintsText = `\n\nPotential section headers detected: ${sectionHints.map(h => `"${h}"`).join(', ')}`;
+  }
   
   const prompt = `You are an expert recipe extraction assistant. Extract a complete recipe from this VIDEO TRANSCRIPT (spoken narration).
 
-Extract these fields:
+EXTRACTION SOURCE:
+- Primary source: Video transcript (spoken narration)
+- Secondary reference: Video description may contain section headers and ingredient lists${sectionHintsText ? `\n\nIMPORTANT: The following section headers were detected in the description/video:\n${sectionHints.map(h => `  - "${h}"`).join('\n')}\n\nYou MUST extract ALL of these sections if they appear in the transcript. Do not miss any sections!` : ''}
+- Follow the transcript carefully - extract exactly what ingredients are listed under each section
+
+OUTPUT STRUCTURE:
 - title: The recipe name
-- ingredients: Array of ingredients WITH EXACT QUANTITIES as spoken
-- steps: Array of detailed cooking instructions
 - tags: Relevant tags (cuisine, meal type, protein, etc.)
+- ingredients: Array of ALL ingredients WITH EXACT QUANTITIES (use this if no sections, or as fallback)
+- steps: Array of detailed cooking instructions (use this if no sections, or as fallback if sections incomplete)
+- sections: (OPTIONAL) Array of structured sections if recipe has multiple components
 
-CRITICAL RULES FOR VIDEO TRANSCRIPTS:
-• Extract EXACT quantities the speaker states - use FIRST mentioned amount
+CRITICAL: SECTION STRUCTURE RULES (if sections are detected):
+1. SECTIONS MUST MIRROR: If you create ingredient sections, create matching instruction sections with the SAME titles
+2. ORDER: All ingredient sections FIRST, then all instruction sections (in matching order)
+3. SEPARATION: Each section contains EITHER ingredients OR steps, NEVER both
+4. STRUCTURE: { title: string, ingredients?: string[] } OR { title: string, steps?: string[] }
+5. COMPLETENESS: Extract ALL ingredients listed under each section header - don't miss any items
+6. ALL SECTIONS: Extract ALL sections mentioned in the description or transcript. If you see section headers like "Chicken Soup", "Dashi Stock", "Shoyu Tare", etc., you MUST create sections for ALL of them - do not skip any
+7. SECTION BOUNDARIES: Ingredients listed under a section header belong ONLY to that section - don't mix or merge ingredients between different sections
+8. TITLE CHECK: If a section title contains an ingredient name (e.g., "Shoyu Tare" contains "Shoyu"), ensure that ingredient is included in that section's ingredients array
+9. EXAMPLE:
+   If recipe has "Stock" and "Aroma Oil" sections:
+   sections: [
+     { title: "Stock", ingredients: ["1.1 kg pork bones", ...] },
+     { title: "Aroma Oil", ingredients: ["500g pork fat", ...] },
+     { title: "Stock", steps: ["Pre-boil pork bones...", ...] },
+     { title: "Aroma Oil", steps: ["Boil pork fat...", ...] }
+   ]
+10. If sections exist and are complete, prefer sections. However, ALWAYS include flat "ingredients" and "steps" arrays as a backup even when sections exist, to ensure data completeness.
+
+QUANTITY EXTRACTION RULES:
+• Extract EXACT quantities - use FIRST mentioned amount
 • Ignore filler words: "about", "roughly", "around", "maybe", "approximately"
-• Handle ranges precisely: "3 to 4 tablespoons" → "3-4 tablespoons"
+• Handle ranges: "3 to 4 tablespoons" → "3-4 tablespoons"
 • "A couple" = 2, "a few" = 3, "half" = 1/2
-• Watch for base recipe context: "for 8 ounces of noodles" or "for 4 servings"
-• Use the PRIMARY quantity mentioned, not alternatives or suggestions
 • If speaker gives options ("2 or 3 tablespoons"), use the first: "2 tablespoons"
-• Pay attention to "per serving" vs "total batch" context
 
-QUANTITY EXTRACTION EXAMPLES:
+EXAMPLES:
 • "I use about 3 tablespoons palm sugar" → "3 tablespoons palm sugar"
-• "Add 2, maybe 3 tablespoons fish sauce" → "2-3 tablespoons fish sauce"  
+• "Add 2, maybe 3 tablespoons fish sauce" → "2-3 tablespoons fish sauce"
 • "Around a quarter cup of oil" → "1/4 cup oil"
 • "Half a cup of peanuts" → "1/2 cup peanuts"
-• "A couple eggs" → "2 eggs"
-• "Three to four tablespoons" → "3-4 tablespoons"
-
-MEASUREMENT PRECISION:
-• Preserve exact measurements - don't round or estimate
-• Include units exactly as stated (cups, tablespoons, teaspoons, grams)
-• Keep fractions precise (1/2, 1/4, 3/4)
-• Note if "for 8 oz noodles" or similar base amount is mentioned
 
 If the transcript doesn't contain a recipe, set incomplete:true with a reason.
 
@@ -97,36 +123,114 @@ Return valid JSON only.`;
 
   const extracted = JSON.parse(content);
   
-  // Log each extracted ingredient with context from transcript
-  console.log('\n🔍 INGREDIENT EXTRACTION ANALYSIS:');
-  console.log('='.repeat(80));
-  if (extracted.ingredients && Array.isArray(extracted.ingredients)) {
-    extracted.ingredients.forEach((ingredient: string, index: number) => {
-      console.log(`\n${index + 1}. INGREDIENT: "${ingredient}"`);
-      
-      // Find mentions in transcript
-      const ingredientName = ingredient.replace(/^\d+[\s\/-]*(?:cups?|tbsp?|tsp?|tablespoons?|teaspoons?|oz|ounces?|lbs?|pounds?|grams?|g|ml|l)?\s*/i, '').split(',')[0].trim();
-      const searchTerms = ingredientName.split(/\s+/).filter(word => word.length > 3);
-      
-      if (searchTerms.length > 0) {
-        const mainTerm = searchTerms[0];
-        // Escape special regex characters
-        const escapedTerm = mainTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`.{0,80}${escapedTerm}.{0,80}`, 'gi');
-        const matches = transcript.match(regex);
-        
-        if (matches && matches.length > 0) {
-          console.log(`   TRANSCRIPT MENTIONS (${matches.length}):`);
-          matches.forEach((match, i) => {
-            console.log(`   ${i + 1}) "...${match.trim()}..."`);
-          });
-        } else {
-          console.log('   ⚠️ Not found in transcript');
-        }
+  // Store original flat arrays in case OpenAI included them despite sections
+  const originalSteps = extracted.steps && Array.isArray(extracted.steps) ? extracted.steps : [];
+  const originalIngredients = extracted.ingredients && Array.isArray(extracted.ingredients) ? extracted.ingredients : [];
+  
+  // Post-process: Handle sections vs flat arrays
+  if (extracted.sections && Array.isArray(extracted.sections) && extracted.sections.length > 0) {
+    console.log(`📋 Sections detected (${extracted.sections.length}), processing separated structure...`);
+    
+    // Sections are now separated: ingredient sections first, then instruction sections
+    // Populate flat arrays from sections for database compatibility (NOT NULL constraint)
+    const allIngredients: string[] = [];
+    const allSteps: string[] = [];
+    
+    extracted.sections.forEach((section: any) => {
+      if (section.ingredients && Array.isArray(section.ingredients)) {
+        allIngredients.push(...section.ingredients);
+      }
+      if (section.steps && Array.isArray(section.steps)) {
+        allSteps.push(...section.steps);
       }
     });
+    
+    // Log section structure
+    const ingredientSections = extracted.sections.filter((s: any) => s.ingredients && s.ingredients.length > 0);
+    const stepSections = extracted.sections.filter((s: any) => s.steps && s.steps.length > 0);
+    console.log(`   Structure: ${ingredientSections.length} ingredient sections, ${stepSections.length} instruction sections`);
+    console.log(`   Consolidated: ${allIngredients.length} ingredients, ${allSteps.length} steps`);
+    
+    // Validate sections: Only remove if sections are CERTAINLY malformed (no instruction sections AND no steps)
+    // Check both consolidated steps AND original flat steps (in case OpenAI included them)
+    const hasStepsFromSections = allSteps.length > 0;
+    const hasStepsFromFlat = originalSteps.length > 0;
+    const hasAnySteps = hasStepsFromSections || hasStepsFromFlat;
+    
+    if (stepSections.length === 0 && !hasAnySteps) {
+      // Sections have no instruction sections AND no steps anywhere - truly malformed
+      console.warn(`⚠️  Sections detected but no instruction sections found AND no steps available. Removing sections and using flat arrays only.`);
+      delete extracted.sections; // Remove malformed sections
+      // Use original flat arrays if available, otherwise empty
+      extracted.ingredients = originalIngredients.length > 0 ? originalIngredients : allIngredients;
+      extracted.steps = originalSteps.length > 0 ? originalSteps : [];
+    } else {
+      // Sections are valid OR we have steps from flat arrays - use consolidated data
+      // Prefer steps from sections, fall back to original flat steps if sections didn't have steps
+      extracted.ingredients = allIngredients.length > 0 ? allIngredients : originalIngredients;
+      extracted.steps = hasStepsFromSections ? allSteps : originalSteps;
+      
+      // If sections don't have steps but flat arrays do, keep sections but they'll render with fallback
+      if (stepSections.length === 0 && hasStepsFromFlat) {
+        console.warn(`⚠️  Sections detected but no instruction sections found. Using flat steps array as fallback while keeping sections for ingredient organization.`);
+      }
+    }
+  } else {
+    // No sections detected - ensure flat arrays exist (backwards compatibility)
+    if (!extracted.ingredients || !Array.isArray(extracted.ingredients)) {
+      extracted.ingredients = [];
+    }
+    if (!extracted.steps || !Array.isArray(extracted.steps)) {
+      extracted.steps = [];
+    }
   }
-  console.log('\n' + '='.repeat(80) + '\n');
+  
+  // Log extraction results
+  if (extracted.sections && extracted.sections.length > 0) {
+    console.log('\n📋 EXTRACTED SECTIONS:');
+    console.log('='.repeat(80));
+    
+    const ingredientSections = extracted.sections.filter((s: any) => s.ingredients && s.ingredients.length > 0);
+    const stepSections = extracted.sections.filter((s: any) => s.steps && s.steps.length > 0);
+    
+    if (ingredientSections.length > 0) {
+      console.log('\n📦 INGREDIENT SECTIONS:');
+      ingredientSections.forEach((section: any, index: number) => {
+        console.log(`\n${index + 1}. ${section.title} (${section.ingredients.length} ingredients)`);
+        section.ingredients.slice(0, 3).forEach((ing: string) => console.log(`   - ${ing}`));
+        if (section.ingredients.length > 3) {
+          console.log(`   ... and ${section.ingredients.length - 3} more`);
+        }
+      });
+    }
+    
+    if (stepSections.length > 0) {
+      console.log('\n📝 INSTRUCTION SECTIONS:');
+      stepSections.forEach((section: any, index: number) => {
+        console.log(`\n${index + 1}. ${section.title} (${section.steps.length} steps)`);
+        section.steps.slice(0, 2).forEach((step: string) => console.log(`   - ${step.substring(0, 60)}...`));
+        if (section.steps.length > 2) {
+          console.log(`   ... and ${section.steps.length - 2} more steps`);
+        }
+      });
+    }
+    
+    console.log('\n' + '='.repeat(80) + '\n');
+  } else {
+    // Log flat extraction (backwards compatibility)
+    console.log('\n🔍 FLAT EXTRACTION (no sections):');
+    console.log('='.repeat(80));
+    if (extracted.ingredients && Array.isArray(extracted.ingredients)) {
+      console.log(`\nExtracted ${extracted.ingredients.length} ingredients`);
+      extracted.ingredients.slice(0, 5).forEach((ingredient: string, index: number) => {
+        console.log(`   ${index + 1}. ${ingredient}`);
+      });
+      if (extracted.ingredients.length > 5) {
+        console.log(`   ... and ${extracted.ingredients.length - 5} more`);
+      }
+    }
+    console.log('\n' + '='.repeat(80) + '\n');
+  }
 
   return extracted;
 }
@@ -242,8 +346,23 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
 
   console.log(`✅ Got captions (${captions.length} characters), extracting recipe...`);
 
-  // Extract recipe from captions
-  const recipe = await extractRecipeFromTranscript(captions);
+  // Try to get section hints from description first (usually better formatted)
+  let sectionHints: string[] | undefined;
+  if (metadata?.description) {
+    console.log('🔍 Detecting sections from video description...');
+    sectionHints = extractSectionHeaderHints(metadata.description);
+    console.log(`📋 Found ${sectionHints.length} potential section headers:`, sectionHints);
+  }
+  
+  // If no hints from description, try transcript
+  if (!sectionHints || sectionHints.length === 0) {
+    console.log('🔍 Detecting sections from transcript...');
+    sectionHints = extractSectionHeaderHints(captions);
+    console.log(`📋 Found ${sectionHints.length} potential section headers:`, sectionHints);
+  }
+
+  // Extract recipe from captions with section hints
+  const recipe = await extractRecipeFromTranscript(captions, sectionHints.length > 0 ? sectionHints : undefined);
 
   if (recipe.incomplete) {
     throw new Error(recipe.reason || 'Could not find a recipe in this video');

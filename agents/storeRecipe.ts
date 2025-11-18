@@ -330,6 +330,7 @@ export async function storeRecipe(
                 ingredients: videoRecipe.ingredients,
                 steps: videoRecipe.steps,
                 tags: videoRecipe.tags,
+                sections: videoRecipe.sections, // Include detected sections
                 source_url: url,
                 video_url: videoRecipe.video_url,
                 video_platform: videoRecipe.video_platform as any,
@@ -363,6 +364,9 @@ export async function storeRecipe(
             
             // Save to database
             console.log('Saving video recipe to database...');
+            if (videoRecipe.sections && videoRecipe.sections.length > 0) {
+              console.log(`✅ Recipe has ${videoRecipe.sections.length} sections:`, videoRecipe.sections.map(s => s.title));
+            }
             const { data, error } = await supabase
               .from('recipes')
               .insert([{
@@ -372,6 +376,7 @@ export async function storeRecipe(
                 ingredients: videoRecipe.ingredients,
                 steps: videoRecipe.steps,
                 tags: videoRecipe.tags,
+                sections: videoRecipe.sections || null, // Include sections if detected
                 source_url: url,
                 video_url: videoRecipe.video_url,
                 video_platform: videoRecipe.video_platform,
