@@ -48,10 +48,18 @@ function normalizeTitle(raw: string): string {
     .join(' ');
 }
 
+function startsWithQuantity(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed) return false;
+  const quantityPattern = /^(\d+(\.\d+)?\s*[-\/]\s*\d+(\.\d+)?|\d+(\.\d+)?)\s*(L|ml|kg|g|tbsp|tsp|tablespoons?|teaspoons?|cups?|oz|ounces?|lbs?|pounds?|grams?|pieces?|heads?|cloves?|slices?|sprigs?|bunches?|stems?)/i;
+  return quantityPattern.test(trimmed);
+}
+
 function isLikelyHeader(line: string): boolean {
   const trimmed = line.trim();
   if (!trimmed) return false;
   if (trimmed.length > 48) return false;
+  if (startsWithQuantity(trimmed)) return false; // Skip if it starts with a quantity
 
   // ends with colon
   if (/:$/.test(trimmed)) return true;
@@ -84,6 +92,7 @@ function isListStart(line: string): boolean {
   // bullets or numbered lists
   if (/^[-*•]\s+/.test(trimmed)) return true;
   if (/^\d+[\.\)]\s+/.test(trimmed)) return true;
+  if (startsWithQuantity(trimmed)) return true; // Also detect quantity-prefixed lines as list items
   return false;
 }
 
@@ -135,6 +144,32 @@ export function detectSectionsFromText(raw: string): DetectedSectionsResult {
   }
 
   return { sections: filtered };
+}
+
+/**
+ * Extract potential section header hints from text for OpenAI integration.
+ * Returns an array of normalized section titles that can be used as hints.
+ */
+export function extractSectionHeaderHints(text: string): string[] {
+  const lines = text.split(/\r?\n/);
+  const headers: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const next = lines[i + 1] || '';
+    
+    if (isLikelyHeader(line)) {
+      const hasFollowingContent = startsWithQuantity(next) || isListStart(next) || next.trim().length > 0;
+      if (hasFollowingContent) {
+        const normalizedTitle = normalizeTitle(line);
+        if (!headers.includes(normalizedTitle)) {
+          headers.push(normalizedTitle);
+        }
+      }
+    }
+  }
+  
+  return headers;
 }
 
 
