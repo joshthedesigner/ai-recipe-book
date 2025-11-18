@@ -356,7 +356,8 @@ export default function BrowsePage() {
         // Silently refetch in background with cache-busting to ensure fresh data
         fetchRecipes(true, true);
       } else {
-        showToast('Failed to delete recipe', 'error');
+        // Show specific error message from API (e.g., permission denied)
+        showToast(data.error || 'Failed to delete recipe', 'error');
       }
     } catch (error) {
       showToast('Failed to delete recipe', 'error');
