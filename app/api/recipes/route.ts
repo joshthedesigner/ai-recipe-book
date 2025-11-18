@@ -183,9 +183,10 @@ export async function GET(request: NextRequest) {
       { status: 200 }
     );
     
-    // Set surrogate cache headers for list browsing
-    // Auth is enforced, but CDN can cache per cookie-less requests; adjust if needed
-    response.headers.set('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+    // Set conservative cache headers to prevent stale data after mutations
+    // Reduced from 60s to 10s to ensure fresh data after delete/add operations
+    // Removed stale-while-revalidate to prevent serving deleted recipes
+    response.headers.set('Cache-Control', 's-maxage=10, max-age=0, must-revalidate');
     return response;
 
   } catch (error) {

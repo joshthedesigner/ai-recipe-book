@@ -194,7 +194,8 @@ export default function BrowsePage() {
     if (!user || authLoading || groupsLoading) return;
 
     if (activeGroup) {
-      fetchRecipes();
+      // Use cache-busting on initial load to ensure fresh data
+      fetchRecipes(false, true);
     } else {
       setRecipes([]);
       setLoading(false);
