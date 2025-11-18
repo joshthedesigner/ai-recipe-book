@@ -43,16 +43,16 @@ async function extractRecipeFromTranscript(
   const client = getOpenAIClient();
   
   // Build section detection instructions
-  let sectionHintsText = '';
-  if (sectionHints && sectionHints.length > 0) {
-    sectionHintsText = `\n\nPotential section headers detected: ${sectionHints.map(h => `"${h}"`).join(', ')}`;
-  }
+  const hasSectionHints = sectionHints && sectionHints.length > 0;
+  const sectionHintsText = hasSectionHints 
+    ? `\n\nIMPORTANT: The following section headers were detected in the description/video:\n${sectionHints.map(h => `  - "${h}"`).join('\n')}\n\nYou MUST extract ALL of these sections if they appear in the transcript. Do not miss any sections!`
+    : '';
   
   const prompt = `You are an expert recipe extraction assistant. Extract a complete recipe from this VIDEO TRANSCRIPT (spoken narration).
 
 EXTRACTION SOURCE:
 - Primary source: Video transcript (spoken narration)
-- Secondary reference: Video description may contain section headers and ingredient lists${sectionHintsText ? `\n\nIMPORTANT: The following section headers were detected in the description/video:\n${sectionHints.map(h => `  - "${h}"`).join('\n')}\n\nYou MUST extract ALL of these sections if they appear in the transcript. Do not miss any sections!` : ''}
+- Secondary reference: Video description may contain section headers and ingredient lists${sectionHintsText}
 - Follow the transcript carefully - extract exactly what ingredients are listed under each section
 
 OUTPUT STRUCTURE:
