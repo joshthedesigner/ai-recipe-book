@@ -234,18 +234,31 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   overflow: 'hidden',
                 }}
               >
-                <Image
-                  src={imageUrl}
-                  alt={recipe.title}
-                  fill
-                  sizes={isEmbedded 
-                    ? '(max-width: 768px) 296px, 445px' 
-                    : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 500px'}
-                  style={{ objectFit: 'cover' }}
-                  loading={loading}
-                  priority={loading === 'eager'}
-                  unoptimized={!shouldOptimizeImage}
-                />
+                {shouldOptimizeImage ? (
+                  <Image
+                    src={imageUrl}
+                    alt={recipe.title}
+                    fill
+                    sizes={isEmbedded 
+                      ? '(max-width: 768px) 296px, 445px' 
+                      : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 500px'}
+                    style={{ objectFit: 'cover' }}
+                    loading={loading}
+                    priority={loading === 'eager'}
+                  />
+                ) : (
+                  <img
+                    src={imageUrl}
+                    alt={recipe.title}
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }}
+                    loading={loading}
+                  />
+                )}
               </Box>
             ) : (
               <Box
@@ -469,15 +482,28 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                 overflow: 'hidden',
               }}
             >
-              <Image
-                src={imageUrl}
-                alt={recipe.title}
-                fill
-                sizes="(max-width: 600px) 100vw, (max-width: 960px) 80vw, 1200px"
-                style={{ objectFit: 'cover' }}
-                priority={loading === 'eager'}
-                unoptimized={!shouldOptimizeImage}
-              />
+              {shouldOptimizeImage ? (
+                <Image
+                  src={imageUrl}
+                  alt={recipe.title}
+                  fill
+                  sizes="(max-width: 600px) 100vw, (max-width: 960px) 80vw, 1200px"
+                  style={{ objectFit: 'cover' }}
+                  priority={loading === 'eager'}
+                />
+              ) : (
+                <img
+                  src={imageUrl}
+                  alt={recipe.title}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover',
+                    display: 'block'
+                  }}
+                  loading={loading}
+                />
+              )}
             </Box>
           ) : (
             <Box
