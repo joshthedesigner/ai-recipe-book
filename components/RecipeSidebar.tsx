@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { getConversationContext } from '@/utils/chatHistory';
+import { isYouTubeUrl } from '@/utils/youtubeHelpers';
 
 interface Message {
   id: string;
@@ -35,6 +36,26 @@ interface RecipeSidebarProps {
   onClose: () => void;
   onRecipeAdded?: () => void;
 }
+
+// Animated dots component for loading states
+const AnimatedDots = () => {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prev) => {
+        if (prev === '') return '.';
+        if (prev === '.') return '..';
+        if (prev === '..') return '...';
+        return '';
+      });
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return <Box component="span">{dots}</Box>;
+};
 
 const INITIAL_MESSAGE: Message = {
   id: '0',
@@ -78,10 +99,63 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   const [pendingCookbookInfo, setPendingCookbookInfo] = useState<{
     extractedText: string;
   } | null>(null);
+  const [processingStep, setProcessingStep] = useState<'fetching' | 'extracting' | 'processing' | 'saving' | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const progressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const MAX_IMAGES = 5;
+
+  // Helper function to get progress message
+  const getProgressMessage = (step: 'fetching' | 'extracting' | 'processing' | 'saving'): string => {
+    switch (step) {
+      case 'fetching':
+        return 'Fetching video';
+      case 'extracting':
+        return 'Extracting recipe';
+      case 'processing':
+        return 'Processing';
+      case 'saving':
+        return 'Saving recipe';
+      default:
+        return 'Thinking';
+    }
+  };
+
+  // Helper function to start progress updates
+  const startProgressUpdates = () => {
+    // Clear any existing timeout
+    if (progressTimeoutRef.current) {
+      clearTimeout(progressTimeoutRef.current);
+    }
+
+    // Start with fetching
+    setProcessingStep('fetching');
+
+    // Move to extracting after 10 seconds (covers YouTube API calls)
+    progressTimeoutRef.current = setTimeout(() => {
+      setProcessingStep('extracting');
+      
+      // Move to processing after 15 more seconds (covers OpenAI transcript extraction)
+      progressTimeoutRef.current = setTimeout(() => {
+        setProcessingStep('processing');
+        
+        // Move to saving after 5 more seconds (covers embedding generation)
+        progressTimeoutRef.current = setTimeout(() => {
+          setProcessingStep('saving');
+        }, 5000);
+      }, 15000);
+    }, 10000);
+  };
+
+  // Helper function to stop progress updates
+  const stopProgressUpdates = () => {
+    if (progressTimeoutRef.current) {
+      clearTimeout(progressTimeoutRef.current);
+      progressTimeoutRef.current = null;
+    }
+    setProcessingStep(null);
+  };
 
   // Reset conversation when sidebar opens
   useEffect(() => {
@@ -94,8 +168,23 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setPendingTranslation(null);
       setPendingCookbookInfo(null);
       setUploadingImage(false);
+      setProcessingStep(null);
+      // Clear any pending progress timeouts
+      if (progressTimeoutRef.current) {
+        clearTimeout(progressTimeoutRef.current);
+        progressTimeoutRef.current = null;
+      }
     }
   }, [open]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (progressTimeoutRef.current) {
+        clearTimeout(progressTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -129,6 +218,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
+
+    // Check if this is a YouTube URL and start progress updates
+    const isYouTube = isYouTubeUrl(input.trim());
+    if (isYouTube) {
+      startProgressUpdates();
+    }
 
     try {
       // Get conversation context (last 10 messages, excluding welcome message)
@@ -172,14 +267,6 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         if (data.response.needsReview && data.response.pendingRecipe) {
           setPendingRecipe(data.response.pendingRecipe);
         }
-        
-        // Check if recipe was saved directly (URL scraping, etc.)
-        if (data.response.recipe && !data.response.needsReview) {
-          // Recipe was saved directly, trigger refresh
-          if (onRecipeAdded) {
-            onRecipeAdded();
-          }
-        }
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
@@ -194,6 +281,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       setMessages((prev) => [...prev, errorMessage]);
       showToast('Failed to send message. Please try again.', 'error');
     } finally {
+      stopProgressUpdates();
       setIsLoading(false);
     }
   };
@@ -701,7 +789,16 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
               >
                 <CircularProgress size={16} />
                 <Typography variant="body1" color="text.secondary">
-                  {uploadingImage ? `Processing ${imageQueue.length > 1 ? `${imageQueue.length} images` : 'image'}...` : 'Thinking...'}
+                  {uploadingImage 
+                    ? `Processing ${imageQueue.length > 1 ? `${imageQueue.length} images` : 'image'}...`
+                    : processingStep
+                    ? (
+                        <>
+                          {getProgressMessage(processingStep)}
+                          <AnimatedDots />
+                        </>
+                      )
+                    : 'Thinking...'}
                 </Typography>
               </Box>
             </Box>
