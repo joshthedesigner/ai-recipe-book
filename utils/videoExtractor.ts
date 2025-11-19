@@ -63,23 +63,46 @@ OUTPUT STRUCTURE:
 - sections: (OPTIONAL) Array of structured sections if recipe has multiple components
 
 CRITICAL: SECTION STRUCTURE RULES (if sections are detected):
-1. SECTIONS MUST MIRROR: If you create ingredient sections, create matching instruction sections with the SAME titles
-2. ORDER: All ingredient sections FIRST, then all instruction sections (in matching order)
-3. SEPARATION: Each section contains EITHER ingredients OR steps, NEVER both
-4. STRUCTURE: { title: string, ingredients?: string[] } OR { title: string, steps?: string[] }
+⚠️ HARD REQUIREMENT - A section object CANNOT have both ingredients AND steps. This is a hard constraint, not a suggestion.
+
+1. SEPARATION IS MANDATORY: Each section object MUST contain EITHER ingredients OR steps, NEVER both. If you see a section with both, you MUST split it into two separate section objects with the same title.
+
+2. SECTIONS MUST MIRROR: If you create ingredient sections, create matching instruction sections with the SAME titles
+   - Example: If you have "Shio Tare" with ingredients, you MUST also create "Shio Tare" with steps
+
+3. ORDER: All ingredient sections FIRST, then all instruction sections (in matching order)
+   - Ingredient sections: [{ title: "A", ingredients: [...] }, { title: "B", ingredients: [...] }]
+   - Instruction sections: [{ title: "A", steps: [...] }, { title: "B", steps: [...] }]
+
+4. STRUCTURE: Each section object must be ONE of these formats:
+   - { title: string, ingredients: string[] } - ONLY ingredients, no steps
+   - { title: string, steps: string[] } - ONLY steps, no ingredients
+   - NEVER: { title: string, ingredients: [...], steps: [...] } ❌ INVALID
+
 5. COMPLETENESS: Extract ALL ingredients listed under each section header - don't miss any items
+
 6. ALL SECTIONS: Extract ALL sections mentioned in the description or transcript. If you see section headers like "Chicken Soup", "Dashi Stock", "Shoyu Tare", etc., you MUST create sections for ALL of them - do not skip any
+
 7. SECTION BOUNDARIES: Ingredients listed under a section header belong ONLY to that section - don't mix or merge ingredients between different sections
+
 8. TITLE CHECK: If a section title contains an ingredient name (e.g., "Shoyu Tare" contains "Shoyu"), ensure that ingredient is included in that section's ingredients array
-9. EXAMPLE:
+
+9. CORRECT EXAMPLE (what you MUST do):
    If recipe has "Stock" and "Aroma Oil" sections:
    sections: [
-     { title: "Stock", ingredients: ["1.1 kg pork bones", ...] },
-     { title: "Aroma Oil", ingredients: ["500g pork fat", ...] },
-     { title: "Stock", steps: ["Pre-boil pork bones...", ...] },
-     { title: "Aroma Oil", steps: ["Boil pork fat...", ...] }
+     { title: "Stock", ingredients: ["1.1 kg pork bones", "2 liters water"] },
+     { title: "Aroma Oil", ingredients: ["500g pork fat", "3 cloves garlic"] },
+     { title: "Stock", steps: ["Pre-boil pork bones for 10 minutes", "Simmer for 4 hours"] },
+     { title: "Aroma Oil", steps: ["Render pork fat slowly", "Add garlic at the end"] }
    ]
-10. If sections exist and are complete, prefer sections. However, ALWAYS include flat "ingredients" and "steps" arrays as a backup even when sections exist, to ensure data completeness.
+
+10. INCORRECT EXAMPLE (what you MUST NOT do):
+   ❌ WRONG: sections: [
+     { title: "Stock", ingredients: [...], steps: [...] }  // NEVER DO THIS
+   ]
+   ✅ CORRECT: Split into two sections with same title
+
+11. If sections exist and are complete, prefer sections. However, ALWAYS include flat "ingredients" and "steps" arrays as a backup even when sections exist, to ensure data completeness.
 
 QUANTITY EXTRACTION RULES:
 • Extract EXACT quantities - use FIRST mentioned amount
@@ -131,7 +154,51 @@ Return valid JSON only.`;
   if (extracted.sections && Array.isArray(extracted.sections) && extracted.sections.length > 0) {
     console.log(`📋 Sections detected (${extracted.sections.length}), processing separated structure...`);
     
-    // Sections are now separated: ingredient sections first, then instruction sections
+    // Phase 2: Split merged sections (sections with both ingredients AND steps)
+    const splitMergedSections = (sections: any[]): any[] => {
+      const ingredientSections: any[] = [];
+      const instructionSections: any[] = [];
+      let mergedCount = 0;
+      
+      sections.forEach((section: any) => {
+        const hasIngredients = section.ingredients && Array.isArray(section.ingredients) && section.ingredients.length > 0;
+        const hasSteps = section.steps && Array.isArray(section.steps) && section.steps.length > 0;
+        
+        if (hasIngredients && hasSteps) {
+          // Split merged section into two separate sections
+          mergedCount++;
+          console.warn(`⚠️  Detected merged section "${section.title || 'Untitled'}" - splitting into separate sections`);
+          ingredientSections.push({ 
+            title: section.title || 'Untitled', 
+            ingredients: section.ingredients 
+          });
+          instructionSections.push({ 
+            title: section.title || 'Untitled', 
+            steps: section.steps 
+          });
+        } else if (hasIngredients) {
+          ingredientSections.push(section);
+        } else if (hasSteps) {
+          instructionSections.push(section);
+        } else {
+          // Section with neither - skip it but log warning
+          console.warn(`⚠️  Skipping empty section "${section.title || 'Untitled'}" (no ingredients or steps)`);
+        }
+      });
+      
+      if (mergedCount > 0) {
+        console.log(`✅ Split ${mergedCount} merged section(s) into separate ingredient/instruction sections`);
+      }
+      
+      // Return: all ingredient sections first, then all instruction sections
+      return [...ingredientSections, ...instructionSections];
+    };
+    
+    // Split any merged sections
+    extracted.sections = splitMergedSections(extracted.sections);
+    console.log(`📋 After splitting: ${extracted.sections.length} total sections`);
+    
+    // Sections are now properly separated: ingredient sections first, then instruction sections
     // Populate flat arrays from sections for database compatibility (NOT NULL constraint)
     const allIngredients: string[] = [];
     const allSteps: string[] = [];
@@ -145,11 +212,34 @@ Return valid JSON only.`;
       }
     });
     
-    // Log section structure
+    // Phase 3: Validate section structure
     const ingredientSections = extracted.sections.filter((s: any) => s.ingredients && s.ingredients.length > 0);
     const stepSections = extracted.sections.filter((s: any) => s.steps && s.steps.length > 0);
+    
+    // Check for any remaining merged sections (shouldn't happen after splitting, but validate)
+    const stillMerged = extracted.sections.filter((s: any) => 
+      (s.ingredients && s.ingredients.length > 0) && (s.steps && s.steps.length > 0)
+    );
+    if (stillMerged.length > 0) {
+      console.error(`❌ ERROR: Found ${stillMerged.length} section(s) still merged after splitting:`, stillMerged.map((s: any) => s.title));
+    }
+    
+    // Validate matching titles
+    const ingredientTitles = new Set(ingredientSections.map((s: any) => s.title));
+    const stepTitles = new Set(stepSections.map((s: any) => s.title));
+    const unmatchedIngredients = Array.from(ingredientTitles).filter(t => !stepTitles.has(t));
+    const unmatchedSteps = Array.from(stepTitles).filter(t => !ingredientTitles.has(t));
+    
+    if (unmatchedIngredients.length > 0) {
+      console.warn(`⚠️  Found ingredient sections without matching instruction sections: ${unmatchedIngredients.join(', ')}`);
+    }
+    if (unmatchedSteps.length > 0) {
+      console.warn(`⚠️  Found instruction sections without matching ingredient sections: ${unmatchedSteps.join(', ')}`);
+    }
+    
     console.log(`   Structure: ${ingredientSections.length} ingredient sections, ${stepSections.length} instruction sections`);
     console.log(`   Consolidated: ${allIngredients.length} ingredients, ${allSteps.length} steps`);
+    console.log(`   Validation: ${stillMerged.length === 0 ? '✅ No merged sections' : '❌ Merged sections found'}`);
     
     // Validate sections: Only remove if sections are CERTAINLY malformed (no instruction sections AND no steps)
     // Check both consolidated steps AND original flat steps (in case OpenAI included them)

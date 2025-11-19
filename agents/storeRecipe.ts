@@ -837,10 +837,24 @@ function generateRecipePreview(recipe: Recipe): string {
   // If sections exist, render sections-only; else render flat
   const sectionsText = Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0
     ? (recipe as any).sections.map((s: any) => {
-        const sIng = Array.isArray(s.ingredients) && s.ingredients.length > 0
+        // Phase 4: Defensive check - if section has both, split on-the-fly (shouldn't happen after post-processing)
+        const hasIngredients = Array.isArray(s.ingredients) && s.ingredients.length > 0;
+        const hasSteps = Array.isArray(s.steps) && s.steps.length > 0;
+        
+        if (hasIngredients && hasSteps) {
+          // Safety net: split merged section during rendering
+          console.warn(`⚠️  Rendering: Found merged section "${s.title || 'Untitled'}" - splitting during render`);
+          return [
+            `### ${s.title || 'Section'}`,
+            `Ingredients:\n${s.ingredients.map((ing: string, i: number) => `  ${i + 1}. ${ing}`).join('\n')}`,
+            `Instructions:\n${s.steps.map((st: string, i: number) => `  ${i + 1}. ${st}`).join('\n')}`,
+          ].join('\n\n');
+        }
+        
+        const sIng = hasIngredients
           ? s.ingredients.map((ing: string, i: number) => `  ${i + 1}. ${ing}`).join('\n')
           : '';
-        const sSteps = Array.isArray(s.steps) && s.steps.length > 0
+        const sSteps = hasSteps
           ? s.steps.map((st: string, i: number) => `  ${i + 1}. ${st}`).join('\n')
           : '';
         return [
