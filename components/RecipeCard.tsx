@@ -30,7 +30,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Recipe } from '@/types';
-import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
+import { getYouTubeThumbnail, getYouTubeThumbnailSrcSet } from '@/utils/youtubeHelpers';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -77,7 +77,22 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
     return null;
   };
 
+  // Get responsive srcset for YouTube thumbnails
+  const getImageSrcSet = (): string | null => {
+    if (recipe.video_url) return getYouTubeThumbnailSrcSet(recipe.video_url);
+    return null;
+  };
+
   const imageUrl = getImageUrl();
+  const imageSrcSet = getImageSrcSet();
+  
+  // Calculate image dimensions for layout stability
+  // Compact cards: 250px height, aspect ratio ~16:9 for YouTube thumbnails
+  // Use fixed dimensions to prevent layout shift
+  const compactImageWidth = 500;
+  const compactImageHeight = 250;
+  const embeddedImageWidth = 445; // Desktop default
+  const embeddedImageHeight = 445;
 
   const handleMenuClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click
@@ -231,7 +246,13 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               >
                 <img
                   src={imageUrl}
+                  srcSet={imageSrcSet || undefined}
+                  sizes={isEmbedded 
+                    ? '(max-width: 960px) 296px, 445px'
+                    : '(max-width: 600px) 100vw, (max-width: 960px) 50vw, 500px'}
                   alt={recipe.title}
+                  width={isEmbedded ? embeddedImageWidth : compactImageWidth}
+                  height={isEmbedded ? embeddedImageHeight : compactImageHeight}
                   style={{ 
                     width: '100%', 
                     height: '100%', 
@@ -239,6 +260,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                     display: 'block'
                   }}
                   loading={loading}
+                  fetchPriority={loading === 'eager' ? 'high' : 'auto'}
                 />
               </Box>
             ) : (
@@ -465,7 +487,11 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             >
               <img
                 src={imageUrl}
+                srcSet={imageSrcSet || undefined}
+                sizes="(max-width: 600px) 100vw, (max-width: 960px) 80vw, 800px"
                 alt={recipe.title}
+                width={800}
+                height={400}
                 style={{ 
                   width: '100%', 
                   height: '100%', 
@@ -473,6 +499,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   display: 'block'
                 }}
                 loading={loading}
+                fetchPriority={loading === 'eager' ? 'high' : 'auto'}
               />
             </Box>
           ) : (

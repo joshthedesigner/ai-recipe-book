@@ -36,16 +36,33 @@ export function isYouTubeUrl(url: string): boolean {
 
 /**
  * Get YouTube video thumbnail URL
- * Returns high-quality thumbnail image
+ * Returns optimized thumbnail image (smaller size for better performance)
  */
-export function getYouTubeThumbnail(videoUrl: string): string | null {
+export function getYouTubeThumbnail(videoUrl: string, size: 'default' | 'mqdefault' | 'hqdefault' | 'sddefault' | 'maxresdefault' = 'hqdefault'): string | null {
   const videoId = extractYouTubeId(videoUrl);
   if (!videoId) return null;
   
-  // maxresdefault = 1920x1080 (best quality, may not exist for all videos)
-  // hqdefault = 480x360 (always available)
-  // We'll use maxresdefault and let the browser fallback to hqdefault if needed
-  return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+  // Thumbnail sizes:
+  // default = 120x90 (smallest, ~10KB)
+  // mqdefault = 320x180 (medium quality, ~30KB)
+  // hqdefault = 480x360 (high quality, ~50KB) - good balance
+  // sddefault = 640x480 (standard def, ~80KB)
+  // maxresdefault = 1920x1080 (best quality, ~200KB) - too large for cards
+  // Using hqdefault as default for good quality/size balance
+  return `https://img.youtube.com/vi/${videoId}/${size}.jpg`;
+}
+
+/**
+ * Get responsive YouTube thumbnail srcset
+ * Returns srcset string for responsive images
+ */
+export function getYouTubeThumbnailSrcSet(videoUrl: string): string | null {
+  const videoId = extractYouTubeId(videoUrl);
+  if (!videoId) return null;
+  
+  // Provide multiple sizes for responsive loading
+  const baseUrl = `https://img.youtube.com/vi/${videoId}`;
+  return `${baseUrl}/mqdefault.jpg 320w, ${baseUrl}/hqdefault.jpg 480w, ${baseUrl}/sddefault.jpg 640w`;
 }
 
 /**
