@@ -427,21 +427,30 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="xl" sx={{ pt: 8, pb: 4, flex: 1 }}>
-        {/* Header */}
-        <Box sx={{ mb: 8 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
+      {/* Header Container - Full Width White Container */}
+      <Box
+        sx={{
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          width: '100%',
+        }}
+      >
+        <Container maxWidth="xl" sx={{ py: 3 }}>
+          {/* Header Title */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
                   : 'Your recipes'}
-            </Typography>
-            {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+              </Typography>
+              {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+            </Box>
           </Box>
-        </Box>
 
-        {/* Search and Filters */}
-        <Box sx={{ mb: 4, display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Search and Filters */}
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Search Bar */}
           <TextField
             placeholder="Search recipes, ingredients, or tags..."
@@ -513,8 +522,12 @@ export default function BrowsePage() {
               },
             }}
           />
-        </Box>
+          </Box>
+        </Container>
+      </Box>
 
+      {/* Content Container */}
+      <Container maxWidth="xl" sx={{ pt: 4, pb: 4, flex: 1 }}>
         {/* Loading State */}
         {loading && (
           <Grid container spacing={3}>
