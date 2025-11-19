@@ -26,6 +26,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import { Recipe } from '@/types';
@@ -77,6 +78,59 @@ export default function RecipeDetailPage() {
       return mainName.charAt(0).toUpperCase() + mainName.slice(1);
     } catch {
       return 'Source';
+    }
+  };
+
+  // Format timestamp in MM:SS format
+  const formatTimestamp = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Handle timestamp click - seek embedded video to timestamp using PostMessage API
+  const handleTimestampClick = (timestampSeconds: number) => {
+    if (!recipe?.video_url || recipe.video_platform !== 'youtube') return;
+    
+    const videoId = extractYouTubeId(recipe.video_url);
+    if (!videoId) return;
+    
+    const iframeId = `youtube-player-${videoId}`;
+    const iframe = document.getElementById(iframeId) as HTMLIFrameElement;
+    
+    if (!iframe?.contentWindow) {
+      // Fallback: open in new tab if iframe not available
+      const timestampUrl = `${recipe.video_url}&t=${timestampSeconds}s`;
+      window.open(timestampUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    
+    try {
+      // Use YouTube's PostMessage API to control the embedded player
+      // This works with enablejsapi=1 in the iframe src
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'seekTo',
+          args: [timestampSeconds, true], // true = allowSeekAhead
+        }),
+        'https://www.youtube.com'
+      );
+      
+      // Play video after seeking
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'playVideo',
+          args: [],
+        }),
+        'https://www.youtube.com'
+      );
+    } catch (error) {
+      console.error('Failed to seek video:', error);
+      // Fallback: open in new tab
+      const timestampUrl = `${recipe.video_url}&t=${timestampSeconds}s`;
+      window.open(timestampUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -331,9 +385,10 @@ export default function RecipeDetailPage() {
             }}
           >
             <iframe
+              id={`youtube-player-${extractYouTubeId(recipe.video_url)}`}
               width="100%"
               height="100%"
-              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
+              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}?enablejsapi=1`}
               title={recipe.title}
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -454,9 +509,31 @@ export default function RecipeDetailPage() {
                   Array.isArray(section.steps) && section.steps.length > 0 ? (
                     <Box key={`steps-${idx}`} sx={{ mb: 3 }}>
                       {section.title && (
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                          {section.title}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {section.title}
+                          </Typography>
+                          {section.timestamp !== undefined && recipe.video_url && recipe.video_platform === 'youtube' && (
+                            <Button
+                              size="small"
+                              startIcon={<PlayArrowIcon sx={{ fontSize: 16 }} />}
+                              onClick={() => handleTimestampClick(section.timestamp)}
+                              sx={{
+                                textTransform: 'none',
+                                minWidth: 'auto',
+                                px: 1.5,
+                                py: 0.5,
+                                fontSize: '0.75rem',
+                                color: 'primary.main',
+                                '&:hover': {
+                                  bgcolor: 'action.hover',
+                                },
+                              }}
+                            >
+                              {formatTimestamp(section.timestamp)}
+                            </Button>
+                          )}
+                        </Box>
                       )}
                       <List sx={{ pl: 2 }}>
                         {section.steps.map((step: string, index: number) => (

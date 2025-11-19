@@ -5,7 +5,7 @@
  */
 
 import OpenAI from 'openai';
-import { getYouTubeCaptions, extractYouTubeId, isYouTubeUrl, getYouTubeMetadata } from '@/utils/youtubeHelpers';
+import { getYouTubeCaptions, extractYouTubeId, isYouTubeUrl, getYouTubeMetadata, TranscriptSegment } from '@/utils/youtubeHelpers';
 import { scrapeRecipe } from '@/utils/recipeScraper';
 import { extractSectionHeaderHints } from '@/utils/sectionDetector';
 import { RecipeSection } from '@/types';
@@ -36,9 +36,126 @@ interface ExtractedRecipe {
   video_platform: string;
 }
 
+/**
+ * Map section timestamps by matching section steps to transcript segments
+ * Uses simple substring matching with fallback strategies
+ */
+function mapTimestampsToSections(
+  sections: RecipeSection[],
+  transcriptSegments: TranscriptSegment[]
+): RecipeSection[] {
+  if (!sections || sections.length === 0 || !transcriptSegments || transcriptSegments.length === 0) {
+    return sections;
+  }
+
+  const matchedSections: RecipeSection[] = [];
+  let matchCount = 0;
+  let skipCount = 0;
+
+  sections.forEach((section) => {
+    // Only add timestamps to instruction sections (sections with steps)
+    if (!section.steps || section.steps.length === 0) {
+      matchedSections.push(section); // Keep ingredient-only sections as-is
+      return;
+    }
+
+    try {
+      // Strategy 1: Match first step text to transcript segments
+      const firstStep = section.steps[0];
+      if (!firstStep || firstStep.trim().length < 10) {
+        // Step too short, skip matching
+        matchedSections.push(section);
+        skipCount++;
+        return;
+      }
+
+      // Normalize text for matching (lowercase, remove punctuation)
+      const normalizeText = (text: string): string => {
+        return text
+          .toLowerCase()
+          .replace(/[^\w\s]/g, ' ') // Replace punctuation with spaces
+          .replace(/\s+/g, ' ') // Normalize whitespace
+          .trim();
+      };
+
+      const normalizedStep = normalizeText(firstStep);
+      const stepWords = normalizedStep.split(' ').filter(w => w.length > 2); // Filter out very short words
+
+      // Find best matching segment
+      let bestMatch: TranscriptSegment | null = null;
+      let bestScore = 0;
+
+      for (const segment of transcriptSegments) {
+        const normalizedSegment = normalizeText(segment.text);
+        
+        // Strategy 1a: Exact substring match (highest priority)
+        if (normalizedSegment.includes(normalizedStep)) {
+          bestMatch = segment;
+          bestScore = 100;
+          break;
+        }
+        
+        // Strategy 1b: Word overlap (count matching words)
+        const segmentWords = normalizedSegment.split(' ').filter(w => w.length > 2);
+        const matchingWords = stepWords.filter(word => segmentWords.includes(word));
+        const overlapScore = (matchingWords.length / Math.max(stepWords.length, 1)) * 50;
+        
+        if (overlapScore > bestScore && overlapScore >= 20) { // At least 40% word overlap
+          bestMatch = segment;
+          bestScore = overlapScore;
+        }
+      }
+
+      // Strategy 2: If no match found, try matching section title
+      if (!bestMatch && section.title) {
+        const normalizedTitle = normalizeText(section.title);
+        for (const segment of transcriptSegments) {
+          const normalizedSegment = normalizeText(segment.text);
+          if (normalizedSegment.includes(normalizedTitle)) {
+            bestMatch = segment;
+            break;
+          }
+        }
+      }
+
+      // Add timestamp if match found
+      if (bestMatch) {
+        // Convert milliseconds to seconds
+        const timestampSeconds = Math.floor(bestMatch.startMs / 1000);
+        
+        // Validation: Ensure timestamp is reasonable (0 to 10 hours max)
+        if (timestampSeconds >= 0 && timestampSeconds <= 36000) {
+          matchedSections.push({
+            ...section,
+            timestamp: timestampSeconds,
+          });
+          matchCount++;
+        } else {
+          console.warn(`⚠️  Invalid timestamp ${timestampSeconds}s for section "${section.title}" - skipping`);
+          matchedSections.push(section);
+          skipCount++;
+        }
+      } else {
+        // No match found - keep section without timestamp
+        matchedSections.push(section);
+        skipCount++;
+      }
+    } catch (error) {
+      // Error handling: If matching fails, keep section without timestamp
+      console.warn(`⚠️  Error matching timestamp for section "${section.title}":`, error);
+      matchedSections.push(section);
+      skipCount++;
+    }
+  });
+
+  console.log(`⏱️  Timestamp mapping: ${matchCount} matched, ${skipCount} skipped`);
+  return matchedSections;
+}
+
 async function extractRecipeFromTranscript(
   transcript: string,
-  sectionHints?: string[]
+  sectionHints?: string[],
+  transcriptSegments?: TranscriptSegment[]
 ): Promise<Omit<ExtractedRecipe, 'video_url' | 'video_platform'>> {
   const client = getOpenAIClient();
   
@@ -322,6 +439,23 @@ Return valid JSON only.`;
     console.log('\n' + '='.repeat(80) + '\n');
   }
 
+  // Map timestamps to sections if we have transcript segments
+  if (transcriptSegments && transcriptSegments.length > 0 && extracted.sections && extracted.sections.length > 0) {
+    console.log('⏱️  Mapping timestamps to sections...');
+    extracted.sections = mapTimestampsToSections(extracted.sections, transcriptSegments);
+    
+    // Log timestamp mapping results
+    const sectionsWithTimestamps = extracted.sections.filter((s: any) => s.timestamp !== undefined);
+    if (sectionsWithTimestamps.length > 0) {
+      console.log(`✅ Mapped timestamps to ${sectionsWithTimestamps.length} section(s):`);
+      sectionsWithTimestamps.forEach((section: any) => {
+        const minutes = Math.floor(section.timestamp / 60);
+        const seconds = section.timestamp % 60;
+        console.log(`   "${section.title}": ${minutes}:${seconds.toString().padStart(2, '0')}`);
+      });
+    }
+  }
+
   return extracted;
 }
 
@@ -427,14 +561,19 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
 
   // Fall back to caption extraction
   console.log('📝 Attempting caption-based extraction...');
-  const captions = await getYouTubeCaptions(videoId);
+  // Get captions with timestamped segments for section matching
+  const captionData = await getYouTubeCaptions(videoId, true);
   
-  if (!captions) {
+  if (!captionData || !captionData.text) {
     // No captions and no description recipe - offer to save video-only
     throw new Error('VIDEO_LINK_ONLY');
   }
 
+  const captions = captionData.text;
+  const transcriptSegments = captionData.segments;
+
   console.log(`✅ Got captions (${captions.length} characters), extracting recipe...`);
+  console.log(`   ${transcriptSegments.length} timestamped segments available for matching`);
 
   // Try to get section hints from description first (usually better formatted)
   let sectionHints: string[] | undefined;
@@ -451,8 +590,8 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
     console.log(`📋 Found ${sectionHints.length} potential section headers:`, sectionHints);
   }
 
-  // Extract recipe from captions with section hints
-  const recipe = await extractRecipeFromTranscript(captions, sectionHints.length > 0 ? sectionHints : undefined);
+  // Extract recipe from captions with section hints and timestamped segments
+  const recipe = await extractRecipeFromTranscript(captions, sectionHints.length > 0 ? sectionHints : undefined, transcriptSegments);
 
   if (recipe.incomplete) {
     throw new Error(recipe.reason || 'Could not find a recipe in this video');

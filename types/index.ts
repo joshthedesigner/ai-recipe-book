@@ -23,6 +23,7 @@ export interface RecipeSection {
   title: string;
   ingredients?: string[];
   steps?: string[];
+  timestamp?: number; // seconds into video (for YouTube videos)
 }
 
 export interface Recipe {

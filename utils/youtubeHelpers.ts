@@ -66,10 +66,29 @@ export function getYouTubeThumbnailSrcSet(videoUrl: string): string | null {
 }
 
 /**
- * Fetch YouTube video captions/subtitles
- * Uses youtube-transcript library for reliable caption extraction
+ * Transcript segment with timestamp information
  */
-export async function getYouTubeCaptions(videoId: string): Promise<string | null> {
+export interface TranscriptSegment {
+  text: string;
+  startMs: number; // milliseconds
+  endMs: number; // milliseconds
+}
+
+/**
+ * Transcript data with both text and timestamped segments
+ */
+export interface TranscriptData {
+  text: string;
+  segments: TranscriptSegment[];
+}
+
+/**
+ * Fetch YouTube video captions/subtitles
+ * Returns both full text and timestamped segments for section matching
+ */
+export async function getYouTubeCaptions(videoId: string): Promise<string | null>;
+export async function getYouTubeCaptions(videoId: string, includeSegments: true): Promise<TranscriptData | null>;
+export async function getYouTubeCaptions(videoId: string, includeSegments?: boolean): Promise<string | TranscriptData | null> {
   try {
     console.log(`🎥 Fetching captions for YouTube video: ${videoId}`);
     console.log(`   Full URL: https://www.youtube.com/watch?v=${videoId}`);
@@ -113,33 +132,60 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
       return null;
     }
     
-    // Log first segment structure to understand the format
-    console.log('🔍 First segment structure:', JSON.stringify(segments[0], null, 2).substring(0, 500));
+    // Extract text and timestamps from segments
+    const transcriptSegments: TranscriptSegment[] = [];
+    const textParts: string[] = [];
     
-    // Combine all segments into full text
-    // Try different possible text locations in the segment object
-    const fullTranscript = segments
-      .map((segment: any) => {
-        // youtubei.js uses different structures - try multiple paths
-        if (segment.snippet?.text) {
-          return typeof segment.snippet.text === 'string' 
-            ? segment.snippet.text 
-            : segment.snippet.text.toString?.() || String(segment.snippet.text);
-        }
-        if (segment.text) {
-          return typeof segment.text === 'string'
-            ? segment.text
-            : segment.text.toString?.() || String(segment.text);
-        }
-        // Fallback: convert whole segment to string
-        return String(segment);
-      })
-      .join(' ')
-      .trim();
+    segments.forEach((segment: any) => {
+      // Skip section headers (they don't have text)
+      if (segment.type === 'TranscriptSectionHeader') {
+        return;
+      }
+      
+      // Extract text from segment
+      let segmentText = '';
+      if (segment.snippet?.text) {
+        segmentText = typeof segment.snippet.text === 'string' 
+          ? segment.snippet.text 
+          : segment.snippet.text.toString?.() || String(segment.snippet.text);
+      } else if (segment.text) {
+        segmentText = typeof segment.text === 'string'
+          ? segment.text
+          : segment.text.toString?.() || String(segment.text);
+      }
+      
+      if (!segmentText.trim()) {
+        return; // Skip empty segments
+      }
+      
+      // Extract timestamps (convert from string to number)
+      const startMs = segment.start_ms ? parseInt(String(segment.start_ms), 10) : 0;
+      const endMs = segment.end_ms ? parseInt(String(segment.end_ms), 10) : 0;
+      
+      // Only include segments with valid timestamps
+      if (!isNaN(startMs) && startMs >= 0) {
+        transcriptSegments.push({
+          text: segmentText.trim(),
+          startMs,
+          endMs: !isNaN(endMs) && endMs >= startMs ? endMs : startMs,
+        });
+        textParts.push(segmentText);
+      }
+    });
+    
+    const fullTranscript = textParts.join(' ').trim();
     
     console.log(`✅ Extracted ${fullTranscript.length} characters of captions from YouTube video`);
-    console.log(`   ${segments.length} caption segments combined`);
+    console.log(`   ${transcriptSegments.length} timestamped segments extracted`);
     console.log(`   Preview: ${fullTranscript.substring(0, 200)}...`);
+    
+    // Return segments if requested, otherwise just text (backward compatible)
+    if (includeSegments) {
+      return {
+        text: fullTranscript,
+        segments: transcriptSegments,
+      };
+    }
     
     return fullTranscript;
     
