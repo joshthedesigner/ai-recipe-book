@@ -101,6 +101,23 @@ export interface ChatAPIResponse {
 }
 
 // ========================================
+// RECIPE CHAT TYPES
+// ========================================
+
+export interface RecipeChatRequest {
+  message: string;
+  recipeId: string;
+  recipe?: Recipe; // Optional - preferred to avoid DB query
+  conversationHistory?: ChatMessage[]; // Limited to last 10 messages
+}
+
+export interface RecipeChatAPIResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+// ========================================
 // GROUP & PERMISSIONS TYPES
 // ========================================
 
