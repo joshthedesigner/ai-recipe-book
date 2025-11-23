@@ -8,8 +8,12 @@ import {
   CardActionArea,
   Typography,
   Box,
+  Dialog,
+  IconButton,
 } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import CloseIcon from '@mui/icons-material/Close';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 import { FeedItem } from '@/types';
 
 interface FeedNoteCardProps {
@@ -54,6 +58,7 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const textRef = useRef<HTMLDivElement>(null);
 
   if (note.type !== 'note') {
@@ -114,6 +119,15 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
       // Navigate to recipe page, scroll to notes tab
       router.push(`/recipe/${note.recipe_id}?tab=notes`);
     }
+  };
+
+  const handleImageClick = (e: React.MouseEvent, url: string) => {
+    e.stopPropagation(); // Prevent card navigation
+    setExpandedImage(url);
+  };
+
+  const handleCloseExpanded = () => {
+    setExpandedImage(null);
   };
 
   // Get display image: first note photo or recipe image
@@ -269,21 +283,51 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
             <img
               src={displayImage}
               alt={note.recipe_title || 'Recipe note'}
+              onClick={(e) => handleImageClick(e, displayImage)}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain', // Show full photo without cropping
                 display: 'block',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.9';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
               }}
               loading="lazy"
             />
+            {/* Expand icon */}
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleImageClick(e, displayImage);
+              }}
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                bgcolor: 'rgba(0, 0, 0, 0.6)',
+                color: 'white',
+                width: 32,
+                height: 32,
+                '&:hover': {
+                  bgcolor: 'rgba(0, 0, 0, 0.8)',
+                },
+              }}
+            >
+              <FullscreenIcon sx={{ fontSize: 18 }} />
+            </IconButton>
             {/* Photo count indicator if multiple photos */}
             {note.photo_urls && note.photo_urls.length > 1 && (
               <Box
                 sx={{
                   position: 'absolute',
                   top: 8,
-                  right: 8,
+                  left: 8,
                   bgcolor: 'rgba(0,0,0,0.6)',
                   color: 'white',
                   px: 1,
@@ -353,6 +397,69 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
           </Box>
         </CardContent>
       </CardActionArea>
+
+      {/* Expanded Image Dialog */}
+      <Dialog
+        open={Boolean(expandedImage)}
+        onClose={handleCloseExpanded}
+        maxWidth={false}
+        PaperProps={{
+          sx: {
+            bgcolor: 'rgba(0, 0, 0, 0.9)',
+            boxShadow: 'none',
+            border: 'none',
+            outline: 'none',
+            m: 0,
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+          },
+        }}
+        sx={{
+          '& .MuiBackdrop-root': {
+            bgcolor: 'rgba(0, 0, 0, 0.8)',
+          },
+        }}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: 0,
+          }}
+        >
+          <IconButton
+            onClick={handleCloseExpanded}
+            sx={{
+              position: 'absolute',
+              top: 16,
+              right: 16,
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.2)',
+              },
+              zIndex: 1,
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {expandedImage && (
+            <img
+              src={expandedImage}
+              alt="Expanded note photo"
+              style={{
+                maxWidth: '90vw',
+                maxHeight: '90vh',
+                width: 'auto',
+                height: 'auto',
+                objectFit: 'contain',
+              }}
+            />
+          )}
+        </Box>
+      </Dialog>
     </Card>
   );
 }
