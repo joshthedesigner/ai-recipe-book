@@ -11,7 +11,7 @@
  */
 
 import OpenAI from 'openai';
-import { AgentResponse, ChatMessage } from '@/types';
+import { AgentResponse, ChatMessage, Recipe } from '@/types';
 
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
@@ -104,6 +104,138 @@ export async function chat(
 
   } catch (error) {
     console.error('Error in chat agent:', error);
+    return {
+      success: false,
+      message: 'Sorry, I encountered an error. Please try again.',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
+/**
+ * Format recipe data into context string for AI
+ * Simple truncation: if > 6000 chars, truncate to first 6000
+ */
+function formatRecipeContext(recipe: Recipe): string {
+  let context = `RECIPE: ${recipe.title}\n\n`;
+  
+  // Add ingredients
+  if (recipe.ingredients && recipe.ingredients.length > 0) {
+    context += `INGREDIENTS:\n${recipe.ingredients.map((ing, i) => `${i + 1}. ${ing}`).join('\n')}\n\n`;
+  }
+  
+  // Add steps
+  if (recipe.steps && recipe.steps.length > 0) {
+    context += `INSTRUCTIONS:\n${recipe.steps.map((step, i) => `${i + 1}. ${step}`).join('\n')}\n\n`;
+  }
+  
+  // Add tags if available
+  if (recipe.tags && recipe.tags.length > 0) {
+    context += `TAGS: ${recipe.tags.join(', ')}\n\n`;
+  }
+  
+  // Add metadata if available
+  if (recipe.cookbook_name) {
+    context += `From: ${recipe.cookbook_name}`;
+    if (recipe.cookbook_page) {
+      context += `, Page ${recipe.cookbook_page}`;
+    }
+    context += '\n';
+  }
+  
+  // Simple truncation: if > 6000 chars, truncate
+  if (context.length > 6000) {
+    console.warn(`Recipe context truncated from ${context.length} to 6000 chars`);
+    context = context.substring(0, 6000) + '...';
+  }
+  
+  return context;
+}
+
+const RECIPE_CHAT_SYSTEM_PROMPT = `You are a helpful cooking assistant helping a user with a specific recipe.
+
+Your role:
+- Answer questions about ingredient substitutions
+- Help with measurement conversions
+- Explain cooking techniques mentioned in the recipe
+- Provide cooking tips related to this recipe
+- Answer general cooking questions
+
+CRITICAL RULES FOR SUBSTITUTIONS AND CONVERSIONS:
+- When answering substitution questions, ALWAYS include the specific amount from the recipe
+  Example: If recipe calls for "2 cups flour" and user asks "what can I substitute flour with?", 
+  respond: "You can substitute the 2 cups of flour with 2 cups of [substitute]"
+  
+- When answering measurement conversion questions, ALWAYS use the recipe's exact amounts as the basis
+  Example: If recipe calls for "1/2 cup sugar" and user asks "how many grams is that?", 
+  respond: "The 1/2 cup of sugar in this recipe equals approximately [X] grams"
+  
+- Always reference the recipe's specific quantities when providing substitutions or conversions
+- Never give generic substitution advice - always tie it to the recipe amounts
+
+Important: The user is viewing this recipe and asking questions about it. You have full context - they don't need to repeat recipe details. Keep responses concise and helpful.`;
+
+/**
+ * Chat with recipe context - for recipe-specific questions
+ * Uses gpt-3.5-turbo for cost efficiency
+ */
+export async function chatWithRecipeContext(
+  message: string,
+  recipe: Recipe,
+  conversationHistory?: ChatMessage[]
+): Promise<AgentResponse> {
+  try {
+    console.log('Recipe chat agent handling message for recipe:', recipe.title);
+
+    const client = getOpenAIClient();
+    
+    // Format recipe context
+    const recipeContext = formatRecipeContext(recipe);
+    
+    // Build system prompt with recipe context
+    const systemPrompt = `${RECIPE_CHAT_SYSTEM_PROMPT}\n\n${recipeContext}`;
+
+    // Build messages array
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
+    ];
+
+    // Add conversation history (limited to last 10 for token efficiency)
+    const limitedHistory = conversationHistory 
+      ? conversationHistory.slice(-10)
+      : [];
+    
+    if (limitedHistory.length > 0) {
+      limitedHistory.forEach((msg) => {
+        messages.push({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.message,
+        });
+      });
+    }
+
+    // Add current message
+    messages.push({ role: 'user', content: message });
+
+    const response = await client.chat.completions.create({
+      model: 'gpt-3.5-turbo', // Cheaper than gpt-4o-mini, sufficient for recipe Q&A
+      messages,
+      temperature: 0.7,  // Friendly and conversational
+      max_tokens: 500,   // Keep responses concise
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error('No response from OpenAI');
+    }
+
+    return {
+      success: true,
+      message: content,
+    };
+
+  } catch (error) {
+    console.error('Error in recipe chat agent:', error);
     return {
       success: false,
       message: 'Sorry, I encountered an error. Please try again.',
