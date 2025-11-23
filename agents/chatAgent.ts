@@ -177,7 +177,7 @@ Important: The user is viewing this recipe and asking questions about it. You ha
 
 /**
  * Chat with recipe context - for recipe-specific questions
- * Uses gpt-3.5-turbo for cost efficiency
+ * Uses gpt-4o-mini for cost efficiency and better quality
  */
 export async function chatWithRecipeContext(
   message: string,
@@ -218,7 +218,7 @@ export async function chatWithRecipeContext(
     messages.push({ role: 'user', content: message });
 
     const response = await client.chat.completions.create({
-      model: 'gpt-3.5-turbo', // Cheaper than gpt-4o-mini, sufficient for recipe Q&A
+      model: 'gpt-4o-mini', // More cost-effective than gpt-3.5-turbo (70% cheaper input, 60% cheaper output)
       messages,
       temperature: 0.7,  // Friendly and conversational
       max_tokens: 500,   // Keep responses concise
