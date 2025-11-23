@@ -363,7 +363,6 @@ export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeC
   if (isMobile && isOpen) {
     return (
       <>
-        {fabButton}
         {createPortal(
           <Paper
             ref={chatWindowRef}
