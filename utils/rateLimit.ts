@@ -246,6 +246,12 @@ export const RATE_LIMITS = {
     maxRequests: 5, // 5 requests per minute
   },
   
+  // Recipe chat - same as main chat (OpenAI calls)
+  recipeChat: {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 10, // 10 requests per minute
+  },
+  
   // General API - less restrictive
   general: {
     windowMs: 60 * 1000, // 1 minute
