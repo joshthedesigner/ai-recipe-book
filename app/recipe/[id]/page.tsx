@@ -19,6 +19,8 @@ import {
   ListItemIcon,
   ListItemText as MenuItemText,
   Grid,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -29,6 +31,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import RecipeChat from '@/components/RecipeChat';
+import RecipeNotesTab from '@/components/RecipeNotesTab';
 import { Recipe } from '@/types';
 import { supabase } from '@/db/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,6 +51,8 @@ export default function RecipeDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'recipe' | 'notes'>('recipe');
+  const [notesCount, setNotesCount] = useState(0);
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
   
@@ -56,6 +61,14 @@ export default function RecipeDetailPage() {
 
   // Check if user came from feed
   const fromFeed = searchParams.get('from') === 'feed';
+  
+  // Check for tab query param (for navigation from feed notes)
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'notes') {
+      setActiveTab('notes');
+    }
+  }, [searchParams]);
 
   // Smart back navigation
   const handleBack = () => {
@@ -171,6 +184,27 @@ export default function RecipeDetailPage() {
     };
 
     fetchRecipe();
+  }, [recipeId, user]);
+
+  // Fetch notes count on page load (for badge display)
+  useEffect(() => {
+    if (!recipeId || !user) return;
+
+    const fetchNotesCount = async () => {
+      try {
+        const response = await fetch(`/api/recipes/${recipeId}/notes`);
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          setNotesCount(data.notes?.length || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching notes count:', err);
+        // Silently fail - badge will just show 0
+      }
+    };
+
+    fetchNotesCount();
   }, [recipeId, user]);
 
   if (loading) {
@@ -370,7 +404,7 @@ export default function RecipeDetailPage() {
 
         {/* Tags - Below image/video */}
         {recipe.tags && recipe.tags.length > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 5 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
             {recipe.tags.map((tag) => (
               <Chip
                 key={tag}
@@ -383,7 +417,55 @@ export default function RecipeDetailPage() {
           </Box>
         )}
 
-        {/* Ingredients and Instructions - Prefer sections when available (two columns) */}
+        {/* Tabs: Recipe / Notes */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 500,
+                minHeight: 48,
+              },
+            }}
+          >
+            <Tab label="Recipe" value="recipe" />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>Notes</span>
+                  {notesCount > 0 && (
+                    <Box
+                      sx={{
+                        minWidth: 20,
+                        height: 20,
+                        borderRadius: '10px',
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 0.75,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {notesCount > 99 ? '99+' : notesCount}
+                    </Box>
+                  )}
+                </Box>
+              }
+              value="notes"
+            />
+          </Tabs>
+        </Box>
+
+        {/* Tab Content */}
+        {activeTab === 'recipe' && (
+          <>
+            {/* Ingredients and Instructions - Prefer sections when available (two columns) */}
         {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
           <Grid container spacing={4}>
             {/* Ingredients column */}
@@ -598,14 +680,24 @@ export default function RecipeDetailPage() {
           </Grid>
         )}
 
-        {/* Cookbook Info */}
-        {recipe.cookbook_name && (
-          <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary">
-              From: {recipe.cookbook_name}
-              {recipe.cookbook_page && ` (Page ${recipe.cookbook_page})`}
-            </Typography>
-          </Box>
+            {/* Cookbook Info */}
+            {recipe.cookbook_name && (
+              <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+                <Typography variant="body2" color="text.secondary">
+                  From: {recipe.cookbook_name}
+                  {recipe.cookbook_page && ` (Page ${recipe.cookbook_page})`}
+                </Typography>
+              </Box>
+            )}
+          </>
+        )}
+
+        {activeTab === 'notes' && (
+          <RecipeNotesTab
+            recipeId={recipeId}
+            onNotesCountChange={setNotesCount}
+            canAddNotes={isOwnRecipe}
+          />
         )}
       </Container>
 

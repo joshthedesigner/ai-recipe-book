@@ -24,7 +24,8 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
-import { Recipe } from '@/types';
+import FeedNoteCard from '@/components/FeedNoteCard';
+import { Recipe, FeedItem } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
@@ -53,7 +54,7 @@ export default function FeedPage() {
   const { showToast } = useToast();
   const { groups, switchGroup } = useGroup();
   
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +83,17 @@ export default function FeedPage() {
       sessionStorage.setItem('feedScrollPosition', String(window.scrollY));
     }
     router.push(`/recipe/${recipe.id}?from=feed`);
+  };
+
+  // Handle clicking on note card - navigate to recipe page, notes tab
+  const handleNoteClick = (note: FeedItem) => {
+    if (note.type === 'note' && note.recipe_id) {
+      // Save current scroll position before navigating
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('feedScrollPosition', String(window.scrollY));
+      }
+      router.push(`/recipe/${note.recipe_id}?from=feed&tab=notes`);
+    }
   };
 
   // Handle adding recipe to own cookbook
@@ -136,11 +148,11 @@ export default function FeedPage() {
         const data = await response.json();
 
         if (data.success) {
-          setRecipes(data.recipes || []);
+          setRecipes(data.feedItems || data.recipes || []);
           setHasMore(data.hasMore || false);
           
           // Show friendly message if no friends yet (only once)
-          if (data.message && data.recipes?.length === 0) {
+          if (data.message && (data.feedItems || data.recipes)?.length === 0) {
             showToast(data.message, 'info');
           }
         } else {
@@ -220,7 +232,7 @@ export default function FeedPage() {
       const data = await response.json();
 
       if (data.success) {
-        setRecipes(prev => [...prev, ...(data.recipes || [])]);
+        setRecipes(prev => [...prev, ...(data.feedItems || data.recipes || [])]);
         setHasMore(data.hasMore || false);
         setOffset(newOffset);
       }
@@ -316,9 +328,23 @@ export default function FeedPage() {
         {/* Recipe Feed - Stacked Cards */}
         {!loading && recipes.length > 0 && (
           <Box sx={{ maxWidth: 625, mx: 'auto' }}>
-            {recipes.map((recipe) => (
+            {recipes.map((item) => {
+              // Render note card for notes
+              if (item.type === 'note') {
+                return (
+                  <FeedNoteCard
+                    key={item.id}
+                    note={item}
+                    onClick={() => handleNoteClick(item)}
+                  />
+                );
+              }
+
+              // Render recipe card for recipes (existing logic)
+              const recipe = item as Recipe;
+              return (
               <Card 
-                key={recipe.id} 
+                key={recipe.id}
                 elevation={0}
                 sx={{ 
                   mb: 3,
@@ -456,7 +482,8 @@ export default function FeedPage() {
                   onClick={() => handleRecipeClick(recipe)}
                 />
               </Card>
-            ))}
+              );
+            })}
 
             {/* Loading More Indicator */}
             {loadingMore && (

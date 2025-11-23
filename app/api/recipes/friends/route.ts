@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
 import { getUserGroups } from '@/utils/permissions';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/utils/rateLimit';
+import { getYouTubeThumbnail } from '@/utils/youtubeHelpers';
+import { FeedItem } from '@/types';
 
 // Force dynamic rendering - this route uses cookies for auth
 export const dynamic = 'force-dynamic';
@@ -79,9 +81,12 @@ export async function GET(request: NextRequest) {
     }
 
     const friendGroupIds = friendGroups.map(g => g.id);
-    console.log('[Friends Feed API] Fetching recipes from group IDs:', friendGroupIds);
+    console.log('[Friends Feed API] Fetching recipes and notes from group IDs:', friendGroupIds);
 
-    // Fetch recipes from all friend groups with pagination
+    // Performance monitoring
+    const startTime = Date.now();
+
+    // Fetch recipes from all friend groups
     const { data: recipes, error: recipesError } = await supabase
       .from('recipes')
       .select(`
@@ -102,11 +107,7 @@ export async function GET(request: NextRequest) {
         created_at,
         updated_at
       `)
-      .in('group_id', friendGroupIds)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    console.log('[Friends Feed API] Query result - recipes:', recipes?.length, 'error:', recipesError);
+      .in('group_id', friendGroupIds);
 
     if (recipesError) {
       console.error('[Friends Feed API] Error fetching friend recipes:', recipesError);
@@ -120,33 +121,126 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Format recipes with friend information and is_new flag
-    console.log('[Friends Feed API] Formatting recipes...');
-    const formattedRecipes = recipes?.map(recipe => {
-      // Find the matching friend group to get the friend's name
+    // Fetch notes from recipes in friend groups (using denormalized fields, no join needed)
+    const { data: notes, error: notesError } = await supabase
+      .from('recipe_notes')
+      .select(`
+        id,
+        recipe_id,
+        user_id,
+        note_text,
+        photo_urls,
+        recipe_title,
+        recipe_image_url,
+        created_at,
+        updated_at,
+        users!recipe_notes_user_id_fkey(name)
+      `)
+      .in('recipe_id', recipes?.map(r => r.id) || []);
+
+    if (notesError) {
+      console.error('[Friends Feed API] Error fetching notes:', notesError);
+      // Continue without notes rather than failing completely
+    }
+
+    const queryTime = Date.now() - startTime;
+    console.log(`[Friends Feed API] Query time: ${queryTime}ms (recipes: ${recipes?.length || 0}, notes: ${notes?.length || 0})`);
+
+    // Combine recipes and notes into feed items
+    const feedItems: FeedItem[] = [];
+
+    // Format recipes as feed items
+    const recipeItems: FeedItem[] = (recipes || []).map(recipe => {
       const friendGroup = friendGroups.find(g => g.id === recipe.group_id);
-      
-      // Determine if recipe is new (created after last feed view)
-      // If lastViewAt is NULL, all recipes are new (user never viewed feed)
       const isNew = lastViewAt
         ? new Date(recipe.created_at) > new Date(lastViewAt)
         : true;
-      
+
       return {
-        ...recipe,
+        type: 'recipe' as const,
+        id: recipe.id,
+        created_at: recipe.created_at,
+        title: recipe.title,
+        ingredients: recipe.ingredients,
+        steps: recipe.steps,
+        tags: recipe.tags,
+        source_url: recipe.source_url,
+        image_url: recipe.image_url,
+        video_url: recipe.video_url,
+        video_platform: recipe.video_platform,
+        cookbook_name: recipe.cookbook_name,
+        cookbook_page: recipe.cookbook_page,
+        contributor_name: recipe.contributor_name,
         friend_name: friendGroup?.name.replace("'s recipes", '') || recipe.contributor_name,
         group_name: friendGroup?.name || 'Unknown',
         is_new: isNew,
       };
-    }) || [];
+    });
+
+    // Format notes as feed items
+    const noteItems: FeedItem[] = (notes || []).map((note: any) => {
+      // Find the recipe to get friend info
+      const recipe = recipes?.find(r => r.id === note.recipe_id);
+      const friendGroup = recipe ? friendGroups.find(g => g.id === recipe.group_id) : null;
+      const friendName = friendGroup?.name.replace("'s recipes", '') || note.users?.name || 'Unknown';
+
+      // Use first photo if exists, else recipe image (or generate YouTube thumbnail for legacy notes)
+      let displayImage = note.photo_urls && note.photo_urls.length > 0
+        ? note.photo_urls[0]
+        : note.recipe_image_url;
+
+      // Handle legacy notes: if recipe_image_url is null, try to generate from recipe's video_url
+      if (!displayImage && recipe) {
+        if (recipe.video_url) {
+          displayImage = getYouTubeThumbnail(recipe.video_url) || null;
+        } else if (recipe.image_url) {
+          displayImage = recipe.image_url;
+        }
+      }
+
+      return {
+        type: 'note' as const,
+        id: note.id,
+        created_at: note.created_at,
+        note_text: note.note_text,
+        photo_urls: note.photo_urls || [],
+        recipe_id: note.recipe_id,
+        recipe_title: note.recipe_title,
+        recipe_image_url: displayImage, // For feed display
+        source_url: recipe?.source_url || null, // Include recipe source URL
+        user_name: note.users?.name || 'Unknown',
+        friend_name: friendName, // For consistency with recipe items
+      };
+    });
+
+    // Combine and sort by created_at DESC
+    feedItems.push(...recipeItems, ...noteItems);
+    feedItems.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    // Apply pagination
+    const paginatedItems = feedItems.slice(offset, offset + limit);
+    const hasMore = feedItems.length > offset + limit;
+
+    const totalTime = Date.now() - startTime;
+    console.log(`[Friends Feed API] Total processing time: ${totalTime}ms (returning ${paginatedItems.length} items)`);
+
+    // Log performance warning if query is slow
+    if (queryTime > 1000) {
+      console.warn(`[Friends Feed API] Slow query detected: ${queryTime}ms`);
+    }
 
     return NextResponse.json(
       {
         success: true,
-        recipes: formattedRecipes,
-        count: formattedRecipes.length,
-        hasMore: formattedRecipes.length === limit,
+        recipes: paginatedItems, // Keep 'recipes' key for backward compatibility
+        feedItems: paginatedItems, // New key for clarity
+        count: paginatedItems.length,
+        totalCount: feedItems.length,
+        hasMore: hasMore,
         offset: offset,
+        queryTime: queryTime, // Performance metric
       },
       { status: 200 }
     );
