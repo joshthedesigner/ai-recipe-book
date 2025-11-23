@@ -7,15 +7,24 @@ import {
   Avatar,
   Dialog,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CloseIcon from '@mui/icons-material/Close';
 import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { RecipeNote } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
+import DeleteConfirmDialog from './DeleteConfirmDialog';
 
 interface NoteCardProps {
   note: RecipeNote;
+  onNoteDeleted?: () => void;
 }
 
 // Simple relative time formatter
@@ -36,8 +45,15 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function NoteCard({ note }: NoteCardProps) {
+export default function NoteCard({ note, onNoteDeleted }: NoteCardProps) {
+  const { user } = useAuth();
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwnNote = note.user_id === user?.id;
+  const menuOpen = Boolean(anchorEl);
 
   const handleImageClick = (url: string) => {
     setExpandedImage(url);
@@ -45,6 +61,65 @@ export default function NoteCard({ note }: NoteCardProps) {
 
   const handleCloseExpanded = () => {
     setExpandedImage(null);
+  };
+
+  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDeleteClick = () => {
+    handleMenuClose();
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/notes/${note.id}`, {
+        method: 'DELETE',
+      });
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', {
+          status: response.status,
+          statusText: response.statusText,
+          contentType,
+          url: response.url,
+          text: text.substring(0, 500), // First 500 chars
+        });
+        throw new Error(`Server error (${response.status}): ${response.statusText}. Check console for details.`);
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete note');
+      }
+
+      if (data.success) {
+        setDeleteDialogOpen(false);
+        onNoteDeleted?.();
+      } else {
+        throw new Error(data.error || 'Failed to delete note');
+      }
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      alert(err instanceof Error ? err.message : 'Failed to delete note. Please try again.');
+      setDeleting(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
   };
 
   return (
@@ -75,6 +150,21 @@ export default function NoteCard({ note }: NoteCardProps) {
             </Typography>
           </Box>
         </Box>
+        {isOwnNote && (
+          <>
+            <IconButton size="small" onClick={handleMenuClick}>
+              <MoreVertIcon />
+            </IconButton>
+            <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleMenuClose}>
+              <MenuItem onClick={handleDeleteClick}>
+                <ListItemIcon>
+                  <DeleteIcon fontSize="small" color="error" />
+                </ListItemIcon>
+                <ListItemText>Delete</ListItemText>
+              </MenuItem>
+            </Menu>
+          </>
+        )}
       </Box>
 
       {/* Note Text */}
@@ -209,6 +299,18 @@ export default function NoteCard({ note }: NoteCardProps) {
           )}
         </Box>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        title="Note"
+        dialogTitle="Delete Note?"
+        message="Are you sure you want to delete this note? This action cannot be undone."
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        loading={deleting}
+        confirmText="Delete"
+      />
     </Box>
   );
 }

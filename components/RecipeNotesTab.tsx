@@ -91,6 +91,7 @@ export default function RecipeNotesTab({ recipeId, onNotesCountChange, canAddNot
             <NoteCard
               key={note.id}
               note={note}
+              onNoteDeleted={fetchNotes}
             />
           ))}
         </Box>

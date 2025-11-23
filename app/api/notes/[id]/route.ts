@@ -255,8 +255,10 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log('[DELETE Note] Starting delete request');
     const supabase = createClient();
     const noteId = params.id;
+    console.log('[DELETE Note] Note ID:', noteId);
 
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -329,7 +331,14 @@ export async function DELETE(
     );
 
   } catch (error) {
-    console.error('Delete note API error:', error);
+    console.error('[DELETE Note] Error:', error);
+    // Ensure we always return JSON, even on unexpected errors
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { success: false, error: error.message || 'Failed to delete note' },
+        { status: 500 }
+      );
+    }
     return errorResponse(error);
   }
 }
