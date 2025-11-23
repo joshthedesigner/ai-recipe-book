@@ -28,6 +28,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
+import RecipeChat from '@/components/RecipeChat';
 import { Recipe } from '@/types';
 import { supabase } from '@/db/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -630,6 +631,11 @@ export default function RecipeDetailPage() {
         onCancel={handleDeleteCancel}
         loading={deleting}
       />
+
+      {/* Recipe Chat FAB */}
+      {recipe && (
+        <RecipeChat recipeId={recipeId} recipe={recipe} />
+      )}
     </Box>
   );
 }
