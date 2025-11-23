@@ -53,14 +53,6 @@ export default function RecipeNotesTab({ recipeId, onNotesCountChange, canAddNot
     fetchNotes(); // Refresh notes list
   };
 
-  const handleNoteUpdated = () => {
-    fetchNotes(); // Refresh notes list
-  };
-
-  const handleNoteDeleted = () => {
-    fetchNotes(); // Refresh notes list
-  };
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
@@ -99,8 +91,6 @@ export default function RecipeNotesTab({ recipeId, onNotesCountChange, canAddNot
             <NoteCard
               key={note.id}
               note={note}
-              onNoteUpdated={handleNoteUpdated}
-              onNoteDeleted={handleNoteDeleted}
             />
           ))}
         </Box>

@@ -263,6 +263,7 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
               width: '100%',
               height: { xs: 296, md: 445 }, // Match RecipeCard embedded height
               overflow: 'hidden',
+              bgcolor: 'grey.100', // Background for letterboxing when using contain
             }}
           >
             <img
@@ -271,7 +272,7 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'cover',
+                objectFit: 'contain', // Show full photo without cropping
                 display: 'block',
               }}
               loading="lazy"
