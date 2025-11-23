@@ -76,7 +76,7 @@ export default function FeedNoteCard({ note, onClick }: FeedNoteCardProps) {
         clone.style.visibility = 'hidden';
         clone.style.display = 'block';
         clone.style.width = element.offsetWidth + 'px'; // CRITICAL: Match actual width
-        clone.style.WebkitLineClamp = 'none';
+        clone.style.setProperty('-webkit-line-clamp', 'none');
         clone.style.overflow = 'visible';
         clone.style.height = 'auto';
         clone.style.maxHeight = 'none';
