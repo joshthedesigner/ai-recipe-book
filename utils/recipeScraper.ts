@@ -303,10 +303,19 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
   }
   
   try {
-    // Fetch the webpage
+    // Fetch the webpage with browser-like headers to avoid 403 blocks
     const response = await axios.get(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (compatible; RecipeAssistBot/1.0)',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Cache-Control': 'max-age=0',
       },
       timeout: 10000, // 10 second timeout
       maxRedirects: 5, // Limit redirects to prevent abuse
@@ -321,6 +330,16 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
     
     if (schemaRecipe) {
       console.log('Found schema.org recipe data');
+      
+      // If schema doesn't have an image, try HTML fallback
+      if (!schemaRecipe.image_url) {
+        console.log('No image in schema.org data, trying HTML extraction...');
+        const htmlImage = extractImageFromHTML($, url);
+        if (htmlImage) {
+          schemaRecipe.image_url = htmlImage;
+          console.log('Found image in HTML:', htmlImage);
+        }
+      }
       
       // Step 2: Validate and filter steps
       const validSteps = schemaRecipe.steps.filter(isValidCookingStep);
@@ -378,6 +397,16 @@ export async function scrapeRecipe(url: string): Promise<ScrapedRecipe> {
     // No schema found: Fallback to full OpenAI parsing
     console.log('No schema found, using OpenAI to parse entire recipe');
     const fullRecipe = await parseRecipeWithAI(html, url);
+    
+    // Try to extract image from HTML as fallback
+    if (!fullRecipe.image_url) {
+      console.log('Trying to extract image from HTML...');
+      const htmlImage = extractImageFromHTML($, url);
+      if (htmlImage) {
+        fullRecipe.image_url = htmlImage;
+        console.log('Found image in HTML:', htmlImage);
+      }
+    }
     
     // Condense the AI-generated recipe steps too
     if (fullRecipe.steps.length >= 3) {
@@ -482,6 +511,82 @@ function extractPluginSections($: cheerio.CheerioAPI): Array<{ title: string; in
   }
 
   return sections;
+}
+
+/**
+ * Extract image URL from HTML as fallback when schema.org doesn't have images
+ */
+function extractImageFromHTML($: cheerio.CheerioAPI, baseUrl: string): string | undefined {
+  const htmlImages: string[] = [];
+  
+  // Common selectors for recipe images (ordered by priority)
+  const imageSelectors = [
+    'img.recipe-image',
+    'img[class*="recipe"]',
+    'img[class*="hero"]',
+    'article img',
+    '.entry-content img',
+    '.recipe-content img',
+    'main img',
+    'img[src*="recipe"]',
+  ];
+
+  for (const selector of imageSelectors) {
+    $(selector).each((_, el) => {
+      const src = $(el).attr('src');
+      const dataSrc = $(el).attr('data-src'); // Lazy loading
+      const srcSet = $(el).attr('srcset');
+      
+      // Process src attribute
+      if (src && !src.startsWith('data:') && !src.startsWith('//')) {
+        try {
+          const absoluteUrl = src.startsWith('http') ? src : new URL(src, baseUrl).toString();
+          if (!htmlImages.includes(absoluteUrl)) {
+            htmlImages.push(absoluteUrl);
+          }
+        } catch (e) {
+          // Skip invalid URLs
+        }
+      }
+      
+      // Process data-src (lazy loading)
+      if (dataSrc && !dataSrc.startsWith('data:') && !dataSrc.startsWith('//')) {
+        try {
+          const absoluteUrl = dataSrc.startsWith('http') ? dataSrc : new URL(dataSrc, baseUrl).toString();
+          if (!htmlImages.includes(absoluteUrl)) {
+            htmlImages.push(absoluteUrl);
+          }
+        } catch (e) {
+          // Skip invalid URLs
+        }
+      }
+      
+      // Process srcset
+      if (srcSet) {
+        const urls = srcSet.split(',').map(s => s.trim().split(' ')[0]).filter(Boolean);
+        urls.forEach(imgUrl => {
+          if (!imgUrl.startsWith('data:') && !imgUrl.startsWith('//')) {
+            try {
+              const absoluteUrl = imgUrl.startsWith('http') ? imgUrl : new URL(imgUrl, baseUrl).toString();
+              if (!htmlImages.includes(absoluteUrl)) {
+                htmlImages.push(absoluteUrl);
+              }
+            } catch (e) {
+              // Skip invalid URLs
+            }
+          }
+        });
+      }
+    });
+    
+    // If we found images with this selector, use the first one
+    if (htmlImages.length > 0) {
+      console.log(`Found ${htmlImages.length} HTML image(s) using selector: ${selector}`);
+      return htmlImages[0];
+    }
+  }
+
+  return undefined;
 }
 
 /**
