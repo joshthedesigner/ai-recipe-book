@@ -137,3 +137,4 @@ const isShowingRecents = !hasSearchInput && recentSearches.length > 0;
 
 
 
+

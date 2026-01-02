@@ -181,6 +181,23 @@ export default function RecipeDetailPage() {
 
       setRecipe(data);
       setLoading(false);
+
+      // Track recipe view in localStorage for "Recently Viewed" sorting
+      if (data?.id && typeof window !== 'undefined') {
+        try {
+          const STORAGE_KEY = 'recipeRecentlyViewed';
+          const stored = localStorage.getItem(STORAGE_KEY);
+          const viewed: Record<string, number> = stored ? JSON.parse(stored) : {};
+          viewed[data.id] = Date.now();
+          // Keep only the last 100 viewed recipes
+          const entries = Object.entries(viewed)
+            .sort(([, a], [, b]) => b - a)
+            .slice(0, 100);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(entries)));
+        } catch (error) {
+          console.warn('Error tracking recipe view:', error);
+        }
+      }
     };
 
     fetchRecipe();

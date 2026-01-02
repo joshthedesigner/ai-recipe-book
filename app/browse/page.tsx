@@ -11,34 +11,15 @@ import {
   TextField,
   InputAdornment,
   Grid,
-  FormControl,
   InputLabel,
+  CircularProgress,
+  FormControl,
   Select,
   MenuItem,
-  CircularProgress,
-  Chip,
   IconButton,
-  Card,
-  CardContent,
-  Popover,
-  Button,
-  Paper,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import RamenDiningIcon from '@mui/icons-material/RamenDining';
-import PizzaIcon from '@mui/icons-material/LocalPizza';
-import SushiIcon from '@mui/icons-material/SetMeal';
-import FastfoodIcon from '@mui/icons-material/Fastfood';
-import BakeryDiningIcon from '@mui/icons-material/BakeryDining';
-import EmojiFoodBeverageIcon from '@mui/icons-material/EmojiFoodBeverage';
-import LunchDiningIcon from '@mui/icons-material/LunchDining';
-import SpaIcon from '@mui/icons-material/Spa';
-import EggIcon from '@mui/icons-material/Egg';
-import FishIcon from '@mui/icons-material/SetMeal';
-import PetsIcon from '@mui/icons-material/Pets';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -58,13 +39,33 @@ export default function BrowsePage() {
   const { showToast } = useToast();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  // Sort options (defined before state to avoid hoisting issues)
+  const SORT_OPTIONS = {
+    RECENTLY_ADDED: 'recently_added',
+    FIRST_ADDED: 'first_added',
+    RECENTLY_VIEWED: 'recently_viewed',
+    DEFAULT: 'default',
+  } as const;
+
+  type SortOption = typeof SORT_OPTIONS[keyof typeof SORT_OPTIONS];
+
+  // localStorage keys
+  const STORAGE_KEY_SORT_PREFERENCE = 'recipeSortPreference';
+  const STORAGE_KEY_RECENTLY_VIEWED = 'recipeRecentlyViewed';
+
+  // TODO: Adjust page size based on screen size or user preference
+  const PAGE_SIZE = 12;
+  // TODO: Adjust scroll threshold for earlier/later loading
+  const SCROLL_THRESHOLD = 300; // pixels from bottom
+
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [displayedRecipes, setDisplayedRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [sortBy, setSortBy] = useState<SortOption>(SORT_OPTIONS.RECENTLY_ADDED);
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterMainIngredient, setFilterMainIngredient] = useState('');
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
@@ -75,61 +76,86 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
-  const [cuisineAnchorEl, setCuisineAnchorEl] = useState<HTMLElement | null>(null);
-  const [ingredientAnchorEl, setIngredientAnchorEl] = useState<HTMLElement | null>(null);
-  const [tempCuisine, setTempCuisine] = useState('');
-  const [tempIngredient, setTempIngredient] = useState('');
 
-  // TODO: Adjust page size based on screen size or user preference
-  const PAGE_SIZE = 12;
-  // TODO: Adjust scroll threshold for earlier/later loading
-  const SCROLL_THRESHOLD = 300; // pixels from bottom
-
-  // Common cuisine types with icons
-  const CUISINE_TYPES = [
-    { value: 'american', label: 'American', icon: '🍔' },
-    { value: 'chinese', label: 'Chinese', icon: '🥘' },
-    { value: 'french', label: 'French', icon: '🥖' },
-    { value: 'greek', label: 'Greek', icon: '🥙' },
-    { value: 'indian', label: 'Indian', icon: '🍛' },
-    { value: 'italian', label: 'Italian', icon: '🍕' },
-    { value: 'japanese', label: 'Japanese', icon: '🍣' },
-    { value: 'korean', label: 'Korean', icon: '🍜' },
-    { value: 'mexican', label: 'Mexican', icon: '🌮' },
-    { value: 'thai', label: 'Thai', icon: '🍤' },
-    { value: 'vietnamese', label: 'Vietnamese', icon: '🍲' },
-    { value: 'middle eastern', label: 'Middle Eastern', icon: '🧆' },
-    { value: 'mediterranean', label: 'Mediterranean', icon: '🫒' },
+  // Cuisine and ingredient filter options
+  const CUISINE_OPTIONS = [
+    'american', 'chinese', 'french', 'greek', 'indian', 'italian', 
+    'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 
+    'middle eastern', 'mediterranean'
   ];
   
-  // Main ingredient types with icons (matching auto-tagging categories)
-  const MAIN_INGREDIENT_TYPES = [
-    { value: 'fish', label: 'Fish', icon: '🐟' },
-    { value: 'seafood', label: 'Seafood', icon: '🦐' },
-    { value: 'chicken', label: 'Chicken', icon: '🍗' },
-    { value: 'beef', label: 'Beef', icon: '🥩' },
-    { value: 'pork', label: 'Pork', icon: '🥓' },
-    { value: 'lamb', label: 'Lamb', icon: '🍖' },
-    { value: 'vegetarian', label: 'Vegetarian', icon: '🥗' },
-    { value: 'vegan', label: 'Vegan', icon: '🌱' },
+  const INGREDIENT_OPTIONS = [
+    'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'vegetarian', 'vegan'
   ];
 
-  // Calculate counts for each filter option
-  const getCuisineCount = (cuisineValue: string) => {
-    return recipes.filter(r => 
-      r.tags.some(tag => tag.toLowerCase() === cuisineValue.toLowerCase())
-    ).length;
+  // Get available filter options (only show options that exist in recipes)
+  const availableCuisines = useMemo(() => {
+    return CUISINE_OPTIONS.filter(cuisine => 
+      recipes.some(recipe => 
+        recipe.tags.some(tag => tag.toLowerCase() === cuisine.toLowerCase())
+      )
+    );
+  }, [recipes]);
+
+  const availableIngredients = useMemo(() => {
+    return INGREDIENT_OPTIONS.filter(ingredient => 
+      recipes.some(recipe => 
+        recipe.tags.some(tag => tag.toLowerCase() === ingredient.toLowerCase())
+      )
+    );
+  }, [recipes]);
+
+  // localStorage utilities for sort preference
+  const loadSortPreference = (): SortOption => {
+    if (typeof window === 'undefined') return SORT_OPTIONS.RECENTLY_ADDED;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_SORT_PREFERENCE);
+      if (stored && Object.values(SORT_OPTIONS).includes(stored as SortOption)) {
+        return stored as SortOption;
+      }
+    } catch (error) {
+      console.warn('Error loading sort preference:', error);
+    }
+    return SORT_OPTIONS.RECENTLY_ADDED; // Default
   };
 
-  const getIngredientCount = (ingredientValue: string) => {
-    return recipes.filter(r => 
-      r.tags.some(tag => tag.toLowerCase() === ingredientValue.toLowerCase())
-    ).length;
+  const saveSortPreference = (preference: SortOption) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY_SORT_PREFERENCE, preference);
+    } catch (error) {
+      console.warn('Error saving sort preference:', error);
+    }
   };
 
-  // Get cuisines and ingredients that actually exist in recipes
-  const availableCuisines = CUISINE_TYPES.filter(c => getCuisineCount(c.value) > 0);
-  const availableIngredients = MAIN_INGREDIENT_TYPES.filter(i => getIngredientCount(i.value) > 0);
+  // localStorage utilities for recently viewed tracking
+  const getRecentlyViewed = (): Record<string, number> => {
+    if (typeof window === 'undefined') return {};
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_RECENTLY_VIEWED);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.warn('Error loading recently viewed:', error);
+    }
+    return {};
+  };
+
+  const trackRecipeView = (recipeId: string) => {
+    if (typeof window === 'undefined' || !recipeId) return;
+    try {
+      const viewed = getRecentlyViewed();
+      viewed[recipeId] = Date.now();
+      // Keep only the last 100 viewed recipes to prevent localStorage bloat
+      const entries = Object.entries(viewed)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 100);
+      localStorage.setItem(STORAGE_KEY_RECENTLY_VIEWED, JSON.stringify(Object.fromEntries(entries)));
+    } catch (error) {
+      console.warn('Error tracking recipe view:', error);
+    }
+  };
 
   // Fetch recipes from API
   const fetchRecipes = useCallback(async (silent = false, noCache = false) => {
@@ -165,6 +191,12 @@ export default function BrowsePage() {
       }
     }
   }, [activeGroup, showToast]);
+
+  // Load sort preference from localStorage on mount
+  useEffect(() => {
+    const savedPreference = loadSortPreference();
+    setSortBy(savedPreference);
+  }, []);
 
   // Auth protection: redirect to home if not authenticated
   useEffect(() => {
@@ -206,42 +238,59 @@ export default function BrowsePage() {
   // not when the callback recreates due to activeGroup object reference changing in GroupContext
   // user?.id (not user) prevents re-fetch on session validation while maintaining login/logout behavior
 
-  // Apply filters whenever recipes, search, or filters change
-  useEffect(() => {
-    applyFilters();
+  // Apply filters function
+  const applyFilters = useCallback(() => {
+    let filtered = [...recipes];
+
+    // Search filter (title, ingredients, tags)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (recipe) =>
+          recipe.title.toLowerCase().includes(query) ||
+          recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+          recipe.ingredients.some((ing) => ing.toLowerCase().includes(query))
+      );
+    }
+
+    // Cuisine filter
+    if (filterCuisine) {
+      filtered = filtered.filter((recipe) => 
+        recipe.tags.some(tag => tag.toLowerCase() === filterCuisine.toLowerCase())
+      );
+    }
+
+    // Main ingredient filter
+    if (filterMainIngredient) {
+      filtered = filtered.filter((recipe) => 
+        recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase())
+      );
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      if (sortBy === SORT_OPTIONS.RECENTLY_VIEWED) {
+        const viewed = getRecentlyViewed();
+        const aViewed = a.id ? (viewed[a.id] || 0) : 0;
+        const bViewed = b.id ? (viewed[b.id] || 0) : 0;
+        // Most recently viewed first (higher timestamp = more recent)
+        return bViewed - aViewed;
+      } else if (sortBy === SORT_OPTIONS.RECENTLY_ADDED) {
+        // Newest first (created_at DESC)
+        return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
+      } else if (sortBy === SORT_OPTIONS.FIRST_ADDED) {
+        // Oldest first (created_at ASC)
+        return new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime();
+      }
+      // Default to Recently Added (newest first)
+      return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
+    });
+
+    setFilteredRecipes(filtered);
   }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient]);
 
-  // Load initial batch of displayed recipes when filtered recipes change
-  useEffect(() => {
-    setCurrentPage(0);
-    setHasMore(true);
-    const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
-    setDisplayedRecipes(initialBatch);
-  }, [filteredRecipes]);
-
-  // Infinite scroll: Load more recipes when user scrolls near bottom
-  useEffect(() => {
-    const handleScroll = () => {
-      // Don't load if already loading, no more recipes, or initial load
-      if (loadingMore || !hasMore || loading) return;
-
-      // Calculate distance from bottom
-      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
-
-      // Load more if within threshold
-      if (distanceFromBottom < SCROLL_THRESHOLD) {
-        loadMoreRecipes();
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [loadingMore, hasMore, loading, currentPage, filteredRecipes]);
-
-  const loadMoreRecipes = () => {
+  // Load more recipes function
+  const loadMoreRecipes = useCallback(() => {
     if (loadingMore || !hasMore) return;
 
     setLoadingMore(true);
@@ -272,54 +321,53 @@ export default function BrowsePage() {
 
       setLoadingMore(false);
     }, 300); // Small delay for smooth loading indicator
-  };
+  }, [loadingMore, hasMore, currentPage, filteredRecipes]);
 
-  const applyFilters = () => {
-    let filtered = [...recipes];
+  // Apply filters whenever recipes, search, or filters change
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
-    // Search filter (title, ingredients, tags)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (recipe) =>
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          recipe.ingredients.some((ing) => ing.toLowerCase().includes(query))
-      );
-    }
+  // Load initial batch of displayed recipes when filtered recipes change
+  useEffect(() => {
+    setCurrentPage(0);
+    setHasMore(true);
+    const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
+    setDisplayedRecipes(initialBatch);
+  }, [filteredRecipes]);
 
-    // Cuisine filter
-    if (filterCuisine) {
-      filtered = filtered.filter((recipe) => 
-        recipe.tags.some(tag => tag.toLowerCase() === filterCuisine.toLowerCase())
-      );
-    }
+  // Infinite scroll: Load more recipes when user scrolls near bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      // Don't load if already loading, no more recipes, or initial load
+      if (loadingMore || !hasMore || loading) return;
 
-    // Main ingredient filter
-    if (filterMainIngredient) {
-      filtered = filtered.filter((recipe) => 
-        recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase())
-      );
-    }
+      // Calculate distance from bottom
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const distanceFromBottom = documentHeight - (scrollTop + windowHeight);
 
-
-    // Sort
-    filtered.sort((a, b) => {
-      if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
-      } else if (sortBy === 'contributor_name') {
-        return a.contributor_name.localeCompare(b.contributor_name);
-      } else {
-        // Default: created_at (newest first)
-        return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
+      // Load more if within threshold
+      if (distanceFromBottom < SCROLL_THRESHOLD) {
+        loadMoreRecipes();
       }
-    });
+    };
 
-    setFilteredRecipes(filtered);
-  };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loadingMore, hasMore, loading, currentPage, filteredRecipes, loadMoreRecipes]);
 
   const handleCardClick = (recipe: Recipe) => {
+    if (recipe.id) {
+      trackRecipeView(recipe.id);
+    }
     router.push(`/recipe/${recipe.id}`);
+  };
+
+  const handleSortChange = (newSort: SortOption) => {
+    setSortBy(newSort);
+    saveSortPreference(newSort);
   };
 
   const handleDeleteClick = (recipeId: string) => {
@@ -379,42 +427,11 @@ export default function BrowsePage() {
     setSearchQuery('');
     setFilterCuisine('');
     setFilterMainIngredient('');
-    setSortBy('created_at');
-    setTempCuisine('');
-    setTempIngredient('');
+    handleSortChange(SORT_OPTIONS.RECENTLY_ADDED); // Reset to default
   };
 
-  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || sortBy !== 'created_at';
+  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
 
-  const handleCuisineOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setTempCuisine(filterCuisine);
-    setCuisineAnchorEl(event.currentTarget);
-  };
-
-  const handleCuisineClose = () => {
-    setCuisineAnchorEl(null);
-    setTempCuisine('');
-  };
-
-  const handleCuisineApply = () => {
-    setFilterCuisine(tempCuisine);
-    setCuisineAnchorEl(null);
-  };
-
-  const handleIngredientOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setTempIngredient(filterMainIngredient);
-    setIngredientAnchorEl(event.currentTarget);
-  };
-
-  const handleIngredientClose = () => {
-    setIngredientAnchorEl(null);
-    setTempIngredient('');
-  };
-
-  const handleIngredientApply = () => {
-    setFilterMainIngredient(tempIngredient);
-    setIngredientAnchorEl(null);
-  };
 
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
@@ -434,12 +451,15 @@ export default function BrowsePage() {
           borderBottom: '1px solid',
           borderColor: 'divider',
           width: '100%',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         <Container maxWidth="xl" sx={{ py: 3 }}>
-          {/* Header Title */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          {/* Header Title and Search/Filters */}
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
+            {/* Title and CTA */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
               <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
@@ -447,81 +467,87 @@ export default function BrowsePage() {
               </Typography>
               {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
             </Box>
-          </Box>
 
-          {/* Search and Filters */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Search Bar */}
-          <TextField
-            placeholder="Search recipes, ingredients, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-              endAdornment: searchQuery && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchQuery('')}>
-                    <ClearIcon />
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-            size="small"
-            sx={{ width: { xs: '100%', sm: 400 } }}
-          />
+            {/* Search and Filters */}
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 0 }}>
+            {/* Search Bar */}
+            <TextField
+              placeholder="Search recipes, ingredients, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchQuery('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
+              sx={{ width: { xs: '100%', sm: 400 } }}
+            />
 
-          {/* Filter Buttons */}
-          {/* Cuisine Filter Button */}
-          <Chip
-            label={filterCuisine ? `Cuisine: ${filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1)}` : 'Cuisines'}
-            onClick={handleCuisineOpen}
-            onDelete={filterCuisine ? () => setFilterCuisine('') : undefined}
-            deleteIcon={filterCuisine ? <ClearIcon /> : undefined}
-            icon={<ExpandMoreIcon />}
-            sx={{
-              height: 40,
-              px: 2,
-              fontWeight: 600,
-              bgcolor: filterCuisine ? 'primary.main' : 'background.paper',
-              color: filterCuisine ? 'white' : 'text.primary',
-              border: '1px solid',
-              borderColor: filterCuisine ? 'primary.main' : 'divider',
-              '&:hover': {
-                bgcolor: filterCuisine ? 'primary.dark' : 'action.hover',
-              },
-              '& .MuiChip-icon': {
-                color: filterCuisine ? 'white' : 'text.secondary',
-              },
-            }}
-          />
+            {/* Sort by Dropdown */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="sort-by-label">Sort by</InputLabel>
+              <Select
+                labelId="sort-by-label"
+                id="sort-by-select"
+                value={sortBy}
+                label="Sort by"
+                onChange={(e) => handleSortChange(e.target.value as SortOption)}
+              >
+                <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
+                <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
+                <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
+              </Select>
+            </FormControl>
 
-          {/* Ingredient Filter Button */}
-          <Chip
-            label={filterMainIngredient ? `Ingredient: ${filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1)}` : 'Main Ingredient'}
-            onClick={handleIngredientOpen}
-            onDelete={filterMainIngredient ? () => setFilterMainIngredient('') : undefined}
-            deleteIcon={filterMainIngredient ? <ClearIcon /> : undefined}
-            icon={<ExpandMoreIcon />}
-            sx={{
-              height: 40,
-              px: 2,
-              fontWeight: 600,
-              bgcolor: filterMainIngredient ? 'primary.main' : 'background.paper',
-              color: filterMainIngredient ? 'white' : 'text.primary',
-              border: '1px solid',
-              borderColor: filterMainIngredient ? 'primary.main' : 'divider',
-              '&:hover': {
-                bgcolor: filterMainIngredient ? 'primary.dark' : 'action.hover',
-              },
-              '& .MuiChip-icon': {
-                color: filterMainIngredient ? 'white' : 'text.secondary',
-              },
-            }}
-          />
+            {/* Filter by Section */}
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
+                <Select
+                  labelId="cuisine-filter-label"
+                  id="cuisine-filter-select"
+                  value={filterCuisine}
+                  label="Cuisines"
+                  onChange={(e) => setFilterCuisine(e.target.value)}
+                >
+                  <MenuItem value="">All Cuisines</MenuItem>
+                  {availableCuisines.map((cuisine) => (
+                    <MenuItem key={cuisine} value={cuisine}>
+                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl size="small" sx={{ minWidth: 160 }}>
+                <InputLabel id="ingredient-filter-label">Main Ingredient</InputLabel>
+                <Select
+                  labelId="ingredient-filter-label"
+                  id="ingredient-filter-select"
+                  value={filterMainIngredient}
+                  label="Main Ingredient"
+                  onChange={(e) => setFilterMainIngredient(e.target.value)}
+                >
+                  <MenuItem value="">All Ingredients</MenuItem>
+                  {availableIngredients.map((ingredient) => (
+                    <MenuItem key={ingredient} value={ingredient}>
+                      {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+            </Box>
           </Box>
         </Container>
       </Box>
@@ -660,177 +686,6 @@ export default function BrowsePage() {
         onRecipeAdded={handleRecipeAdded}
       />
 
-      {/* Cuisine Filter Popover */}
-      <Popover
-        open={Boolean(cuisineAnchorEl)}
-        anchorEl={cuisineAnchorEl}
-        onClose={handleCuisineClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            maxWidth: { xs: '90vw', sm: 600 },
-            width: { xs: '90vw', sm: 'auto' },
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          }
-        }}
-      >
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" sx={{ mb: { xs: 1.5, sm: 2 }, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Cuisines
-          </Typography>
-          <Grid container spacing={{ xs: 1.5, sm: 2 }}>
-            {availableCuisines.map((cuisine) => {
-              const isSelected = tempCuisine === cuisine.value;
-              return (
-                <Grid item xs={6} sm={4} md={3} key={cuisine.value}>
-                  <Card
-                    onClick={() => setTempCuisine(isSelected ? '' : cuisine.value)}
-                    sx={{
-                      cursor: 'pointer',
-                      bgcolor: isSelected ? 'hsl(24, 85%, 55%)' : 'background.paper',
-                      border: '1px solid',
-                      borderColor: isSelected ? 'hsl(24, 85%, 55%)' : 'divider',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderColor: 'hsl(24, 85%, 55%)',
-                        transform: 'scale(1.05)',
-                        boxShadow: 2,
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: { xs: 28, sm: 36 }, mb: 0.5 }}>
-                        {cuisine.icon}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: { xs: '0.6875rem', sm: '0.75rem' },
-                          color: isSelected ? 'white' : 'text.primary',
-                        }}
-                      >
-                        {cuisine.label}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: { xs: 2, sm: 3 }, gap: 1 }}>
-            <Button onClick={() => setTempCuisine('')} color="inherit" size="small">
-              Reset
-            </Button>
-            <Button
-              onClick={handleCuisineApply}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: 'hsl(24, 85%, 55%)',
-                '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
-              }}
-            >
-              View Results
-            </Button>
-          </Box>
-        </Box>
-      </Popover>
-
-      {/* Ingredient Filter Popover */}
-      <Popover
-        open={Boolean(ingredientAnchorEl)}
-        anchorEl={ingredientAnchorEl}
-        onClose={handleIngredientClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        PaperProps={{
-          sx: {
-            mt: 1,
-            maxWidth: { xs: '90vw', sm: 600 },
-            width: { xs: '90vw', sm: 'auto' },
-            borderRadius: 2,
-            boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-          }
-        }}
-      >
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          <Typography variant="h6" sx={{ mb: { xs: 1.5, sm: 2 }, fontWeight: 600, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
-            Main Ingredient
-          </Typography>
-          <Grid container spacing={{ xs: 1.5, sm: 2 }}>
-            {availableIngredients.map((ingredient) => {
-              const isSelected = tempIngredient === ingredient.value;
-              return (
-                <Grid item xs={6} sm={4} md={3} key={ingredient.value}>
-                  <Card
-                    onClick={() => setTempIngredient(isSelected ? '' : ingredient.value)}
-                    sx={{
-                      cursor: 'pointer',
-                      bgcolor: isSelected ? 'hsl(24, 85%, 55%)' : 'background.paper',
-                      border: '1px solid',
-                      borderColor: isSelected ? 'hsl(24, 85%, 55%)' : 'divider',
-                      transition: 'all 0.2s',
-                      '&:hover': {
-                        borderColor: 'hsl(24, 85%, 55%)',
-                        transform: 'scale(1.05)',
-                        boxShadow: 2,
-                      },
-                    }}
-                  >
-                    <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } }, textAlign: 'center' }}>
-                      <Box sx={{ color: isSelected ? 'white' : 'hsl(24, 85%, 55%)', fontSize: { xs: 28, sm: 36 }, mb: 0.5 }}>
-                        {ingredient.icon}
-                      </Box>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 600,
-                          fontSize: { xs: '0.6875rem', sm: '0.75rem' },
-                          color: isSelected ? 'white' : 'text.primary',
-                        }}
-                      >
-                        {ingredient.label}
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            })}
-          </Grid>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: { xs: 2, sm: 3 }, gap: 1 }}>
-            <Button onClick={() => setTempIngredient('')} color="inherit" size="small">
-              Reset
-            </Button>
-            <Button
-              onClick={handleIngredientApply}
-              variant="contained"
-              size="small"
-              sx={{
-                bgcolor: 'hsl(24, 85%, 55%)',
-                '&:hover': { bgcolor: 'hsl(24, 85%, 45%)' },
-              }}
-            >
-              View Results
-            </Button>
-          </Box>
-        </Box>
-      </Popover>
     </Box>
   );
 }

@@ -44,3 +44,4 @@ CREATE POLICY "Users can delete their own note photos"
     AND auth.uid()::text = (storage.foldername(name))[1]
   );
 
+

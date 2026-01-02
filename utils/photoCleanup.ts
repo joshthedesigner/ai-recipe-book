@@ -101,3 +101,4 @@ export async function cleanupNotePhotos(
   console.log(`Cleaned up ${deleted.length} of ${photoUrls.length} photos`);
 }
 
+

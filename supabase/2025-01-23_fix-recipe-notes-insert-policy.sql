@@ -21,3 +21,4 @@ CREATE POLICY "Only recipe owners can create notes"
     )
   );
 
+
