@@ -261,5 +261,6 @@ if (require.main === module) {
   main().catch(console.error);
 }
 
-export { checkImageAvailability, ImageCheckResult };
+export { checkImageAvailability };
+export type { ImageCheckResult };
 
