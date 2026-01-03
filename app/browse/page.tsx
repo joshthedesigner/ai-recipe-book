@@ -85,7 +85,7 @@ export default function BrowsePage() {
   ];
   
   const INGREDIENT_OPTIONS = [
-    'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'vegetarian', 'vegan'
+    'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'tofu', 'vegetarian', 'vegan'
   ];
 
   // Get available filter options (only show options that exist in recipes)
@@ -98,11 +98,22 @@ export default function BrowsePage() {
   }, [recipes]);
 
   const availableIngredients = useMemo(() => {
-    return INGREDIENT_OPTIONS.filter(ingredient => 
-      recipes.some(recipe => 
+    return INGREDIENT_OPTIONS.filter(ingredient => {
+      // Special case: tofu matches in title or ingredients, not just tags
+      if (ingredient === 'tofu') {
+        return recipes.some(recipe => {
+          const titleMatch = recipe.title.toLowerCase().includes('tofu');
+          const ingredientsMatch = recipe.ingredients.some(ing => 
+            ing.toLowerCase().includes('tofu')
+          );
+          return titleMatch || ingredientsMatch;
+        });
+      }
+      // All other ingredients match by tags
+      return recipes.some(recipe => 
         recipe.tags.some(tag => tag.toLowerCase() === ingredient.toLowerCase())
-      )
-    );
+      );
+    });
   }, [recipes]);
 
   // localStorage utilities for sort preference
@@ -262,9 +273,18 @@ export default function BrowsePage() {
 
     // Main ingredient filter
     if (filterMainIngredient) {
-      filtered = filtered.filter((recipe) => 
-        recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase())
-      );
+      filtered = filtered.filter((recipe) => {
+        // Special case: tofu matches in title or ingredients, not just tags
+        if (filterMainIngredient.toLowerCase() === 'tofu') {
+          const titleMatch = recipe.title.toLowerCase().includes('tofu');
+          const ingredientsMatch = recipe.ingredients.some(ing => 
+            ing.toLowerCase().includes('tofu')
+          );
+          return titleMatch || ingredientsMatch;
+        }
+        // All other ingredients match by tags
+        return recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase());
+      });
     }
 
     // Sort
@@ -530,12 +550,12 @@ export default function BrowsePage() {
               </FormControl>
 
               <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="ingredient-filter-label">Main Ingredient</InputLabel>
+                <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
                 <Select
                   labelId="ingredient-filter-label"
                   id="ingredient-filter-select"
                   value={filterMainIngredient}
-                  label="Main Ingredient"
+                  label="Ingredients"
                   onChange={(e) => setFilterMainIngredient(e.target.value)}
                 >
                   <MenuItem value="">All Ingredients</MenuItem>
