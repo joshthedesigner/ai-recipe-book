@@ -487,29 +487,28 @@ export default function RecipeDetailPage() {
                                       py: 1.5,
                                       px: 0,
                                       alignItems: 'flex-start',
+                                      display: 'flex',
                                     }}
                                   >
-                                    <Box sx={{ display: 'flex', gap: 2, width: '100%', alignItems: 'center' }}>
-                                      <Checkbox
-                                        checked={isChecked}
-                                        onChange={() => handleIngredientToggle(ingredientKey)}
-                                        size="small"
-                                        sx={{ flexShrink: 0 }}
-                                      />
-                                      <Typography
-                                        variant="body1"
-                                        sx={{
-                                          flex: 1,
-                                          wordBreak: 'break-word',
-                                          overflowWrap: 'break-word',
-                                          lineHeight: 1.6,
-                                          textDecoration: isChecked ? 'line-through' : 'none',
-                                          color: isChecked ? 'text.secondary' : 'text.primary',
-                                        }}
-                                      >
-                                        {ingredient}
-                                      </Typography>
-                                    </Box>
+                                    <Checkbox
+                                      checked={isChecked}
+                                      onChange={() => handleIngredientToggle(ingredientKey)}
+                                      size="small"
+                                      sx={{ flexShrink: 0, mt: '-4px', mr: 1 }}
+                                    />
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        flex: 1,
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        lineHeight: 1.6,
+                                        textDecoration: isChecked ? 'line-through' : 'none',
+                                        color: isChecked ? 'text.secondary' : 'text.primary',
+                                      }}
+                                    >
+                                      {ingredient}
+                                    </Typography>
                                   </ListItem>
                                 );
                               })}
@@ -626,29 +625,28 @@ export default function RecipeDetailPage() {
                                 py: 1.5,
                                 px: 0,
                                 alignItems: 'flex-start',
+                                display: 'flex',
                               }}
                             >
-                              <Box sx={{ display: 'flex', gap: 2, width: '100%', alignItems: 'center' }}>
-                                <Checkbox
-                                  checked={isChecked}
-                                  onChange={() => handleIngredientToggle(ingredientKey)}
-                                  size="small"
-                                  sx={{ flexShrink: 0 }}
-                                />
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    flex: 1,
-                                    wordBreak: 'break-word',
-                                    overflowWrap: 'break-word',
-                                    lineHeight: 1.6,
-                                    textDecoration: isChecked ? 'line-through' : 'none',
-                                    color: isChecked ? 'text.secondary' : 'text.primary',
-                                  }}
-                                >
-                                  {ingredient}
-                                </Typography>
-                              </Box>
+                              <Checkbox
+                                checked={isChecked}
+                                onChange={() => handleIngredientToggle(ingredientKey)}
+                                size="small"
+                                sx={{ flexShrink: 0, mt: '-4px', mr: 1 }}
+                              />
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  flex: 1,
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  lineHeight: 1.6,
+                                  textDecoration: isChecked ? 'line-through' : 'none',
+                                  color: isChecked ? 'text.secondary' : 'text.primary',
+                                }}
+                              >
+                                {ingredient}
+                              </Typography>
                             </ListItem>
                           );
                         })}
