@@ -28,6 +28,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import RecipeChat from '@/components/RecipeChat';
@@ -85,10 +86,8 @@ export default function RecipeDetailPage() {
       const domain = new URL(url).hostname;
       // Remove 'www.' prefix
       const cleanDomain = domain.replace(/^www\./, '');
-      // Get the main domain name (before first dot)
-      const mainName = cleanDomain.split('.')[0];
-      // Capitalize first letter
-      return mainName.charAt(0).toUpperCase() + mainName.slice(1);
+      // Capitalize first letter of each word
+      return cleanDomain.split('.').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('.');
     } catch {
       return 'Source';
     }
@@ -257,315 +256,390 @@ export default function RecipeDetailPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* White Bar - Header Section */}
-      <Box sx={{ width: '100%', bgcolor: 'background.paper', borderBottom: 1, borderColor: 'divider' }}>
-        <Container maxWidth="xl">
-          {/* Back Button */}
-          <Box sx={{ pt: 3, pb: 2 }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={handleBack}
-              sx={{ 
-                textTransform: 'none',
-                color: 'black',
-                '&:hover': {
-                  bgcolor: 'transparent',
-                  color: 'black',
-                  opacity: 0.7,
-                },
-              }}
-            >
-              Back
-            </Button>
-          </Box>
-
-          {/* Title and Buttons */}
-          <Box sx={{ pb: 4 }}>
-            {/* Title Row - Title, Link, Overflow Menu */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
-              <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
-                {recipe.title}
-              </Typography>
-              
-              {/* Source Link */}
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+        {/* Single fixed-width container for all content */}
+        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+          {/* Header: Source URL and Delete button */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+              {/* Source URL */}
               {recipe.source_url && (
-                <Button
-                  variant="outlined"
-                  href={recipe.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  endIcon={<OpenInNewIcon sx={{ fontSize: '1rem' }} />}
-                  sx={{ 
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    borderColor: 'text.secondary',
-                    flexShrink: 0,
-                    '&:hover': {
-                      borderColor: 'text.secondary',
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  {getSourceName(recipe.source_url)}
-                </Button>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Typography
+                    variant="body2"
+                    component="a"
+                    href={recipe.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      textTransform: 'uppercase',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    Via {getSourceName(recipe.source_url)}
+                  </Typography>
+                  <OpenInNewIcon sx={{ fontSize: '0.875rem', color: 'text.secondary' }} />
+                </Box>
               )}
               
-              {/* Show delete menu only for own recipes */}
+              {/* Delete button - only for own recipes */}
               {isOwnRecipe && (
-                <IconButton
-                  onClick={handleMenuClick}
-                  size="small"
-                  sx={{ flexShrink: 0 }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              )}
-            </Box>
-
-            {/* Action Buttons - Below Title, Left Aligned */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-              {/* Show Add button for recipes that don't belong to user */}
-              {!isOwnRecipe && (
                 <Button
-                  variant={fromFeed ? "outlined" : "contained"}
-                  color={fromFeed ? undefined : "primary"}
-                  startIcon={isAdding ? <CircularProgress size={16} /> : isAdded ? <CheckIcon /> : <BookmarkIcon />}
-                  onClick={handleAddRecipe}
-                  disabled={isAdding || isAdded}
+                  onClick={handleDeleteClick}
+                  startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
                   sx={{
                     textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 400,
-                    opacity: 1,
-                    '& .MuiButton-startIcon': {
-                      marginRight: '4px', // Reduce gap by 4px (default is 8px, so 8-4=4)
+                    color: 'text.secondary',
+                    fontSize: '0.875rem',
+                    minWidth: 'auto',
+                    px: 1,
+                    '&:hover': {
+                      bgcolor: 'transparent',
+                      color: 'error.main',
                     },
-                    ...(fromFeed && !isAdded && {
-                      color: 'text.secondary',
-                      borderColor: 'text.secondary',
-                      '&:hover': {
-                        borderColor: 'text.secondary',
-                        bgcolor: 'action.hover',
-                      },
-                    }),
-                    ...(isAdded && {
-                      bgcolor: 'success.main',
-                      color: 'white',
-                      borderColor: 'success.main',
-                      '&.Mui-disabled': {
-                        bgcolor: 'success.main',
-                        color: 'white',
-                        borderColor: 'success.main',
-                        opacity: 1,
-                      },
-                    }),
                   }}
                 >
-                  {isAdded ? 'Saved' : 'Save'}
+                  Delete
                 </Button>
               )}
             </Box>
           </Box>
-        </Container>
-      </Box>
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
-        {/* Video Embed - Priority over image */}
-        {recipe.video_url && recipe.video_platform === 'youtube' && (
-          <Box
+          {/* Centered Title */}
+          <Typography
+            variant="h3"
             sx={{
-              width: { xs: '100%', md: '66.67%' },
-              aspectRatio: '16/9',
-              borderRadius: 2,
-              overflow: 'hidden',
-              mb: 3,
-              bgcolor: 'black',
+              fontWeight: 600,
+              textAlign: 'center',
+              mb: 4,
+              fontSize: { xs: '1.875rem', md: '2.5rem' },
             }}
           >
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
-              title={recipe.title}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              style={{ display: 'block', border: 'none' }}
-            />
-          </Box>
-        )}
+            {recipe.title}
+          </Typography>
 
-        {/* Hero Image - Only show if no video */}
-        {!recipe.video_url && recipe.image_url && (
-          <Box
-            sx={{
-              width: { xs: '100%', md: '66.67%' },
-              height: 425,
-              borderRadius: 2,
-              overflow: 'hidden',
-              mb: 3,
-              position: 'relative',
-            }}
-          >
-            <img
-              src={recipe.image_url}
-              alt={recipe.title}
-              style={{
+          {/* Large Image/Video */}
+          {recipe.video_url && recipe.video_platform === 'youtube' ? (
+            <Box
+              sx={{
                 width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                maxWidth: '900px',
+                aspectRatio: '16/9',
+                borderRadius: 2,
+                overflow: 'hidden',
+                mb: 5,
+                mx: 'auto',
+                bgcolor: 'black',
+                position: 'relative',
               }}
-            />
-          </Box>
-        )}
-
-        {/* Tags - Below image/video */}
-        {recipe.tags && recipe.tags.length > 0 && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-            {recipe.tags.map((tag) => (
-              <Chip
-                key={tag}
-                label={tag}
-                size="medium"
-                color="primary"
-                variant="outlined"
+            >
+              <iframe
+                width="100%"
+                height="100%"
+                src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
+                title={recipe.title}
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+                style={{ display: 'block', border: 'none' }}
               />
-            ))}
+            </Box>
+          ) : recipe.image_url ? (
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: '900px',
+                height: { xs: 300, sm: 400, md: 500 },
+                borderRadius: 2,
+                overflow: 'hidden',
+                mb: 5,
+                mx: 'auto',
+                position: 'relative',
+              }}
+            >
+              <img
+                src={recipe.image_url}
+                alt={recipe.title}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
+              />
+            </Box>
+          ) : null}
+
+          {/* Tabs: Recipe / Notes */}
+          <Box sx={{ mb: 4 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+              <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                centered
+                sx={{
+                  '& .MuiTab-root': {
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    minHeight: 48,
+                  },
+                }}
+              >
+              <Tab label="Recipe" value="recipe" />
+              <Tab
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <span>Notes</span>
+                    {notesCount > 0 && (
+                      <Box
+                        sx={{
+                          minWidth: 20,
+                          height: 20,
+                          borderRadius: '10px',
+                          bgcolor: 'primary.main',
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          px: 0.75,
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {notesCount > 99 ? '99+' : notesCount}
+                      </Box>
+                    )}
+                  </Box>
+                }
+                value="notes"
+              />
+              </Tabs>
+            </Box>
           </Box>
-        )}
 
-        {/* Tabs: Recipe / Notes */}
-        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 4 }}>
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 500,
-                minHeight: 48,
-              },
-            }}
-          >
-            <Tab label="Recipe" value="recipe" />
-            <Tab
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <span>Notes</span>
-                  {notesCount > 0 && (
-                    <Box
-                      sx={{
-                        minWidth: 20,
-                        height: 20,
-                        borderRadius: '10px',
-                        bgcolor: 'primary.main',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        px: 0.75,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {notesCount > 99 ? '99+' : notesCount}
+          {/* Tab Content */}
+          {activeTab === 'recipe' && (
+            <>
+              {/* Ingredients and Instructions - Two columns with colored bars */}
+              {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
+                <Grid container spacing={17}>
+                {/* Ingredients column */}
+                <Grid item xs={12} md={4}>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      {/* Colored vertical bar */}
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '1.5em',
+                          bgcolor: 'primary.main',
+                          borderRadius: '2px',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        Ingredients
+                      </Typography>
                     </Box>
-                  )}
-                </Box>
-              }
-              value="notes"
-            />
-          </Tabs>
-        </Box>
+                    <Box>
+                      {(recipe as any).sections.map((section: any, idx: number) => (
+                        Array.isArray(section.ingredients) && section.ingredients.length > 0 ? (
+                          <Box key={`ing-${idx}`} sx={{ mb: 3 }}>
+                            {section.title && (
+                              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                {section.title}
+                              </Typography>
+                            )}
+                            <List sx={{ pl: 0 }}>
+                              {section.ingredients.map((ingredient: string, index: number) => (
+                                <ListItem
+                                  key={index}
+                                  sx={{
+                                    py: 1.5,
+                                    px: 0,
+                                    alignItems: 'flex-start',
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        flex: 1,
+                                        wordBreak: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        lineHeight: 1.6,
+                                      }}
+                                    >
+                                      {ingredient}
+                                    </Typography>
+                                  </Box>
+                                </ListItem>
+                              ))}
+                            </List>
+                          </Box>
+                        ) : null
+                      ))}
+                    </Box>
+                  </Box>
+                </Grid>
 
-        {/* Tab Content */}
-        {activeTab === 'recipe' && (
-          <>
-            {/* Ingredients and Instructions - Prefer sections when available (two columns) */}
-        {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
-          <Grid container spacing={4}>
-            {/* Ingredients column */}
-            <Grid item xs={12} md={4}>
-              <Box sx={{ pr: { xs: 0, md: 6 }, maxWidth: '100%' }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                  Ingredients
-                </Typography>
-                {(recipe as any).sections.map((section: any, idx: number) => (
-                  Array.isArray(section.ingredients) && section.ingredients.length > 0 ? (
-                    <Box key={`ing-${idx}`} sx={{ mb: 3 }}>
-                      {section.title && (
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                          {section.title}
-                        </Typography>
-                      )}
-                      <List sx={{ pl: 2, maxWidth: '100%' }}>
-                        {section.ingredients.map((ingredient: string, index: number) => (
+                {/* Instructions column */}
+                <Grid item xs={12} md={8}>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      {/* Colored vertical bar - using a muted/secondary color */}
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '1.5em',
+                          bgcolor: 'text.secondary',
+                          borderRadius: '2px',
+                          opacity: 0.6,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        Instructions
+                      </Typography>
+                    </Box>
+                    <Box>
+                      {(recipe as any).sections.map((section: any, idx: number) => (
+                        Array.isArray(section.steps) && section.steps.length > 0 ? (
+                          <Box key={`steps-${idx}`} sx={{ mb: 3 }}>
+                            {section.title && (
+                              <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
+                                {section.title}
+                              </Typography>
+                            )}
+                            <List sx={{ pl: 0 }}>
+                              {section.steps.map((step: string, index: number) => (
+                                <ListItem
+                                  key={index}
+                                  sx={{
+                                    py: 1.5,
+                                    px: 0,
+                                    alignItems: 'flex-start',
+                                  }}
+                                >
+                                  <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                                    <Typography
+                                      variant="h6"
+                                      sx={{
+                                        fontWeight: 600,
+                                        color: 'text.secondary',
+                                        minWidth: 32,
+                                        flexShrink: 0,
+                                        mt: 0.25,
+                                      }}
+                                    >
+                                      {index + 1}.
+                                    </Typography>
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        flex: 1,
+                                        wordWrap: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        lineHeight: 1.6,
+                                      }}
+                                    >
+                                      {step}
+                                    </Typography>
+                                  </Box>
+                                </ListItem>
+                              ))}
+                            </List>
+                          </Box>
+                        ) : null
+                      ))}
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            ) : (
+              <Grid container spacing={17}>
+                {/* Ingredients column */}
+                <Grid item xs={12} md={4}>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      {/* Colored vertical bar */}
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '1.5em',
+                          bgcolor: 'primary.main',
+                          borderRadius: '2px',
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        Ingredients
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <List sx={{ pl: 0 }}>
+                        {recipe.ingredients.map((ingredient, index) => (
                           <ListItem
                             key={index}
                             sx={{
-                              py: 0.5,
+                              py: 1.5,
                               px: 0,
-                              display: 'list-item',
-                              listStyleType: 'disc',
-                              listStylePosition: 'outside',
-                              ml: 2,
-                              maxWidth: '100%',
+                              alignItems: 'flex-start',
                             }}
                           >
-                            <Typography
-                              variant="body1"
-                              component="div"
-                              sx={{
-                                wordBreak: 'break-word',
-                                overflowWrap: 'break-word',
-                                hyphens: 'auto',
-                                maxWidth: '100%',
-                              }}
-                            >
-                              {ingredient}
-                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  flex: 1,
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  lineHeight: 1.6,
+                                }}
+                              >
+                                {ingredient}
+                              </Typography>
+                            </Box>
                           </ListItem>
                         ))}
                       </List>
                     </Box>
-                  ) : null
-                ))}
-              </Box>
-            </Grid>
+                  </Box>
+                </Grid>
 
-            {/* Divider between columns - hidden on mobile */}
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{
-                display: { xs: 'none', md: 'block' },
-                mx: -2,
-              }}
-            />
-
-            {/* Instructions column */}
-            <Grid item xs={12} md={8}>
-              <Box sx={{ pl: { xs: 0, md: 4 } }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                  Instructions
-                </Typography>
-                {(recipe as any).sections.map((section: any, idx: number) => (
-                  Array.isArray(section.steps) && section.steps.length > 0 ? (
-                    <Box key={`steps-${idx}`} sx={{ mb: 3 }}>
-                      {section.title && (
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                          {section.title}
-                        </Typography>
-                      )}
-                      <List sx={{ pl: 2 }}>
-                        {section.steps.map((step: string, index: number) => (
+                {/* Instructions column */}
+                <Grid item xs={12} md={8}>
+                  <Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                      {/* Colored vertical bar */}
+                      <Box
+                        sx={{
+                          width: '4px',
+                          height: '1.5em',
+                          bgcolor: 'text.secondary',
+                          borderRadius: '2px',
+                          opacity: 0.6,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        Instructions
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <List sx={{ pl: 0 }}>
+                        {recipe.steps.map((step, index) => (
                           <ListItem
                             key={index}
                             sx={{
-                              py: 1,
+                              py: 1.5,
                               px: 0,
                               alignItems: 'flex-start',
                             }}
@@ -575,9 +649,10 @@ export default function RecipeDetailPage() {
                                 variant="h6"
                                 sx={{
                                   fontWeight: 600,
-                                  color: 'primary.main',
-                                  minWidth: 30,
+                                  color: 'text.secondary',
+                                  minWidth: 32,
                                   flexShrink: 0,
+                                  mt: 0.25,
                                 }}
                               >
                                 {index + 1}.
@@ -588,6 +663,7 @@ export default function RecipeDetailPage() {
                                   flex: 1,
                                   wordWrap: 'break-word',
                                   overflowWrap: 'break-word',
+                                  lineHeight: 1.6,
                                 }}
                               >
                                 {step}
@@ -597,111 +673,14 @@ export default function RecipeDetailPage() {
                         ))}
                       </List>
                     </Box>
-                  ) : null
-                ))}
-              </Box>
-            </Grid>
-          </Grid>
-        ) : (
-          <Grid container spacing={4}>
-            {/* Ingredients - 1/3 width */}
-            <Grid item xs={12} md={4}>
-              <Box sx={{ pr: { xs: 0, md: 6 }, maxWidth: '100%' }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                  Ingredients
-                </Typography>
-                <List sx={{ pl: 2, maxWidth: '100%' }}>
-                  {recipe.ingredients.map((ingredient, index) => (
-                    <ListItem
-                      key={index}
-                      sx={{
-                        py: 0.5,
-                        px: 0,
-                        display: 'list-item',
-                        listStyleType: 'disc',
-                        listStylePosition: 'outside',
-                        ml: 2,
-                        maxWidth: '100%',
-                      }}
-                    >
-                      <Typography
-                        variant="body1"
-                        component="div"
-                        sx={{
-                          wordBreak: 'break-word',
-                          overflowWrap: 'break-word',
-                          hyphens: 'auto',
-                          maxWidth: '100%',
-                        }}
-                      >
-                        {ingredient}
-                      </Typography>
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </Grid>
-
-            {/* Divider between columns - hidden on mobile */}
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{
-                display: { xs: 'none', md: 'block' },
-                mx: -2,
-              }}
-            />
-
-            {/* Instructions - 2/3 width */}
-            <Grid item xs={12} md={8}>
-              <Box sx={{ pl: { xs: 0, md: 4 } }}>
-                <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
-                  Instructions
-                </Typography>
-                <List sx={{ pl: 2 }}>
-                  {recipe.steps.map((step, index) => (
-                    <ListItem
-                      key={index}
-                      sx={{
-                        py: 1,
-                        px: 0,
-                        alignItems: 'flex-start',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 600,
-                            color: 'primary.main',
-                            minWidth: 30,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {index + 1}.
-                        </Typography>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            flex: 1,
-                            wordWrap: 'break-word',
-                            overflowWrap: 'break-word',
-                          }}
-                        >
-                          {step}
-                        </Typography>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              </Box>
-            </Grid>
-          </Grid>
-        )}
+                  </Box>
+                </Grid>
+              </Grid>
+            )}
 
             {/* Cookbook Info */}
             {recipe.cookbook_name && (
-              <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
+              <Box sx={{ mt: 5, pt: 3, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   From: {recipe.cookbook_name}
                   {recipe.cookbook_page && ` (Page ${recipe.cookbook_page})`}
@@ -718,6 +697,7 @@ export default function RecipeDetailPage() {
             canAddNotes={isOwnRecipe}
           />
         )}
+        </Box>
       </Container>
 
       {/* Overflow Menu */}
@@ -750,5 +730,3 @@ export default function RecipeDetailPage() {
     </Box>
   );
 }
-
-
