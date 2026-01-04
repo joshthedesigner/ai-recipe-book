@@ -21,6 +21,7 @@ import {
   Grid,
   Tabs,
   Tab,
+  Checkbox,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -54,6 +55,7 @@ export default function RecipeDetailPage() {
   const [isAdded, setIsAdded] = useState(false);
   const [activeTab, setActiveTab] = useState<'recipe' | 'notes'>('recipe');
   const [notesCount, setNotesCount] = useState(0);
+  const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
   
@@ -162,6 +164,19 @@ export default function RecipeDetailPage() {
     }
   };
 
+  // Handle ingredient checkbox toggle (state only, no persistence)
+  const handleIngredientToggle = (ingredientKey: string) => {
+    setCheckedIngredients(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(ingredientKey)) {
+        newSet.delete(ingredientKey);
+      } else {
+        newSet.add(ingredientKey);
+      }
+      return newSet;
+    });
+  };
+
   useEffect(() => {
     if (!recipeId || !user) return;
 
@@ -180,6 +195,9 @@ export default function RecipeDetailPage() {
 
       setRecipe(data);
       setLoading(false);
+
+      // Reset checked ingredients when recipe loads (don't persist state)
+      setCheckedIngredients(new Set());
 
       // Track recipe view in localStorage for "Recently Viewed" sorting
       if (data?.id && typeof window !== 'undefined') {
@@ -459,30 +477,42 @@ export default function RecipeDetailPage() {
                               </Typography>
                             )}
                             <List sx={{ pl: 0 }}>
-                              {section.ingredients.map((ingredient: string, index: number) => (
-                                <ListItem
-                                  key={index}
-                                  sx={{
-                                    py: 1.5,
-                                    px: 0,
-                                    alignItems: 'flex-start',
-                                  }}
-                                >
-                                  <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                                    <Typography
-                                      variant="body1"
-                                      sx={{
-                                        flex: 1,
-                                        wordBreak: 'break-word',
-                                        overflowWrap: 'break-word',
-                                        lineHeight: 1.6,
-                                      }}
-                                    >
-                                      {ingredient}
-                                    </Typography>
-                                  </Box>
-                                </ListItem>
-                              ))}
+                              {section.ingredients.map((ingredient: string, index: number) => {
+                                const ingredientKey = `section_${idx}_ingredient_${index}`;
+                                const isChecked = checkedIngredients.has(ingredientKey);
+                                return (
+                                  <ListItem
+                                    key={index}
+                                    sx={{
+                                      py: 1.5,
+                                      px: 0,
+                                      alignItems: 'flex-start',
+                                    }}
+                                  >
+                                    <Box sx={{ display: 'flex', gap: 2, width: '100%', alignItems: 'center' }}>
+                                      <Checkbox
+                                        checked={isChecked}
+                                        onChange={() => handleIngredientToggle(ingredientKey)}
+                                        size="small"
+                                        sx={{ flexShrink: 0 }}
+                                      />
+                                      <Typography
+                                        variant="body1"
+                                        sx={{
+                                          flex: 1,
+                                          wordBreak: 'break-word',
+                                          overflowWrap: 'break-word',
+                                          lineHeight: 1.6,
+                                          textDecoration: isChecked ? 'line-through' : 'none',
+                                          color: isChecked ? 'text.secondary' : 'text.primary',
+                                        }}
+                                      >
+                                        {ingredient}
+                                      </Typography>
+                                    </Box>
+                                  </ListItem>
+                                );
+                              })}
                             </List>
                           </Box>
                         ) : null
@@ -586,30 +616,42 @@ export default function RecipeDetailPage() {
                     </Box>
                     <Box>
                       <List sx={{ pl: 0 }}>
-                        {recipe.ingredients.map((ingredient, index) => (
-                          <ListItem
-                            key={index}
-                            sx={{
-                              py: 1.5,
-                              px: 0,
-                              alignItems: 'flex-start',
-                            }}
-                          >
-                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  flex: 1,
-                                  wordBreak: 'break-word',
-                                  overflowWrap: 'break-word',
-                                  lineHeight: 1.6,
-                                }}
-                              >
-                                {ingredient}
-                              </Typography>
-                            </Box>
-                          </ListItem>
-                        ))}
+                        {recipe.ingredients.map((ingredient, index) => {
+                          const ingredientKey = `ingredient_${index}`;
+                          const isChecked = checkedIngredients.has(ingredientKey);
+                          return (
+                            <ListItem
+                              key={index}
+                              sx={{
+                                py: 1.5,
+                                px: 0,
+                                alignItems: 'flex-start',
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', gap: 2, width: '100%', alignItems: 'center' }}>
+                                <Checkbox
+                                  checked={isChecked}
+                                  onChange={() => handleIngredientToggle(ingredientKey)}
+                                  size="small"
+                                  sx={{ flexShrink: 0 }}
+                                />
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    flex: 1,
+                                    wordBreak: 'break-word',
+                                    overflowWrap: 'break-word',
+                                    lineHeight: 1.6,
+                                    textDecoration: isChecked ? 'line-through' : 'none',
+                                    color: isChecked ? 'text.secondary' : 'text.primary',
+                                  }}
+                                >
+                                  {ingredient}
+                                </Typography>
+                              </Box>
+                            </ListItem>
+                          );
+                        })}
                       </List>
                     </Box>
                   </Box>
