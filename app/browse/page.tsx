@@ -62,6 +62,9 @@ export default function BrowsePage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   const [displayedRecipes, setDisplayedRecipes] = useState<Recipe[]>([]);
+  const [totalRecipeCount, setTotalRecipeCount] = useState<number>(0); // Total count from API
+  const [availableCuisines, setAvailableCuisines] = useState<string[]>([]); // From API facets
+  const [availableIngredients, setAvailableIngredients] = useState<string[]>([]); // From API facets
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -77,44 +80,7 @@ export default function BrowsePage() {
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
 
-  // Cuisine and ingredient filter options
-  const CUISINE_OPTIONS = [
-    'american', 'chinese', 'french', 'greek', 'indian', 'italian', 
-    'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 
-    'middle eastern', 'mediterranean'
-  ];
-  
-  const INGREDIENT_OPTIONS = [
-    'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'tofu', 'vegetarian', 'vegan'
-  ];
-
-  // Get available filter options (only show options that exist in recipes)
-  const availableCuisines = useMemo(() => {
-    return CUISINE_OPTIONS.filter(cuisine => 
-      recipes.some(recipe => 
-        recipe.tags.some(tag => tag.toLowerCase() === cuisine.toLowerCase())
-      )
-    );
-  }, [recipes]);
-
-  const availableIngredients = useMemo(() => {
-    return INGREDIENT_OPTIONS.filter(ingredient => {
-      // Special case: tofu matches in title or ingredients, not just tags
-      if (ingredient === 'tofu') {
-        return recipes.some(recipe => {
-          const titleMatch = recipe.title.toLowerCase().includes('tofu');
-          const ingredientsMatch = recipe.ingredients.some(ing => 
-            ing.toLowerCase().includes('tofu')
-          );
-          return titleMatch || ingredientsMatch;
-        });
-      }
-      // All other ingredients match by tags
-      return recipes.some(recipe => 
-        recipe.tags.some(tag => tag.toLowerCase() === ingredient.toLowerCase())
-      );
-    });
-  }, [recipes]);
+  // Filter options are now provided by the server via facets API response
 
   // localStorage utilities for sort preference
   const loadSortPreference = (): SortOption => {
@@ -168,7 +134,7 @@ export default function BrowsePage() {
     }
   };
 
-  // Fetch recipes from API
+  // Fetch recipes from API with server-side filtering
   const fetchRecipes = useCallback(async (silent = false, noCache = false) => {
     if (!activeGroup) return;
     
@@ -176,32 +142,94 @@ export default function BrowsePage() {
       if (!silent) {
         setLoading(true);
       }
-      // Add cache-busting when needed (after delete/add operations)
-      const cacheBuster = noCache ? `&_t=${Date.now()}` : '';
-      const response = await fetch(`/api/recipes?groupId=${activeGroup.id}${cacheBuster}`, {
+      // Build query parameters for server-side filtering
+      const params = new URLSearchParams({
+        groupId: activeGroup.id,
+        limit: '100', // Max allowed by API
+      });
+      
+      // Add sorting parameters (map client sort options to API sort columns)
+      if (sortBy === SORT_OPTIONS.RECENTLY_ADDED || sortBy === SORT_OPTIONS.DEFAULT) {
+        params.append('sortBy', 'created_at');
+        params.append('sortOrder', 'desc');
+      } else if (sortBy === SORT_OPTIONS.FIRST_ADDED) {
+        params.append('sortBy', 'created_at');
+        params.append('sortOrder', 'asc');
+      } else {
+        // For recently_viewed, we'll sort by created_at and handle client-side
+        params.append('sortBy', 'created_at');
+        params.append('sortOrder', 'desc');
+      }
+      
+      // Add filter parameters
+      if (searchQuery.trim()) {
+        params.append('search', searchQuery.trim());
+      }
+      if (filterCuisine) {
+        params.append('cuisine', filterCuisine);
+      }
+      if (filterMainIngredient) {
+        params.append('ingredient', filterMainIngredient);
+      }
+      
+      // Add cache-busting when needed
+      if (noCache) {
+        params.append('_t', Date.now().toString());
+      }
+      
+      const response = await fetch(`/api/recipes?${params.toString()}`, {
         ...(noCache && { cache: 'no-store' })
       });
       const data = await response.json();
 
       if (data.success) {
-        setRecipes(data.recipes || []);
+        const fetchedRecipes = data.recipes || [];
+        setRecipes(fetchedRecipes);
+        // Use API count for total (accurate server-side filtered count)
+        setTotalRecipeCount(data.count || 0);
+        
+        // Update filter options from server facets (only if provided)
+        if (data.facets) {
+          setAvailableCuisines(data.facets.cuisines || []);
+          setAvailableIngredients(data.facets.ingredients || []);
+        }
+        
+        // For "Recently Viewed" sorting, we still need client-side sorting
+        // since it uses localStorage. Other sorts are already done server-side.
+        if (sortBy === SORT_OPTIONS.RECENTLY_VIEWED) {
+          // Client-side sort by recently viewed
+          const viewed = getRecentlyViewed();
+          const sorted = [...fetchedRecipes].sort((a, b) => {
+            const aViewed = a.id ? (viewed[a.id] || 0) : 0;
+            const bViewed = b.id ? (viewed[b.id] || 0) : 0;
+            return bViewed - aViewed;
+          });
+          setFilteredRecipes(sorted);
+        } else {
+          // Server-side sorting already applied, use recipes as-is
+          setFilteredRecipes(fetchedRecipes);
+        }
       } else {
         if (!silent) {
           showToast(data.error || 'Failed to load recipes', 'error');
         }
         setRecipes([]);
+        setFilteredRecipes([]);
+        setTotalRecipeCount(0);
       }
     } catch (error) {
       if (!silent) {
         showToast('Unable to connect to server', 'error');
       }
       setRecipes([]);
+      setFilteredRecipes([]);
+      setTotalRecipeCount(0);
     } finally {
       if (!silent) {
         setLoading(false);
       }
     }
-  }, [activeGroup, showToast]);
+  }, [activeGroup, showToast, searchQuery, filterCuisine, filterMainIngredient, sortBy]);
 
   // Load sort preference from localStorage on mount
   useEffect(() => {
@@ -232,82 +260,25 @@ export default function BrowsePage() {
     setCanAddRecipes(hasPermission);
   }, [user, activeGroup]);
 
-  // Eager loading: Fetch recipes when active group changes
+  // Fetch recipes whenever filters change (server-side filtering)
+  // This includes initial load when activeGroup changes
   useEffect(() => {
     if (!user || authLoading || groupsLoading) return;
 
     if (activeGroup) {
-      // Use cache-busting on initial load to ensure fresh data
-      fetchRecipes(false, true);
+      // Use cache-busting on initial load (when group changes), normal cache otherwise
+      const isInitialLoad = recipes.length === 0;
+      fetchRecipes(false, isInitialLoad);
     } else {
       setRecipes([]);
+      setFilteredRecipes([]);
+      setTotalRecipeCount(0);
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, activeGroup?.id, authLoading, groupsLoading]);
-  // fetchRecipes intentionally omitted from deps - we only want to refetch when group ID changes,
-  // not when the callback recreates due to activeGroup object reference changing in GroupContext
-  // user?.id (not user) prevents re-fetch on session validation while maintaining login/logout behavior
-
-  // Apply filters function
-  const applyFilters = useCallback(() => {
-    let filtered = [...recipes];
-
-    // Search filter (title, ingredients, tags)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (recipe) =>
-          recipe.title.toLowerCase().includes(query) ||
-          recipe.tags.some((tag) => tag.toLowerCase().includes(query)) ||
-          recipe.ingredients.some((ing) => ing.toLowerCase().includes(query))
-      );
-    }
-
-    // Cuisine filter
-    if (filterCuisine) {
-      filtered = filtered.filter((recipe) => 
-        recipe.tags.some(tag => tag.toLowerCase() === filterCuisine.toLowerCase())
-      );
-    }
-
-    // Main ingredient filter
-    if (filterMainIngredient) {
-      filtered = filtered.filter((recipe) => {
-        // Special case: tofu matches in title or ingredients, not just tags
-        if (filterMainIngredient.toLowerCase() === 'tofu') {
-          const titleMatch = recipe.title.toLowerCase().includes('tofu');
-          const ingredientsMatch = recipe.ingredients.some(ing => 
-            ing.toLowerCase().includes('tofu')
-          );
-          return titleMatch || ingredientsMatch;
-        }
-        // All other ingredients match by tags
-        return recipe.tags.some(tag => tag.toLowerCase() === filterMainIngredient.toLowerCase());
-      });
-    }
-
-    // Sort
-    filtered.sort((a, b) => {
-      if (sortBy === SORT_OPTIONS.RECENTLY_VIEWED) {
-        const viewed = getRecentlyViewed();
-        const aViewed = a.id ? (viewed[a.id] || 0) : 0;
-        const bViewed = b.id ? (viewed[b.id] || 0) : 0;
-        // Most recently viewed first (higher timestamp = more recent)
-        return bViewed - aViewed;
-      } else if (sortBy === SORT_OPTIONS.RECENTLY_ADDED) {
-        // Newest first (created_at DESC)
-        return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
-      } else if (sortBy === SORT_OPTIONS.FIRST_ADDED) {
-        // Oldest first (created_at ASC)
-        return new Date(a.created_at!).getTime() - new Date(b.created_at!).getTime();
-      }
-      // Default to Recently Added (newest first)
-      return new Date(b.created_at!).getTime() - new Date(a.created_at!).getTime();
-    });
-
-    setFilteredRecipes(filtered);
-  }, [recipes, searchQuery, sortBy, filterCuisine, filterMainIngredient]);
+  }, [user?.id, activeGroup?.id, authLoading, groupsLoading, searchQuery, filterCuisine, filterMainIngredient, sortBy]);
+  // fetchRecipes intentionally omitted from deps - it's already in the useCallback deps
+  // This effect handles both initial load and filter changes
 
   // Load more recipes function
   const loadMoreRecipes = useCallback(() => {
@@ -343,15 +314,13 @@ export default function BrowsePage() {
     }, 300); // Small delay for smooth loading indicator
   }, [loadingMore, hasMore, currentPage, filteredRecipes]);
 
-  // Apply filters whenever recipes, search, or filters change
-  useEffect(() => {
-    applyFilters();
-  }, [applyFilters]);
+  // Note: Server-side filtering is now handled in fetchRecipes
+  // Only "Recently Viewed" sorting is done client-side (uses localStorage)
 
   // Load initial batch of displayed recipes when filtered recipes change
   useEffect(() => {
     setCurrentPage(0);
-    setHasMore(true);
+    setHasMore(filteredRecipes.length > PAGE_SIZE);
     const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
     setDisplayedRecipes(initialBatch);
   }, [filteredRecipes]);
@@ -650,7 +619,7 @@ export default function BrowsePage() {
               color="text.secondary"
               sx={{ mb: 2, fontSize: 16 }}
             >
-              Displaying <Box component="strong" sx={{ color: 'text.primary' }}>{filteredRecipes.length}</Box> recipes
+              Displaying <Box component="strong" sx={{ color: 'text.primary' }}>{totalRecipeCount}</Box> recipes
             </Typography>
             <Grid container spacing={3}>
               {displayedRecipes.map((recipe, index) => {

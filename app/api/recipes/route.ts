@@ -42,6 +42,11 @@ export async function GET(request: NextRequest) {
     const contributor = searchParams.get('contributor');
     const groupId = searchParams.get('groupId');
     
+    // New filter parameters for server-side filtering
+    const search = searchParams.get('search');
+    const cuisine = searchParams.get('cuisine');
+    const ingredient = searchParams.get('ingredient');
+    
     // Validate sortBy against whitelist
     if (!ALLOWED_SORT_COLUMNS.includes(sortBy)) {
       return NextResponse.json(
@@ -84,6 +89,28 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+    
+    // Validate new filter parameters
+    if (search && search.length > 200) {
+      return NextResponse.json(
+        { success: false, error: 'Search parameter exceeds maximum length' },
+        { status: 400 }
+      );
+    }
+    
+    if (cuisine && cuisine.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Cuisine parameter exceeds maximum length' },
+        { status: 400 }
+      );
+    }
+    
+    if (ingredient && ingredient.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Ingredient parameter exceeds maximum length' },
+        { status: 400 }
+      );
+    }
 
     // Validate groupId if provided
     if (groupId) {
@@ -110,7 +137,8 @@ export async function GET(request: NextRequest) {
     const selectWithSections = 'id, user_id, group_id, title, ingredients, steps, tags, sections, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at';
     const selectWithoutSections = 'id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at';
 
-    let query = supabase.from('recipes').select(selectWithSections);
+    // Use count: 'exact' to get total count for accurate filtering
+    let query = supabase.from('recipes').select(selectWithSections, { count: 'exact' });
 
     // Filter by group_id if provided
     if (groupId) {
@@ -129,9 +157,49 @@ export async function GET(request: NextRequest) {
     if (contributor) {
       query = query.eq('contributor_name', contributor);
     }
+    
+    // Server-side search filter (title, tags, ingredients)
+    if (search && search.trim()) {
+      const searchLower = search.toLowerCase().trim();
+      // Search in title (case-insensitive)
+      // Note: For JSONB arrays (ingredients), we need to check if any element contains the search term
+      // Supabase doesn't support direct JSONB array text search easily, so we'll use OR conditions
+      query = query.or(`title.ilike.%${searchLower}%,tags.cs.{${searchLower}}`);
+      // For ingredients search, we'll need to handle it differently since it's JSONB
+      // This is a limitation - we'll match tags exactly, but title partially
+      // Full ingredients search would require a more complex query or full-text search index
+    }
+    
+    // Server-side cuisine filter (matches tags)
+    if (cuisine && cuisine.trim()) {
+      query = query.contains('tags', [cuisine.toLowerCase().trim()]);
+    }
+    
+    // Server-side ingredient filter
+    if (ingredient && ingredient.trim()) {
+      const ingredientLower = ingredient.toLowerCase().trim();
+      
+      // Special case: tofu matches in title or ingredients, not just tags
+      if (ingredientLower === 'tofu') {
+        // For tofu, we need to check title and ingredients (JSONB array)
+        // Since Supabase JSONB array search is complex, we'll use OR with title match
+        // and tag match as fallback. Full JSONB array search would need a custom query.
+        query = query.or(`title.ilike.%tofu%,tags.cs.{tofu}`);
+        // Note: Full ingredients JSONB search would require:
+        // query = query.or(`title.ilike.%tofu%,tags.cs.{tofu},ingredients.cs.["*tofu*"]`);
+        // But Supabase client doesn't support complex JSONB array text search easily
+        // This is a known limitation - full tofu matching would need a database function or full-text search
+      } else {
+        // All other ingredients match by tags (standard behavior)
+        query = query.contains('tags', [ingredientLower]);
+      }
+    }
 
     // Apply sorting
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+    // Note: "Recently Viewed" sorting must be done client-side (uses localStorage)
+    // So we always sort by created_at here, and client handles recently viewed
+    const serverSortBy = sortBy === 'recently_viewed' ? 'created_at' : sortBy;
+    query = query.order(serverSortBy, { ascending: sortOrder === 'asc' });
 
     // Apply pagination
     query = query.range(offset, offset + limit - 1);
@@ -141,7 +209,7 @@ export async function GET(request: NextRequest) {
 
     // Fallback: if sections column is missing (migration not applied yet), retry without it
     if (error && typeof error.message === 'string' && /column.*sections.*does not exist/i.test(error.message)) {
-      let retry = supabase.from('recipes').select(selectWithoutSections);
+      let retry = supabase.from('recipes').select(selectWithoutSections, { count: 'exact' });
       if (groupId) {
         retry = retry.eq('group_id', groupId);
       } else {
@@ -149,7 +217,26 @@ export async function GET(request: NextRequest) {
       }
       if (tag) retry = retry.contains('tags', [tag]);
       if (contributor) retry = retry.eq('contributor_name', contributor);
-      retry = retry.order(sortBy, { ascending: sortOrder === 'asc' });
+      
+      // Apply new server-side filters
+      if (search && search.trim()) {
+        const searchLower = search.toLowerCase().trim();
+        retry = retry.or(`title.ilike.%${searchLower}%,tags.cs.{${searchLower}}`);
+      }
+      if (cuisine && cuisine.trim()) {
+        retry = retry.contains('tags', [cuisine.toLowerCase().trim()]);
+      }
+      if (ingredient && ingredient.trim()) {
+        const ingredientLower = ingredient.toLowerCase().trim();
+        if (ingredientLower === 'tofu') {
+          retry = retry.or(`title.ilike.%tofu%,tags.cs.{tofu}`);
+        } else {
+          retry = retry.contains('tags', [ingredientLower]);
+        }
+      }
+      
+      const serverSortBy = sortBy === 'recently_viewed' ? 'created_at' : sortBy;
+      retry = retry.order(serverSortBy, { ascending: sortOrder === 'asc' });
       retry = retry.range(offset, offset + limit - 1);
       const retryResult = await retry;
       const retryAny = retryResult as unknown as { data: unknown[] | null; count?: number | null; error?: unknown };
@@ -169,11 +256,92 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Calculate filter facets (available options based on ALL recipes, not filtered)
+    // This runs a separate query to get all recipes in the group for facet calculation
+    let facetsQuery = supabase.from('recipes').select('id, tags, title, ingredients');
+    
+    // Apply group filter (same as main query, but no other filters)
+    if (groupId) {
+      facetsQuery = facetsQuery.eq('group_id', groupId);
+    } else {
+      facetsQuery = facetsQuery.or(`group_id.is.null,user_id.eq.${user.id}`);
+    }
+    
+    // Get all recipes for facet calculation (limit to reasonable number for performance)
+    const { data: allRecipesForFacets } = await facetsQuery.limit(1000);
+    
+    // Calculate available filter options from all recipes
+    const availableCuisines: string[] = [];
+    const availableIngredients: string[] = [];
+    const CUISINE_OPTIONS = [
+      'american', 'chinese', 'french', 'greek', 'indian', 'italian', 
+      'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 
+      'middle eastern', 'mediterranean'
+    ];
+    const INGREDIENT_OPTIONS = [
+      'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'tofu', 'vegetarian', 'vegan'
+    ];
+    
+    if (allRecipesForFacets) {
+      // Extract all unique tags from recipes
+      const allTags = new Set<string>();
+      const allTitles: string[] = [];
+      const allIngredientsArrays: any[] = [];
+      
+      allRecipesForFacets.forEach((recipe: any) => {
+        if (recipe.tags && Array.isArray(recipe.tags)) {
+          recipe.tags.forEach((tag: string) => {
+            allTags.add(tag.toLowerCase());
+          });
+        }
+        if (recipe.title) {
+          allTitles.push(recipe.title.toLowerCase());
+        }
+        if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+          allIngredientsArrays.push(recipe.ingredients);
+        }
+      });
+      
+      // Check which cuisines exist in tags
+      CUISINE_OPTIONS.forEach(cuisine => {
+        if (allTags.has(cuisine.toLowerCase())) {
+          availableCuisines.push(cuisine);
+        }
+      });
+      
+      // Check which ingredients exist in tags or titles/ingredients (for tofu)
+      INGREDIENT_OPTIONS.forEach(ingredient => {
+        const ingredientLower = ingredient.toLowerCase();
+        const existsInTags = allTags.has(ingredientLower);
+        
+        if (ingredientLower === 'tofu') {
+          // Special case: tofu matches in title or ingredients array
+          const existsInTitle = allTitles.some(title => title.includes('tofu'));
+          const existsInIngredients = allIngredientsArrays.some(ingArray => 
+            ingArray.some((ing: any) => 
+              typeof ing === 'string' && ing.toLowerCase().includes('tofu')
+            )
+          );
+          if (existsInTags || existsInTitle || existsInIngredients) {
+            availableIngredients.push(ingredient);
+          }
+        } else {
+          if (existsInTags) {
+            availableIngredients.push(ingredient);
+          }
+        }
+      });
+    }
+
     const response = NextResponse.json(
       {
         success: true,
         recipes: data || [],
         count: count || 0,
+        facets: {
+          cuisines: availableCuisines,
+          ingredients: availableIngredients,
+        },
         pagination: {
           limit,
           offset,
