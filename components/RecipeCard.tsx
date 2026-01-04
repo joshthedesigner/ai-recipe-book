@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, MouseEvent } from 'react';
+import { useState, MouseEvent, useRef, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -19,6 +19,7 @@ import {
   ListItemText as MenuItemText,
   Button,
   CircularProgress,
+  Tooltip,
 } from '@mui/material';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -69,6 +70,8 @@ function formatRelativeTime(timestamp: string): string {
 export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false, isNew = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
+  const tagsContainerRef = useRef<HTMLDivElement>(null);
+  const [visibleTagsCount, setVisibleTagsCount] = useState<number>(recipe.tags?.length || 0);
 
   // Get image URL - prefer recipe image, fallback to YouTube thumbnail
   const getImageUrl = (): string | null => {
@@ -130,6 +133,139 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
   const handleSourceClick = (event: MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click
   };
+
+  // Measure how many tags fit in the available space
+  useEffect(() => {
+    if (!compact || !recipe.tags || recipe.tags.length === 0 || showFriendBadge) {
+      setVisibleTagsCount(recipe.tags?.length || 0);
+      return;
+    }
+
+    const measureTags = () => {
+      if (!tagsContainerRef.current) return;
+
+      const container = tagsContainerRef.current;
+      const containerWidth = container.offsetWidth;
+      
+      // If container hasn't been laid out yet, skip measurement
+      // (will retry on next resize/raf)
+      if (containerWidth === 0) {
+        return;
+      }
+
+      // Measure the actual source/cookbook element width if it exists
+      const parent = container.parentElement;
+      let reservedWidth = 0;
+      if (parent) {
+        // Find the source/cookbook element (sibling after the tags container)
+        const sourceElement = Array.from(parent.children).find(
+          (child) => child !== container && child.textContent && child.textContent.trim().length > 0
+        ) as HTMLElement | undefined;
+        
+        if (sourceElement && sourceElement.offsetWidth > 0) {
+          reservedWidth = sourceElement.offsetWidth + 16; // Add gap (gap: 1 = 8px, so 16px for both sides)
+        } else {
+          // Fallback: use a smaller estimate if no source element
+          reservedWidth = 80;
+        }
+      } else {
+        reservedWidth = 80;
+      }
+      
+      const availableWidth = containerWidth - reservedWidth;
+      
+      // Only prevent showing tags if there's truly no space (less than 40px)
+      if (availableWidth < 40) {
+        setVisibleTagsCount(0);
+        return;
+      }
+
+      // Create a temporary container with matching font family
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.visibility = 'hidden';
+      tempContainer.style.whiteSpace = 'nowrap';
+      tempContainer.style.fontFamily = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+      document.body.appendChild(tempContainer);
+
+      let totalWidth = 0;
+      let count = 0;
+      const gap = 4; // 0.5 * 8px
+      const overflowChipWidth = 50; // Estimate for +X chip
+      const safetyMargin = 4; // Reduced safety margin (was 8px)
+
+      for (let i = 0; i < recipe.tags.length; i++) {
+        const tag = recipe.tags[i];
+        
+        // Create a temporary chip with better matching styling
+        const tempChip = document.createElement('span');
+        tempChip.style.display = 'inline-block';
+        tempChip.style.padding = '6px 12px'; // MUI small Chip padding
+        tempChip.style.fontSize = '0.75rem';
+        tempChip.style.fontWeight = '400';
+        tempChip.style.fontFamily = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        tempChip.style.border = '1px solid';
+        tempChip.style.borderRadius = '16px';
+        tempChip.style.whiteSpace = 'nowrap';
+        tempChip.style.lineHeight = '20px'; // MUI Chip line height
+        tempChip.textContent = tag;
+        tempContainer.appendChild(tempChip);
+        
+        const chipWidth = tempChip.offsetWidth;
+        tempContainer.removeChild(tempChip);
+        
+        const widthWithGap = chipWidth + (count > 0 ? gap : 0);
+        const needsOverflow = i < recipe.tags.length - 1;
+        const overflowWidth = needsOverflow ? overflowChipWidth + gap : 0;
+        const widthNeeded = totalWidth + widthWithGap + overflowWidth + (count === 0 ? safetyMargin : 0); // Only apply safety margin to first tag
+        
+        // Check if this tag (and overflow if needed) fits
+        if (widthNeeded <= availableWidth) {
+          totalWidth += widthWithGap;
+          count++;
+        } else {
+          break;
+        }
+      }
+
+      document.body.removeChild(tempContainer);
+      
+      // Ensure at least 1 tag shows if we have tags and reasonable space
+      // Only show 0 if availableWidth is very small (< 50px) or no tags fit the measurement
+      if (count === 0 && availableWidth >= 50) {
+        // If we have space but measurement said no tags fit, show at least 1 (might be a measurement issue)
+        setVisibleTagsCount(1);
+      } else {
+        setVisibleTagsCount(count);
+      }
+    };
+
+    // Use requestAnimationFrame to ensure layout is complete
+    let rafId: number;
+    const measureWithDelay = () => {
+      rafId = requestAnimationFrame(() => {
+        measureTags();
+      });
+    };
+
+    // Initial measurement with delay
+    measureWithDelay();
+
+    // Re-measure on resize
+    const resizeObserver = new ResizeObserver(() => {
+      measureWithDelay();
+    });
+    
+    if (tagsContainerRef.current?.parentElement) {
+      resizeObserver.observe(tagsContainerRef.current.parentElement);
+    }
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      resizeObserver.disconnect();
+    };
+  }, [compact, recipe.tags, showFriendBadge]);
+
   // Grid view (for browse page) - compact, clickable card
   if (compact) {
     return (
@@ -344,20 +480,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               </Typography>
             </Box>
 
-            <Box sx={{ 
-              display: { xs: isEmbedded ? 'none' : 'flex', md: 'flex' }, // Hide tags on mobile when embedded (feed)
-              gap: 0.5, 
-              flexWrap: 'wrap', 
-              mb: 2 
-            }}>
-              {recipe.tags.slice(0, 3).map((tag) => (
-                <Chip key={tag} label={tag} size="small" color="primary" variant="outlined" />
-              ))}
-              {recipe.tags.length > 3 && (
-                <Chip label={`+${recipe.tags.length - 3}`} size="small" variant="outlined" />
-              )}
-            </Box>
-
             <Box sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
               {/* Friend Badge */}
               {showFriendBadge && recipe.friend_name && (
@@ -378,12 +500,73 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                 </Box>
               )}
               
-              {/* Contributor and Source */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1 }}>
-                {!showFriendBadge && (
-                  <Typography variant="caption" color="text.secondary">
-                    By {recipe.contributor_name}
-                  </Typography>
+              {/* Tags and Source */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'nowrap' }}>
+                {!showFriendBadge && recipe.tags && recipe.tags.length > 0 && (
+                  <Box 
+                    ref={tagsContainerRef}
+                    sx={{ 
+                      display: 'flex', 
+                      gap: 0.5, 
+                      flexWrap: 'nowrap',
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {recipe.tags.slice(0, visibleTagsCount).map((tag) => (
+                      <Chip 
+                        key={tag} 
+                        label={tag} 
+                        size="small" 
+                        color="primary" 
+                        variant="outlined"
+                        sx={{ 
+                          flexShrink: 0,
+                          whiteSpace: 'nowrap',
+                        }}
+                      />
+                    ))}
+                    {recipe.tags.length > visibleTagsCount && (
+                      <Tooltip
+                        title={recipe.tags.slice(visibleTagsCount).join(', ')}
+                        arrow
+                        placement="top"
+                        componentsProps={{
+                          tooltip: {
+                            sx: {
+                              bgcolor: 'white',
+                              color: 'text.primary',
+                              border: '1px solid',
+                              borderColor: 'divider',
+                              boxShadow: 2,
+                            }
+                          },
+                          arrow: {
+                            sx: {
+                              color: 'white',
+                              '&::before': {
+                                border: '1px solid',
+                                borderColor: 'divider',
+                              }
+                            }
+                          }
+                        }}
+                      >
+                        <Chip 
+                          label={`+${recipe.tags.length - visibleTagsCount}`} 
+                          size="small" 
+                          variant="outlined"
+                          sx={{ 
+                            flexShrink: 0,
+                            '&:hover': {
+                              bgcolor: 'rgba(0, 0, 0, 0.04)',
+                            }
+                          }}
+                        />
+                      </Tooltip>
+                    )}
+                  </Box>
                 )}
                 {recipe.cookbook_name ? (
                 <Typography 
@@ -391,6 +574,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                   sx={{ 
                     color: 'text.secondary',
                     fontWeight: 600,
+                    flexShrink: 0,
                   }}
                 >
                   📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, p${recipe.cookbook_page}` : ''}
@@ -408,6 +592,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                     gap: 0.5,
                     color: 'primary.main',
                     textDecoration: 'none',
+                    flexShrink: 0,
                     '&:hover': {
                       textDecoration: 'underline',
                     },

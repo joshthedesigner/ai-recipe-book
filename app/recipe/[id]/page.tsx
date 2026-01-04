@@ -281,17 +281,43 @@ export default function RecipeDetailPage() {
 
           {/* Title and Buttons */}
           <Box sx={{ pb: 4 }}>
-            {/* Title Row */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+            {/* Title Row - Title, Link, Overflow Menu */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap', justifyContent: 'flex-start' }}>
               <Typography variant="h3" sx={{ fontWeight: 600, fontSize: '2.125rem' }}>
                 {recipe.title}
               </Typography>
+              
+              {/* Source Link */}
+              {recipe.source_url && (
+                <Button
+                  variant="outlined"
+                  href={recipe.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  endIcon={<OpenInNewIcon sx={{ fontSize: '1rem' }} />}
+                  sx={{ 
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                    borderColor: 'text.secondary',
+                    flexShrink: 0,
+                    '&:hover': {
+                      borderColor: 'text.secondary',
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  {getSourceName(recipe.source_url)}
+                </Button>
+              )}
               
               {/* Show delete menu only for own recipes */}
               {isOwnRecipe && (
                 <IconButton
                   onClick={handleMenuClick}
                   size="small"
+                  sx={{ flexShrink: 0 }}
                 >
                   <MoreVertIcon />
                 </IconButton>
@@ -338,30 +364,6 @@ export default function RecipeDetailPage() {
                   }}
                 >
                   {isAdded ? 'Saved' : 'Save'}
-                </Button>
-              )}
-
-              {/* Source Link */}
-              {recipe.source_url && (
-                <Button
-                  variant="outlined"
-                  href={recipe.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  endIcon={<OpenInNewIcon sx={{ fontSize: '1rem' }} />}
-                  sx={{ 
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                    borderColor: 'text.secondary',
-                    '&:hover': {
-                      borderColor: 'text.secondary',
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  {getSourceName(recipe.source_url)}
                 </Button>
               )}
             </Box>
