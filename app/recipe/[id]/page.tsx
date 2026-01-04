@@ -317,6 +317,7 @@ export default function RecipeDetailPage() {
             sx={{
               fontWeight: 600,
               textAlign: 'center',
+              py: 1.5,
               mb: 4,
               fontSize: { xs: '1.875rem', md: '2.5rem' },
             }}
