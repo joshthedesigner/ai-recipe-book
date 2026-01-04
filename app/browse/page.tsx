@@ -646,6 +646,12 @@ export default function BrowsePage() {
         {/* Recipe Grid */}
         {!loading && filteredRecipes.length > 0 && (
           <>
+            <Typography 
+              color="text.secondary"
+              sx={{ mb: 2, fontSize: 16 }}
+            >
+              Displaying <Box component="strong" sx={{ color: 'text.primary' }}>{filteredRecipes.length}</Box> recipes
+            </Typography>
             <Grid container spacing={3}>
               {displayedRecipes.map((recipe, index) => {
                 // Load fewer images eagerly on mobile (4 vs 8)
