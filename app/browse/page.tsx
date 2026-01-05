@@ -85,6 +85,15 @@ export default function BrowsePage() {
   
   // Store scroll position to preserve it during recipe list updates
   const scrollPositionRef = useRef<number | null>(null);
+  
+  // Track previous filter/sort values to detect if they changed
+  const previousFiltersRef = useRef<{
+    sortBy: SortOption;
+    searchQuery: string;
+    filterCuisine: string;
+    filterMainIngredient: string;
+    filterFavorites: boolean;
+  } | null>(null);
 
   // Filter options are now provided by the server via facets API response
 
@@ -395,6 +404,10 @@ export default function BrowsePage() {
       prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
     );
     setFilteredRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+    );
+    // Also update displayedRecipes so the card reflects the favorite state
+    setDisplayedRecipes((prev) =>
       prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
     );
   };
