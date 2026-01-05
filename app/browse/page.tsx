@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
@@ -332,6 +332,15 @@ export default function BrowsePage() {
     setHasMore(filteredRecipes.length > PAGE_SIZE);
     const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
     setDisplayedRecipes(initialBatch);
+    
+    // Restore scroll position if it was saved (prevents jitter when adding recipes)
+    if (scrollPositionRef.current !== null) {
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPositionRef.current!);
+        scrollPositionRef.current = null; // Clear after restoring
+      });
+    }
   }, [filteredRecipes]);
 
   // Infinite scroll: Load more recipes when user scrolls near bottom
