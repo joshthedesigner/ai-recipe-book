@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, startTransition } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
@@ -335,10 +335,14 @@ export default function BrowsePage() {
     
     // Restore scroll position if it was saved (prevents jitter when adding recipes)
     if (scrollPositionRef.current !== null) {
-      // Use requestAnimationFrame to ensure DOM has updated
+      // Use double requestAnimationFrame to ensure browser layout is complete
+      // First RAF: React has updated DOM
+      // Second RAF: Browser has completed layout calculation
       requestAnimationFrame(() => {
-        window.scrollTo(0, scrollPositionRef.current!);
-        scrollPositionRef.current = null; // Clear after restoring
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollPositionRef.current!);
+          scrollPositionRef.current = null; // Clear after restoring
+        });
       });
     }
   }, [filteredRecipes]);
@@ -455,8 +459,12 @@ export default function BrowsePage() {
     // Save scroll position before refetching to prevent jitter
     scrollPositionRef.current = window.scrollY;
     
-    // Silently refetch immediately with cache-busting to ensure new recipe appears
-    fetchRecipes(true, true);
+    // Use startTransition to mark recipe list update as non-urgent
+    // This keeps UI responsive and allows React to optimize rendering
+    startTransition(() => {
+      // Silently refetch immediately with cache-busting to ensure new recipe appears
+      fetchRecipes(true, true);
+    });
   };
 
   return (
