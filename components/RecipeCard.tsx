@@ -500,8 +500,51 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                 </Box>
               )}
               
-              {/* Tags and Source */}
+              {/* Source Link and Tags */}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1, flexWrap: 'nowrap' }}>
+                {recipe.cookbook_name ? (
+                <Typography 
+                  variant="caption"
+                  sx={{ 
+                    color: 'text.secondary',
+                    fontWeight: 600,
+                    flexShrink: 0,
+                  }}
+                >
+                  📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, p${recipe.cookbook_page}` : ''}
+                </Typography>
+              ) : recipe.source_url ? (
+                <Box 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    flexShrink: 0,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    component="a"
+                    href={recipe.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={handleSourceClick}
+                    sx={{
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      textTransform: 'uppercase',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    {getSourceName(recipe.source_url)}
+                  </Typography>
+                  <OpenInNewIcon sx={{ fontSize: '0.875rem', color: 'text.secondary' }} />
+                </Box>
+              ) : null}
                 {!showFriendBadge && recipe.tags && recipe.tags.length > 0 && (
                   <Box 
                     ref={tagsContainerRef}
@@ -512,6 +555,7 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                       flex: 1,
                       minWidth: 0,
                       overflow: 'hidden',
+                      justifyContent: 'flex-end',
                     }}
                   >
                     {recipe.tags.slice(0, visibleTagsCount).map((tag) => (
@@ -568,47 +612,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                     )}
                   </Box>
                 )}
-                {recipe.cookbook_name ? (
-                <Typography 
-                  variant="caption"
-                  sx={{ 
-                    color: 'text.secondary',
-                    fontWeight: 600,
-                    flexShrink: 0,
-                  }}
-                >
-                  📖 {recipe.cookbook_name}{recipe.cookbook_page ? `, p${recipe.cookbook_page}` : ''}
-                </Typography>
-              ) : recipe.source_url ? (
-                <Box 
-                  component="a" 
-                  href={recipe.source_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  onClick={handleSourceClick}
-                  sx={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    color: 'primary.main',
-                    textDecoration: 'none',
-                    flexShrink: 0,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  <Typography 
-                    variant="caption"
-                    sx={{ 
-                      fontWeight: 600,
-                    }}
-                  >
-                    {getSourceName(recipe.source_url)}
-                  </Typography>
-                  <OpenInNewIcon sx={{ fontSize: 12 }} />
-                </Box>
-              ) : null}
               </Box>
             </Box>
           </CardContent>
