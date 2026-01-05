@@ -337,10 +337,56 @@ export default function BrowsePage() {
 
   // Load initial batch of displayed recipes when filtered recipes change
   useEffect(() => {
-    setCurrentPage(0);
-    setHasMore(filteredRecipes.length > PAGE_SIZE);
-    const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
-    setDisplayedRecipes(initialBatch);
+    // Check if filters/sort changed by comparing current values with previous
+    const filtersChanged = previousFiltersRef.current === null ||
+      sortBy !== previousFiltersRef.current.sortBy ||
+      searchQuery !== previousFiltersRef.current.searchQuery ||
+      filterCuisine !== previousFiltersRef.current.filterCuisine ||
+      filterMainIngredient !== previousFiltersRef.current.filterMainIngredient ||
+      filterFavorites !== previousFiltersRef.current.filterFavorites;
+
+    if (filtersChanged) {
+      // Filters/sort changed - reset everything (normal behavior)
+      setCurrentPage(0);
+      setHasMore(filteredRecipes.length > PAGE_SIZE);
+      const initialBatch = filteredRecipes.slice(0, PAGE_SIZE);
+      setDisplayedRecipes(initialBatch);
+    } else {
+      // Filters/sort didn't change - just adding/updating recipes
+      // Find new recipes that aren't in displayedRecipes
+      const currentIds = new Set(displayedRecipes.map(r => r.id));
+      const newRecipes = filteredRecipes.filter(r => r.id && !currentIds.has(r.id));
+      
+      if (newRecipes.length > 0) {
+        // New recipes added - insert them at correct sorted position
+        // Since filteredRecipes is already sorted from API, we can merge maintaining order
+        // For "Recently Added" (default), new recipes go at the top
+        setDisplayedRecipes(prev => {
+          const merged = [...newRecipes, ...prev];
+          // Deduplicate by ID (in case of any overlap)
+          const seen = new Set<string>();
+          return merged.filter(r => {
+            if (!r.id || seen.has(r.id)) return false;
+            seen.add(r.id);
+            return true;
+          });
+        });
+      }
+      // If no new recipes, displayedRecipes stays the same (no reset needed)
+      // This handles cases like favoriting where we just update properties
+      
+      // Update hasMore based on total filtered recipes
+      setHasMore(filteredRecipes.length > displayedRecipes.length);
+    }
+    
+    // Update ref with current filter/sort values
+    previousFiltersRef.current = {
+      sortBy,
+      searchQuery,
+      filterCuisine,
+      filterMainIngredient,
+      filterFavorites,
+    };
     
     // Restore scroll position if it was saved (prevents jitter when adding recipes)
     if (scrollPositionRef.current !== null) {
@@ -354,7 +400,7 @@ export default function BrowsePage() {
         });
       });
     }
-  }, [filteredRecipes]);
+  }, [filteredRecipes, sortBy, searchQuery, filterCuisine, filterMainIngredient, filterFavorites]);
 
   // Infinite scroll: Load more recipes when user scrolls near bottom
   useEffect(() => {
