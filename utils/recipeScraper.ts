@@ -40,6 +40,28 @@ function stripHtml(text: string): string {
   return withoutTags.trim();
 }
 
+/**
+ * Clean recipe text by removing unwanted Unicode characters (checkboxes, bullets, etc.)
+ * Used for ingredients and steps to ensure clean data
+ */
+function cleanRecipeText(text: string): string {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  
+  let cleaned = text.trim();
+  
+  // Remove common Unicode checkbox/bullet characters
+  // U+25A2 (▢), U+2610 (☐), U+2611 (☑), U+2612 (☒), U+2713 (✓), U+2714 (✔)
+  // U+25A1 (□), U+25AA (▪), U+2022 (•), U+25E6 (◦)
+  cleaned = cleaned.replace(/[▢☐☑☒✓✔□▪•◦]/g, '');
+  
+  // Normalize whitespace (multiple spaces → single space)
+  cleaned = cleaned.replace(/\s+/g, ' ');
+  
+  return cleaned.trim();
+}
+
 // Lazy-load OpenAI client
 let openai: OpenAI | null = null;
 
@@ -437,7 +459,7 @@ function extractPluginSections($: cheerio.CheerioAPI): Array<{ title: string; in
       const title = ($(el).find('.wprm-recipe-group-name').text().trim()) || 'Ingredients';
       const items = $(el)
         .find('.wprm-recipe-ingredient')
-        .map((i, li) => $(li).text().trim())
+        .map((i, li) => cleanRecipeText($(li).text().trim()))
         .get()
         .filter(Boolean);
       if (!byTitle[title]) byTitle[title] = { title };
@@ -446,7 +468,7 @@ function extractPluginSections($: cheerio.CheerioAPI): Array<{ title: string; in
   } else {
     // Single ingredient list fallback (still place under one section)
     const items = $('.wprm-recipe-ingredient')
-      .map((i, li) => $(li).text().trim())
+      .map((i, li) => cleanRecipeText($(li).text().trim()))
       .get()
       .filter(Boolean);
     if (items.length > 0) {
@@ -488,7 +510,7 @@ function extractPluginSections($: cheerio.CheerioAPI): Array<{ title: string; in
     const title = label || 'Section';
     const ingredients = $(el)
       .find('.tasty-recipes-ingredients li')
-      .map((i, li) => $(li).text().trim())
+      .map((i, li) => cleanRecipeText($(li).text().trim()))
       .get()
       .filter(Boolean);
     const steps = $(el)
@@ -630,9 +652,9 @@ function parseSchemaRecipe(schema: any): ScrapedRecipe {
   // Extract ingredients (can be array or string)
   let ingredients: string[] = [];
   if (Array.isArray(schema.recipeIngredient)) {
-    ingredients = schema.recipeIngredient.map((ing: string) => stripHtml(ing));
+    ingredients = schema.recipeIngredient.map((ing: string) => cleanRecipeText(stripHtml(ing)));
   } else if (typeof schema.recipeIngredient === 'string') {
-    ingredients = [stripHtml(schema.recipeIngredient)];
+    ingredients = [cleanRecipeText(stripHtml(schema.recipeIngredient))];
   }
 
   // Extract steps from recipeInstructions
@@ -745,7 +767,7 @@ ${truncatedText}`;
 
   return {
     title: parsed.title || 'Untitled Recipe',
-    ingredients: parsed.ingredients || [],
+    ingredients: (parsed.ingredients || []).map((ing: string) => cleanRecipeText(ing)),
     steps: parsed.steps || [],
     tags: parsed.tags || [],
     source_url: url,
