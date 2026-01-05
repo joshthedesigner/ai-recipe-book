@@ -82,6 +82,9 @@ export default function BrowsePage() {
   const [hasMore, setHasMore] = useState(true);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
+  
+  // Store scroll position to preserve it during recipe list updates
+  const scrollPositionRef = useRef<number | null>(null);
 
   // Filter options are now provided by the server via facets API response
 
@@ -439,6 +442,9 @@ export default function BrowsePage() {
 
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
+    
+    // Save scroll position before refetching to prevent jitter
+    scrollPositionRef.current = window.scrollY;
     
     // Silently refetch immediately with cache-busting to ensure new recipe appears
     fetchRecipes(true, true);
