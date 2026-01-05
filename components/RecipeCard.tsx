@@ -32,6 +32,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail, getYouTubeThumbnailSrcSet } from '@/utils/youtubeHelpers';
+import { useToast } from '@/contexts/ToastContext';
 
 interface RecipeCardProps {
   recipe: Recipe;
@@ -69,6 +70,7 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, onFavoriteToggle, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false, isNew = false }: RecipeCardProps) {
+  const { showToast } = useToast();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const tagsContainerRef = useRef<HTMLDivElement>(null);
@@ -128,11 +130,20 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
 
       const data = await response.json();
 
-      if (data.success && onFavoriteToggle) {
-        onFavoriteToggle(recipe.id, data.is_favorite);
+      if (data.success) {
+        showToast(
+          data.is_favorite ? 'Added to favorites' : 'Removed from favorites',
+          'success'
+        );
+        if (onFavoriteToggle) {
+          onFavoriteToggle(recipe.id, data.is_favorite);
+        }
+      } else {
+        showToast('Failed to update favorite', 'error');
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      showToast('Failed to update favorite', 'error');
     }
   };
 
