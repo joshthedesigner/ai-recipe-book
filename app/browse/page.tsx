@@ -374,9 +374,7 @@ export default function BrowsePage() {
       }
       // If no new recipes, displayedRecipes stays the same (no reset needed)
       // This handles cases like favoriting where we just update properties
-      
-      // Update hasMore based on total filtered recipes
-      setHasMore(filteredRecipes.length > displayedRecipes.length);
+      // Note: hasMore is managed by loadMoreRecipes (lazy loading) and the if branch (filter changes)
     }
     
     // Update ref with current filter/sort values
