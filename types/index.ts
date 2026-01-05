@@ -46,6 +46,7 @@ export interface Recipe {
   group_name?: string; // Added by feed API for display
   is_new?: boolean; // Added by feed API to indicate new recipe since last view
   sections?: RecipeSection[]; // Optional structured sections when detected
+  is_favorite?: boolean; // Whether the current user has favorited this recipe
 }
 
 // ========================================

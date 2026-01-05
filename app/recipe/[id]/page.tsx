@@ -56,6 +56,8 @@ export default function RecipeDetailPage() {
   const [activeTab, setActiveTab] = useState<'recipe' | 'notes'>('recipe');
   const [notesCount, setNotesCount] = useState(0);
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
+  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [togglingFavorite, setTogglingFavorite] = useState(false);
   const recipeId = params.id as string;
   const menuOpen = Boolean(anchorEl);
   
@@ -101,6 +103,35 @@ export default function RecipeDetailPage() {
 
   const handleMenuClose = () => {
     setAnchorEl(null);
+  };
+
+  const handleToggleFavorite = async () => {
+    if (!recipe?.id || togglingFavorite) return;
+
+    setTogglingFavorite(true);
+    try {
+      const response = await fetch(`/api/recipes/${recipe.id}/favorite`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setIsFavorite(data.is_favorite);
+        setRecipe((prev) => prev ? { ...prev, is_favorite: data.is_favorite } : null);
+        showToast(
+          data.is_favorite ? 'Added to favorites' : 'Removed from favorites',
+          'success'
+        );
+      } else {
+        showToast('Failed to update favorite', 'error');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      showToast('Failed to update favorite', 'error');
+    } finally {
+      setTogglingFavorite(false);
+    }
   };
 
   const handleDeleteClick = () => {
@@ -194,6 +225,19 @@ export default function RecipeDetailPage() {
       }
 
       setRecipe(data);
+      
+      // Check if recipe is favorited
+      if (data?.id) {
+        const { data: favoriteData } = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('recipe_id', data.id)
+          .single();
+        
+        setIsFavorite(!!favoriteData);
+      }
+      
       setLoading(false);
 
       // Reset checked ingredients when recipe loads (don't persist state)
@@ -306,26 +350,49 @@ export default function RecipeDetailPage() {
                 </Box>
               )}
               
-              {/* Delete button - only for own recipes */}
-              {isOwnRecipe && (
+              {/* Favorite and Delete buttons */}
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                {/* Favorite button */}
                 <Button
-                  onClick={handleDeleteClick}
-                  startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
+                  onClick={handleToggleFavorite}
+                  disabled={togglingFavorite}
+                  startIcon={<BookmarkIcon sx={{ fontSize: '1rem' }} />}
                   sx={{
                     textTransform: 'none',
-                    color: 'text.secondary',
+                    color: isFavorite ? 'primary.main' : 'text.secondary',
                     fontSize: '0.875rem',
                     minWidth: 'auto',
                     px: 1,
                     '&:hover': {
                       bgcolor: 'transparent',
-                      color: 'error.main',
+                      color: isFavorite ? 'primary.dark' : 'primary.main',
                     },
                   }}
                 >
-                  Delete
+                  {isFavorite ? 'Favorited' : 'Favorite'}
                 </Button>
-              )}
+                
+                {/* Delete button - only for own recipes */}
+                {isOwnRecipe && (
+                  <Button
+                    onClick={handleDeleteClick}
+                    startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
+                    sx={{
+                      textTransform: 'none',
+                      color: 'text.secondary',
+                      fontSize: '0.875rem',
+                      minWidth: 'auto',
+                      px: 1,
+                      '&:hover': {
+                        bgcolor: 'transparent',
+                        color: 'error.main',
+                      },
+                    }}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </Box>
             </Box>
           </Box>
 

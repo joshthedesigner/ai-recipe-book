@@ -39,6 +39,7 @@ interface RecipeCardProps {
   onClick?: () => void;
   onDelete?: (recipeId: string) => void;
   onAdd?: (recipeId: string, e: React.MouseEvent) => void; // Add callback for friend pages
+  onFavoriteToggle?: (recipeId: string, isFavorite: boolean) => void; // Callback for favorite toggle
   loading?: 'lazy' | 'eager';
   showFriendBadge?: boolean;
   showFriendHeader?: boolean; // Show friend name/date overlaid on image
@@ -67,7 +68,7 @@ function formatRelativeTime(timestamp: string): string {
   return date.toLocaleDateString();
 }
 
-export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false, isNew = false }: RecipeCardProps) {
+export default function RecipeCard({ recipe, compact = false, onClick, onDelete, onAdd, onFavoriteToggle, loading = 'lazy', showFriendBadge = false, showFriendHeader = false, isEmbedded = false, isFriendView = false, isAdded = false, isAdding = false, isNew = false }: RecipeCardProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
   const tagsContainerRef = useRef<HTMLDivElement>(null);
@@ -112,6 +113,26 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
     handleMenuClose();
     if (recipe.id && onDelete) {
       onDelete(recipe.id);
+    }
+  };
+
+  const handleToggleFavorite = async (event: MouseEvent) => {
+    event.stopPropagation(); // Prevent card click
+    handleMenuClose();
+    if (!recipe.id) return;
+
+    try {
+      const response = await fetch(`/api/recipes/${recipe.id}/favorite`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (data.success && onFavoriteToggle) {
+        onFavoriteToggle(recipe.id, data.is_favorite);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -631,6 +652,12 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             horizontal: 'right',
           }}
         >
+          <MenuItem onClick={handleToggleFavorite}>
+            <ListItemIcon>
+              <BookmarkIcon fontSize="small" color={recipe.is_favorite ? 'primary' : 'inherit'} />
+            </ListItemIcon>
+            <MenuItemText>{recipe.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</MenuItemText>
+          </MenuItem>
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>
               <DeleteIcon fontSize="small" color="error" />

@@ -17,9 +17,11 @@ import {
   Select,
   MenuItem,
   IconButton,
+  Chip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -71,6 +73,7 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>(SORT_OPTIONS.RECENTLY_ADDED);
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterMainIngredient, setFilterMainIngredient] = useState('');
+  const [filterFavorites, setFilterFavorites] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
@@ -171,6 +174,9 @@ export default function BrowsePage() {
       if (filterMainIngredient) {
         params.append('ingredient', filterMainIngredient);
       }
+      if (filterFavorites) {
+        params.append('favorites', 'true');
+      }
       
       // Add cache-busting when needed
       if (noCache) {
@@ -229,7 +235,7 @@ export default function BrowsePage() {
         setLoading(false);
       }
     }
-  }, [activeGroup, showToast, searchQuery, filterCuisine, filterMainIngredient, sortBy]);
+  }, [activeGroup, showToast, searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
 
   // Load sort preference from localStorage on mount
   useEffect(() => {
@@ -276,7 +282,7 @@ export default function BrowsePage() {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, activeGroup?.id, authLoading, groupsLoading, searchQuery, filterCuisine, filterMainIngredient, sortBy]);
+  }, [user?.id, activeGroup?.id, authLoading, groupsLoading, searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
   // fetchRecipes intentionally omitted from deps - it's already in the useCallback deps
   // This effect handles both initial load and filter changes
 
@@ -366,6 +372,15 @@ export default function BrowsePage() {
       setRecipeToDelete(recipe);
       setDeleteDialogOpen(true);
     }
+  };
+
+  const handleFavoriteToggle = (recipeId: string, isFavorite: boolean) => {
+    setRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+    );
+    setFilteredRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+    );
   };
 
   const handleDeleteConfirm = async () => {
@@ -535,6 +550,25 @@ export default function BrowsePage() {
                   ))}
                 </Select>
               </FormControl>
+
+              {/* Favorites Filter Chip */}
+              <Chip
+                icon={<BookmarkIcon />}
+                label="Favorites"
+                onClick={() => setFilterFavorites(!filterFavorites)}
+                color={filterFavorites ? 'primary' : 'default'}
+                variant={filterFavorites ? 'filled' : 'outlined'}
+                size="small"
+                sx={{
+                  cursor: 'pointer',
+                  fontWeight: filterFavorites ? 600 : 400,
+                  height: '40px', // Match MUI Select small size height
+                  paddingLeft: '14px', // Match Select small padding
+                  paddingRight: '14px', // Match Select small padding
+                  minWidth: '120px', // Fixed width to prevent layout shift
+                  justifyContent: 'center', // Center content within fixed width
+                }}
+              />
             </Box>
             </Box>
           </Box>
@@ -632,6 +666,7 @@ export default function BrowsePage() {
                       compact 
                       onClick={() => handleCardClick(recipe)}
                       onDelete={canAddRecipes ? handleDeleteClick : undefined}
+                      onFavoriteToggle={handleFavoriteToggle}
                       loading={index < eagerLoadCount ? 'eager' : 'lazy'}
                     />
                   </Grid>

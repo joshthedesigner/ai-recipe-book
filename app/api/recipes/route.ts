@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const cuisine = searchParams.get('cuisine');
     const ingredient = searchParams.get('ingredient');
+    const favorites = searchParams.get('favorites') === 'true';
     
     // Validate sortBy against whitelist
     if (!ALLOWED_SORT_COLUMNS.includes(sortBy)) {
@@ -195,6 +196,25 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fetch user's favorites for filtering and is_favorite flag
+    const { data: userFavorites } = await supabase
+      .from('favorites')
+      .select('recipe_id')
+      .eq('user_id', user.id);
+
+    const favoriteRecipeIds = new Set<string>((userFavorites || []).map((f: any) => f.recipe_id));
+
+    // Filter by favorites if requested
+    if (favorites) {
+      const favoriteIdsArray = Array.from(favoriteRecipeIds);
+      if (favoriteIdsArray.length === 0) {
+        // User has no favorites, return empty result
+        query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // Impossible UUID to return no results
+      } else {
+        query = query.in('id', favoriteIdsArray);
+      }
+    }
+
     // Apply sorting
     // Note: "Recently Viewed" sorting must be done client-side (uses localStorage)
     // So we always sort by created_at here, and client handles recently viewed
@@ -235,6 +255,16 @@ export async function GET(request: NextRequest) {
         }
       }
       
+      // Apply favorites filter to retry query
+      if (favorites) {
+        const favoriteIdsArray = Array.from(favoriteRecipeIds);
+        if (favoriteIdsArray.length === 0) {
+          retry = retry.eq('id', '00000000-0000-0000-0000-000000000000');
+        } else {
+          retry = retry.in('id', favoriteIdsArray);
+        }
+      }
+      
       const serverSortBy = sortBy === 'recently_viewed' ? 'created_at' : sortBy;
       retry = retry.order(serverSortBy, { ascending: sortOrder === 'asc' });
       retry = retry.range(offset, offset + limit - 1);
@@ -255,6 +285,12 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Add is_favorite flag to each recipe
+    const recipesWithFavorites = (data || []).map((recipe: any) => ({
+      ...recipe,
+      is_favorite: favoriteRecipeIds.has(recipe.id),
+    }));
 
     // Calculate filter facets (available options based on ALL recipes, not filtered)
     // This runs a separate query to get all recipes in the group for facet calculation
@@ -336,7 +372,7 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.json(
       {
         success: true,
-        recipes: data || [],
+        recipes: recipesWithFavorites,
         count: count || 0,
         facets: {
           cuisines: availableCuisines,
@@ -345,7 +381,7 @@ export async function GET(request: NextRequest) {
         pagination: {
           limit,
           offset,
-          hasMore: data && data.length === limit,
+          hasMore: recipesWithFavorites && recipesWithFavorites.length === limit,
         },
       },
       { status: 200 }
