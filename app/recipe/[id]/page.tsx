@@ -392,8 +392,8 @@ export default function RecipeDetailPage() {
                     Delete
                 </Button>
               )}
-              </Box>
             </Box>
+          </Box>
       </Box>
 
           {/* Centered Title */}

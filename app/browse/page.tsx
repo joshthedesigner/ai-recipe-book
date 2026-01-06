@@ -338,7 +338,7 @@ export default function BrowsePage() {
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
             {/* Title and CTA */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0 }}>
+              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0, fontSize: '24px' }}>
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
                   : 'Your recipes'}
