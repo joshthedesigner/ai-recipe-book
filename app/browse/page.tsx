@@ -258,11 +258,10 @@ export default function BrowsePage() {
   };
 
   const handleFavoriteToggle = async (recipeId: string, isFavorite: boolean) => {
-    // Invalidate and immediately refetch only the active query
-    // This ensures the UI updates immediately when unfavoriting with favorites filter active
-    queryClient.invalidateQueries({ 
+    // Force immediate refetch to ensure UI updates immediately
+    // This is especially important when unfavoriting with favorites filter active
+    await queryClient.refetchQueries({ 
       queryKey: ['recipes', 'infinite'],
-      refetchType: 'active' // Only refetch active queries immediately
     });
   };
 
