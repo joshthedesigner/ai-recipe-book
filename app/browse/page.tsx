@@ -444,16 +444,24 @@ export default function BrowsePage() {
   };
 
   const handleFavoriteToggle = (recipeId: string, isFavorite: boolean) => {
+    // Update recipes array (always update property)
     setRecipes((prev) =>
       prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
     );
-    setFilteredRecipes((prev) =>
-      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
-    );
-    // Also update displayedRecipes so the card reflects the favorite state
-    setDisplayedRecipes((prev) =>
-      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
-    );
+
+    // If favorites filter is active and recipe is unfavorited, remove from filtered arrays
+    if (filterFavorites && !isFavorite) {
+      setFilteredRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+      setDisplayedRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    } else {
+      // Otherwise, just update the property
+      setFilteredRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+      );
+      setDisplayedRecipes((prev) =>
+        prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+      );
+    }
   };
 
   const handleDeleteConfirm = async () => {
