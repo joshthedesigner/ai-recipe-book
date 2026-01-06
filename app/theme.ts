@@ -99,6 +99,15 @@ const theme = createTheme({
         },
       },
     },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          '&.MuiChip-outlined:hover': {
+            backgroundColor: 'transparent', // Remove grey background on hover for outlined chips
+          },
+        },
+      },
+    },
   },
 });
 

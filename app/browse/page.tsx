@@ -451,10 +451,8 @@ export default function BrowsePage() {
                   justifyContent: 'center', // Center content within fixed width
                   // When selected, use primary border color; otherwise default
                   borderColor: filterFavorites ? 'primary.main' : 'divider',
-                  bgcolor: 'transparent', // Always transparent background
                   '&:hover': {
                     borderColor: 'text.primary', // Darken border on hover to match MUI Select
-                    bgcolor: 'transparent', // Keep background transparent on hover
                   },
                 }}
               />
