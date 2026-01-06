@@ -1,22 +1,17 @@
 # Diagnosis: Recipes Not Removed from Favorites Filter When Unfavorited
 
-## Problem
-When a recipe is unfavorited while the favorites filter is active, the recipe is not removed from the displayed list, even though it's correctly removed from the database.
+## Problem Confirmed
+When a recipe is unfavorited while the favorites filter is active (`filterFavorites = true`), the recipe is NOT removed from the displayed list, even though it's correctly removed from the database.
 
-## Investigation
+## Root Cause Analysis
 
-### Flow Analysis
-
-**When favorites filter is active and recipe is unfavorited:**
+### Current Flow When Unfavoriting with Favorites Filter Active:
 
 1. User has favorites filter active (`filterFavorites = true`)
-2. User unfavorites a recipe
-3. API call to `/api/recipes/[id]/favorite`:
-   - ✅ Correctly removes from `favorites` table (line 57-61)
-   - ✅ Returns `is_favorite: false`
-4. Client receives response in `RecipeCard.handleToggleFavorite`:
-   - ✅ Calls `onFavoriteToggle(recipe.id, false)`
-5. `handleFavoriteToggle` in `browse/page.tsx` (line 446):
+2. API fetches only favorite recipes → `filteredRecipes` contains only favorites
+3. User unfavorites a recipe
+4. API correctly removes from `favorites` table ✅
+5. `handleFavoriteToggle` callback (line 446-457):
    ```typescript
    setRecipes((prev) =>
      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: false } : r))
@@ -28,45 +23,67 @@ When a recipe is unfavorited while the favorites filter is active, the recipe is
      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: false } : r))
    );
    ```
-   - ⚠️ Updates `is_favorite` property to `false`
-   - ❌ **Does NOT remove the recipe from the arrays**
+   - ⚠️ Updates `is_favorite: false` property
+   - ❌ **Recipe remains in arrays**
 
-6. The recipe remains in `filteredRecipes` and `displayedRecipes` arrays
-7. The recipe is still displayed in the UI, even though it's no longer a favorite
+6. Recipe still appears in UI (incorrect behavior)
 
-### Root Cause
+### Expected Behavior:
 
-**The `handleFavoriteToggle` function updates the `is_favorite` property but does NOT remove the recipe from the arrays when the favorites filter is active.**
+When `filterFavorites === true` AND `isFavorite === false`:
+- Recipe should be REMOVED from `filteredRecipes`
+- Recipe should be REMOVED from `displayedRecipes`
+- Recipe should disappear from the list
 
-When `filterFavorites` is `true`:
-- The API only returns favorite recipes
-- The arrays (`filteredRecipes`, `displayedRecipes`) only contain favorite recipes
-- When a recipe is unfavorited, it should be REMOVED from these arrays (not just have its property updated)
-- Currently, the recipe stays in the arrays with `is_favorite: false`, which is incorrect
+When `filterFavorites === false` OR `isFavorite === true`:
+- Just update `is_favorite` property (current behavior is correct)
 
-### Expected Behavior
+### Root Cause:
 
-When `filterFavorites` is `true` and a recipe is unfavorited:
-1. API removes from database ✅ (working)
-2. Remove recipe from `filteredRecipes` array ❌ (not happening)
-3. Remove recipe from `displayedRecipes` array ❌ (not happening)
-4. Recipe disappears from the list ✅ (should happen)
+**The `handleFavoriteToggle` function always updates the property, but never removes the recipe from arrays when the favorites filter is active and the recipe is unfavorited.**
 
-### Evidence
+### Comparison with Delete Function:
 
-Looking at `handleFavoriteToggle` (line 446-457):
-- Updates `is_favorite` property in all three arrays
-- Does NOT check if `filterFavorites` is active
-- Does NOT remove recipe from arrays when unfavorited
+Looking at `handleDeleteConfirm` (line 459+):
+```typescript
+setRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+setFilteredRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+setDisplayedRecipes(prev => prev.filter(r => r.id !== deletedRecipeId));
+```
+- ✅ Correctly removes recipe from all arrays using `.filter()`
 
-Compare to `handleDeleteConfirm` (line 459+):
-- Correctly removes recipe from all arrays: `.filter(r => r.id !== deletedRecipeId)`
-- This is the pattern we need for unfavoriting when filter is active
+We need the same pattern for unfavoriting when the filter is active.
 
 ## Solution
 
-**Update `handleFavoriteToggle` to remove the recipe from arrays when:**
-1. Recipe is unfavorited (`isFavorite === false`)
-2. AND favorites filter is active (`filterFavorites === true`)
+Update `handleFavoriteToggle` to conditionally remove recipes:
 
-Otherwise, just update the `is_favorite` property (current behavior is correct when filter is not active).
+```typescript
+const handleFavoriteToggle = (recipeId: string, isFavorite: boolean) => {
+  // Update recipes array (always update property)
+  setRecipes((prev) =>
+    prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+  );
+
+  // If favorites filter is active and recipe is unfavorited, remove from filtered arrays
+  if (filterFavorites && !isFavorite) {
+    setFilteredRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+    setDisplayedRecipes((prev) => prev.filter((r) => r.id !== recipeId));
+  } else {
+    // Otherwise, just update the property
+    setFilteredRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+    );
+    setDisplayedRecipes((prev) =>
+      prev.map((r) => (r.id === recipeId ? { ...r, is_favorite: isFavorite } : r))
+    );
+  }
+};
+```
+
+## Confidence: 100%
+
+This is definitely the root cause. The logic is clear:
+- When favorites filter is active, only favorite recipes should be in the arrays
+- When a recipe is unfavorited, it's no longer a favorite
+- Therefore, it should be removed from the arrays when the filter is active
