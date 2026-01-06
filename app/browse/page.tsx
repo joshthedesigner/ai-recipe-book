@@ -439,7 +439,7 @@ export default function BrowsePage() {
                 label="Favorites"
                 onClick={() => setFilterFavorites(!filterFavorites)}
                 color={filterFavorites ? 'primary' : 'default'}
-                variant={filterFavorites ? 'filled' : 'outlined'}
+                variant="outlined" // Always use outlined to prevent visual flash
                 size="small"
                 sx={{
                   cursor: 'pointer',
@@ -449,6 +449,13 @@ export default function BrowsePage() {
                   paddingRight: '14px', // Match Select small padding
                   minWidth: '120px', // Fixed width to prevent layout shift
                   justifyContent: 'center', // Center content within fixed width
+                  // When selected, use primary border color; otherwise default
+                  borderColor: filterFavorites ? 'primary.main' : 'divider',
+                  bgcolor: 'transparent', // Always transparent background
+                  '&:hover': {
+                    borderColor: 'text.primary', // Darken border on hover to match MUI Select
+                    bgcolor: 'transparent', // Keep background transparent on hover
+                  },
                 }}
               />
             </Box>
