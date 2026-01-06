@@ -554,14 +554,14 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
                     flexShrink: 0,
                   }}
                 >
-                  <Typography
+                  <Typography 
                     variant="body2"
                     component="a"
                     href={recipe.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleSourceClick}
-                    sx={{
+                    sx={{ 
                       color: 'text.secondary',
                       textDecoration: 'none',
                       textTransform: 'uppercase',

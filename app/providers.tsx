@@ -28,20 +28,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AppRouterCacheProvider>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <PostHogProvider>
-            <AuthProvider>
-              <GroupProvider>
-                <ToastProvider>
-                  {children}
-                </ToastProvider>
-              </GroupProvider>
-            </AuthProvider>
-          </PostHogProvider>
-        </ThemeProvider>
-      </AppRouterCacheProvider>
+    <AppRouterCacheProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <PostHogProvider>
+          <AuthProvider>
+            <GroupProvider>
+              <ToastProvider>
+                {children}
+              </ToastProvider>
+            </GroupProvider>
+          </AuthProvider>
+        </PostHogProvider>
+      </ThemeProvider>
+    </AppRouterCacheProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );

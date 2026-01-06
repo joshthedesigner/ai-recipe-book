@@ -333,7 +333,7 @@ export default function BrowsePage() {
           zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
         }}
       >
-        <Container maxWidth="xl" sx={{ py: 3 }}>
+        <Container maxWidth="xl" sx={{ py: 2 }}>
           {/* Header Title and Search/Filters */}
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
             {/* Title and CTA */}
