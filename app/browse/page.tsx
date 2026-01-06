@@ -258,10 +258,12 @@ export default function BrowsePage() {
   };
 
   const handleFavoriteToggle = async (recipeId: string, isFavorite: boolean) => {
-    // Invalidate queries to refetch with updated favorite status
-    // If favorites filter is active and unfavoriting, the query will automatically
-    // exclude the recipe since it's no longer in favorites
-    queryClient.invalidateQueries({ queryKey: ['recipes', 'infinite'] });
+    // Invalidate and immediately refetch only the active query
+    // This ensures the UI updates immediately when unfavoriting with favorites filter active
+    queryClient.invalidateQueries({ 
+      queryKey: ['recipes', 'infinite'],
+      refetchType: 'active' // Only refetch active queries immediately
+    });
   };
 
   const handleDeleteConfirm = async () => {
@@ -283,7 +285,10 @@ export default function BrowsePage() {
         showToast('Recipe deleted successfully', 'success');
         
         // Invalidate queries to refetch without deleted recipe
-        queryClient.invalidateQueries({ queryKey: ['recipes', 'infinite'] });
+        queryClient.invalidateQueries({ 
+          queryKey: ['recipes', 'infinite'],
+          refetchType: 'active'
+        });
       } else {
         // Show specific error message from API (e.g., permission denied)
         showToast(data.error || 'Failed to delete recipe', 'error');
@@ -312,7 +317,10 @@ export default function BrowsePage() {
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
     // Invalidate queries to refetch with new recipe
-    queryClient.invalidateQueries({ queryKey: ['recipes', 'infinite'] });
+    queryClient.invalidateQueries({ 
+      queryKey: ['recipes', 'infinite'],
+      refetchType: 'active'
+    });
   };
 
   return (
