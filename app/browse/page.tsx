@@ -394,68 +394,67 @@ export default function BrowsePage() {
               </Select>
             </FormControl>
 
-            {/* Filter by Section */}
-            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
-                <Select
-                  labelId="cuisine-filter-label"
-                  id="cuisine-filter-select"
-                  value={filterCuisine}
-                  label="Cuisines"
-                  onChange={(e) => setFilterCuisine(e.target.value)}
-                >
-                  <MenuItem value="">All Cuisines</MenuItem>
-                  {availableCuisines.map((cuisine) => (
-                    <MenuItem key={cuisine} value={cuisine}>
-                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            {/* Cuisines Filter */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
+              <Select
+                labelId="cuisine-filter-label"
+                id="cuisine-filter-select"
+                value={filterCuisine}
+                label="Cuisines"
+                onChange={(e) => setFilterCuisine(e.target.value)}
+              >
+                <MenuItem value="">All Cuisines</MenuItem>
+                {availableCuisines.map((cuisine) => (
+                  <MenuItem key={cuisine} value={cuisine}>
+                    {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-              <FormControl size="small" sx={{ minWidth: 160 }}>
-                <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
-                <Select
-                  labelId="ingredient-filter-label"
-                  id="ingredient-filter-select"
-                  value={filterMainIngredient}
-                  label="Ingredients"
-                  onChange={(e) => setFilterMainIngredient(e.target.value)}
-                >
-                  <MenuItem value="">All Ingredients</MenuItem>
-                  {availableIngredients.map((ingredient) => (
-                    <MenuItem key={ingredient} value={ingredient}>
-                      {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            {/* Ingredients Filter */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
+              <Select
+                labelId="ingredient-filter-label"
+                id="ingredient-filter-select"
+                value={filterMainIngredient}
+                label="Ingredients"
+                onChange={(e) => setFilterMainIngredient(e.target.value)}
+              >
+                <MenuItem value="">All Ingredients</MenuItem>
+                {availableIngredients.map((ingredient) => (
+                  <MenuItem key={ingredient} value={ingredient}>
+                    {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-              {/* Favorites Filter Chip */}
-              <Chip
-                icon={<BookmarkIcon />}
-                label="Favorites"
-                onClick={() => setFilterFavorites(!filterFavorites)}
-                color={filterFavorites ? 'primary' : 'default'}
-                variant="outlined" // Always use outlined to prevent visual flash
-                size="small"
-                sx={{
-                  cursor: 'pointer',
-                  fontWeight: filterFavorites ? 600 : 400,
-                  height: '40px', // Match MUI Select small size height
-                  paddingLeft: '14px', // Match Select small padding
-                  paddingRight: '14px', // Match Select small padding
-                  minWidth: '120px', // Fixed width to prevent layout shift
-                  justifyContent: 'center', // Center content within fixed width
-                  // When selected, use primary border color; otherwise default
-                  borderColor: filterFavorites ? 'primary.main' : 'divider',
-                  '&:hover': {
-                    borderColor: 'text.primary', // Darken border on hover to match MUI Select
-                  },
-                }}
-              />
-            </Box>
+            {/* Favorites Filter Chip */}
+            <Chip
+              icon={<BookmarkIcon />}
+              label="Favorites"
+              onClick={() => setFilterFavorites(!filterFavorites)}
+              color={filterFavorites ? 'primary' : 'default'}
+              variant="outlined" // Always use outlined to prevent visual flash
+              size="small"
+              sx={{
+                cursor: 'pointer',
+                fontWeight: filterFavorites ? 600 : 400,
+                height: '40px', // Match MUI Select small size height
+                paddingLeft: '14px', // Match Select small padding
+                paddingRight: '14px', // Match Select small padding
+                minWidth: '120px', // Fixed width to prevent layout shift
+                justifyContent: 'center', // Center content within fixed width
+                // When selected, use primary border color; otherwise default
+                borderColor: filterFavorites ? 'primary.main' : 'divider',
+                '&:hover': {
+                  borderColor: 'text.primary', // Darken border on hover to match MUI Select
+                },
+              }}
+            />
             </Box>
           </Box>
         </Container>
