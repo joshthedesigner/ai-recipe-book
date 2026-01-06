@@ -319,7 +319,7 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* Header Container - Full Width White Container */}
+      {/* Header Container - Full Width White Container - Sticky */}
       <Box
         sx={{
           bgcolor: '#ffffff',
@@ -328,6 +328,9 @@ export default function BrowsePage() {
           width: '100%',
           display: 'flex',
           alignItems: 'center',
+          position: 'sticky',
+          top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
+          zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
         }}
       >
         <Container maxWidth="xl" sx={{ py: 3 }}>

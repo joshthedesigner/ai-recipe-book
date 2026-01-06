@@ -333,21 +333,21 @@ export default function RecipeDetailPage() {
                     href={recipe.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    sx={{
+              sx={{ 
                       color: 'text.secondary',
                       textDecoration: 'none',
                       textTransform: 'uppercase',
                       fontSize: '0.75rem',
                       letterSpacing: '0.05em',
-                      '&:hover': {
+                '&:hover': {
                         textDecoration: 'underline',
-                      },
-                    }}
-                  >
+                },
+              }}
+            >
                     Via {getSourceName(recipe.source_url)}
                   </Typography>
                   <OpenInNewIcon sx={{ fontSize: '0.875rem', color: 'text.secondary' }} />
-                </Box>
+          </Box>
               )}
               
               {/* Favorite and Delete buttons */}
@@ -371,30 +371,30 @@ export default function RecipeDetailPage() {
                 >
                   {isFavorite ? 'Favorited' : 'Favorite'}
                 </Button>
-                
+
                 {/* Delete button - only for own recipes */}
                 {isOwnRecipe && (
-                  <Button
+                <Button
                     onClick={handleDeleteClick}
                     startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
-                    sx={{
-                      textTransform: 'none',
-                      color: 'text.secondary',
+                  sx={{ 
+                    textTransform: 'none',
+                    color: 'text.secondary',
                       fontSize: '0.875rem',
                       minWidth: 'auto',
                       px: 1,
-                      '&:hover': {
+                    '&:hover': {
                         bgcolor: 'transparent',
                         color: 'error.main',
-                      },
-                    }}
-                  >
+                    },
+                  }}
+                >
                     Delete
-                  </Button>
-                )}
+                </Button>
+              )}
               </Box>
             </Box>
-          </Box>
+      </Box>
 
           {/* Centered Title */}
           <Typography
@@ -416,108 +416,108 @@ export default function RecipeDetailPage() {
               sx={{
                 width: '100%',
                 maxWidth: '900px',
-                aspectRatio: '16/9',
-                borderRadius: 2,
-                overflow: 'hidden',
+              aspectRatio: '16/9',
+              borderRadius: 2,
+              overflow: 'hidden',
                 mb: 5,
                 mx: 'auto',
-                bgcolor: 'black',
+              bgcolor: 'black',
                 position: 'relative',
-              }}
-            >
-              <iframe
-                width="100%"
-                height="100%"
-                src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
-                title={recipe.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                style={{ display: 'block', border: 'none' }}
-              />
-            </Box>
+            }}
+          >
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
+              title={recipe.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{ display: 'block', border: 'none' }}
+            />
+          </Box>
           ) : recipe.image_url ? (
-            <Box
-              sx={{
+          <Box
+            sx={{
                 width: '100%',
                 maxWidth: '900px',
                 height: { xs: 300, sm: 400, md: 500 },
-                borderRadius: 2,
-                overflow: 'hidden',
+              borderRadius: 2,
+              overflow: 'hidden',
                 mb: 5,
                 mx: 'auto',
-                position: 'relative',
-              }}
-            >
-              <img
-                src={recipe.image_url}
-                alt={recipe.title}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
+              position: 'relative',
+            }}
+          >
+            <img
+              src={recipe.image_url}
+              alt={recipe.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
                   display: 'block',
-                }}
-              />
-            </Box>
+              }}
+            />
+          </Box>
           ) : null}
 
-          {/* Tabs: Recipe / Notes */}
+        {/* Tabs: Recipe / Notes */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-              <Tabs
-                value={activeTab}
-                onChange={(e, newValue) => setActiveTab(newValue)}
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
                 centered
-                sx={{
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 500,
-                    minHeight: 48,
-                  },
-                }}
-              >
-              <Tab label="Recipe" value="recipe" />
-              <Tab
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <span>Notes</span>
-                    {notesCount > 0 && (
-                      <Box
-                        sx={{
-                          minWidth: 20,
-                          height: 20,
-                          borderRadius: '10px',
-                          bgcolor: 'primary.main',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          px: 0.75,
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {notesCount > 99 ? '99+' : notesCount}
-                      </Box>
-                    )}
-                  </Box>
-                }
-                value="notes"
-              />
-              </Tabs>
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 500,
+                minHeight: 48,
+              },
+            }}
+          >
+            <Tab label="Recipe" value="recipe" />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>Notes</span>
+                  {notesCount > 0 && (
+                    <Box
+                      sx={{
+                        minWidth: 20,
+                        height: 20,
+                        borderRadius: '10px',
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 0.75,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {notesCount > 99 ? '99+' : notesCount}
+                    </Box>
+                  )}
+                </Box>
+              }
+              value="notes"
+            />
+          </Tabs>
             </Box>
-          </Box>
+        </Box>
 
-          {/* Tab Content */}
-          {activeTab === 'recipe' && (
-            <>
+        {/* Tab Content */}
+        {activeTab === 'recipe' && (
+          <>
               {/* Ingredients and Instructions - Two columns with colored bars */}
-              {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
+        {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
                 <Grid container spacing={17}>
-                {/* Ingredients column */}
-                <Grid item xs={12} md={4}>
+            {/* Ingredients column */}
+            <Grid item xs={12} md={4}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
@@ -531,28 +531,28 @@ export default function RecipeDetailPage() {
                         }}
                       />
                       <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        Ingredients
-                      </Typography>
+                  Ingredients
+                </Typography>
                     </Box>
                     <Box>
-                      {(recipe as any).sections.map((section: any, idx: number) => (
-                        Array.isArray(section.ingredients) && section.ingredients.length > 0 ? (
-                          <Box key={`ing-${idx}`} sx={{ mb: 3 }}>
-                            {section.title && (
+                {(recipe as any).sections.map((section: any, idx: number) => (
+                  Array.isArray(section.ingredients) && section.ingredients.length > 0 ? (
+                    <Box key={`ing-${idx}`} sx={{ mb: 3 }}>
+                      {section.title && (
                               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
-                                {section.title}
-                              </Typography>
-                            )}
+                          {section.title}
+                        </Typography>
+                      )}
                             <List sx={{ pl: 0 }}>
                               {section.ingredients.map((ingredient: string, index: number) => {
                                 const ingredientKey = `section_${idx}_ingredient_${index}`;
                                 const isChecked = checkedIngredients.has(ingredientKey);
                                 return (
-                                  <ListItem
-                                    key={index}
-                                    sx={{
+                          <ListItem
+                            key={index}
+                            sx={{
                                       py: 1.5,
-                                      px: 0,
+                              px: 0,
                                       alignItems: 'flex-start',
                                       display: 'flex',
                                     }}
@@ -563,29 +563,29 @@ export default function RecipeDetailPage() {
                                       size="small"
                                       sx={{ flexShrink: 0, mt: '-4px', mr: 1 }}
                                     />
-                                    <Typography
-                                      variant="body1"
-                                      sx={{
+                            <Typography
+                              variant="body1"
+                              sx={{
                                         flex: 1,
-                                        wordBreak: 'break-word',
-                                        overflowWrap: 'break-word',
+                                wordBreak: 'break-word',
+                                overflowWrap: 'break-word',
                                         lineHeight: 1.6,
                                         textDecoration: isChecked ? 'line-through' : 'none',
                                         color: isChecked ? 'text.secondary' : 'text.primary',
-                                      }}
-                                    >
-                                      {ingredient}
-                                    </Typography>
-                                  </ListItem>
+                              }}
+                            >
+                              {ingredient}
+                            </Typography>
+                          </ListItem>
                                 );
                               })}
-                            </List>
-                          </Box>
-                        ) : null
-                      ))}
+                      </List>
                     </Box>
-                  </Box>
-                </Grid>
+                  ) : null
+                ))}
+                    </Box>
+              </Box>
+            </Grid>
 
                 {/* Instructions column */}
                 <Grid item xs={12} md={8}>
@@ -593,77 +593,77 @@ export default function RecipeDetailPage() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar - using a muted/secondary color */}
                       <Box
-                        sx={{
+              sx={{
                           width: '4px',
                           height: '1.5em',
                           bgcolor: 'text.secondary',
                           borderRadius: '2px',
                           opacity: 0.6,
                           flexShrink: 0,
-                        }}
-                      />
+              }}
+            />
                       <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        Instructions
-                      </Typography>
+                  Instructions
+                </Typography>
                     </Box>
                     <Box>
-                      {(recipe as any).sections.map((section: any, idx: number) => (
-                        Array.isArray(section.steps) && section.steps.length > 0 ? (
-                          <Box key={`steps-${idx}`} sx={{ mb: 3 }}>
-                            {section.title && (
+                {(recipe as any).sections.map((section: any, idx: number) => (
+                  Array.isArray(section.steps) && section.steps.length > 0 ? (
+                    <Box key={`steps-${idx}`} sx={{ mb: 3 }}>
+                      {section.title && (
                               <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1.5 }}>
-                                {section.title}
-                              </Typography>
-                            )}
+                          {section.title}
+                        </Typography>
+                      )}
                             <List sx={{ pl: 0 }}>
-                              {section.steps.map((step: string, index: number) => (
-                                <ListItem
-                                  key={index}
-                                  sx={{
+                        {section.steps.map((step: string, index: number) => (
+                          <ListItem
+                            key={index}
+                            sx={{
                                     py: 1.5,
-                                    px: 0,
-                                    alignItems: 'flex-start',
-                                  }}
-                                >
-                                  <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                                    <Typography
-                                      variant="h6"
-                                      sx={{
-                                        fontWeight: 600,
+                              px: 0,
+                              alignItems: 'flex-start',
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                              <Typography
+                                variant="h6"
+                                sx={{
+                                  fontWeight: 600,
                                         color: 'text.secondary',
                                         minWidth: 32,
-                                        flexShrink: 0,
+                                  flexShrink: 0,
                                         mt: 0.25,
-                                      }}
-                                    >
-                                      {index + 1}.
-                                    </Typography>
-                                    <Typography
-                                      variant="body1"
-                                      sx={{
-                                        flex: 1,
-                                        wordWrap: 'break-word',
-                                        overflowWrap: 'break-word',
+                                }}
+                              >
+                                {index + 1}.
+                              </Typography>
+                              <Typography
+                                variant="body1"
+                                sx={{
+                                  flex: 1,
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word',
                                         lineHeight: 1.6,
-                                      }}
-                                    >
-                                      {step}
-                                    </Typography>
-                                  </Box>
-                                </ListItem>
-                              ))}
-                            </List>
-                          </Box>
-                        ) : null
-                      ))}
+                                }}
+                              >
+                                {step}
+                              </Typography>
+                            </Box>
+                          </ListItem>
+                        ))}
+                      </List>
                     </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-            ) : (
+                  ) : null
+                ))}
+                    </Box>
+              </Box>
+            </Grid>
+          </Grid>
+        ) : (
               <Grid container spacing={17}>
                 {/* Ingredients column */}
-                <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={4}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
@@ -677,8 +677,8 @@ export default function RecipeDetailPage() {
                         }}
                       />
                       <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        Ingredients
-                      </Typography>
+                  Ingredients
+                </Typography>
                     </Box>
                     <Box>
                       <List sx={{ pl: 0 }}>
@@ -686,11 +686,11 @@ export default function RecipeDetailPage() {
                           const ingredientKey = `ingredient_${index}`;
                           const isChecked = checkedIngredients.has(ingredientKey);
                           return (
-                            <ListItem
-                              key={index}
-                              sx={{
+                    <ListItem
+                      key={index}
+                      sx={{
                                 py: 1.5,
-                                px: 0,
+                        px: 0,
                                 alignItems: 'flex-start',
                                 display: 'flex',
                               }}
@@ -701,26 +701,26 @@ export default function RecipeDetailPage() {
                                 size="small"
                                 sx={{ flexShrink: 0, mt: '-4px', mr: 1 }}
                               />
-                              <Typography
-                                variant="body1"
-                                sx={{
+                      <Typography
+                        variant="body1"
+                        sx={{
                                   flex: 1,
-                                  wordBreak: 'break-word',
-                                  overflowWrap: 'break-word',
+                          wordBreak: 'break-word',
+                          overflowWrap: 'break-word',
                                   lineHeight: 1.6,
                                   textDecoration: isChecked ? 'line-through' : 'none',
                                   color: isChecked ? 'text.secondary' : 'text.primary',
-                                }}
-                              >
-                                {ingredient}
-                              </Typography>
-                            </ListItem>
+                        }}
+                      >
+                        {ingredient}
+                      </Typography>
+                    </ListItem>
                           );
                         })}
-                      </List>
+                </List>
                     </Box>
-                  </Box>
-                </Grid>
+              </Box>
+            </Grid>
 
                 {/* Instructions column */}
                 <Grid item xs={12} md={8}>
@@ -728,63 +728,63 @@ export default function RecipeDetailPage() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
                       <Box
-                        sx={{
+              sx={{
                           width: '4px',
                           height: '1.5em',
                           bgcolor: 'text.secondary',
                           borderRadius: '2px',
                           opacity: 0.6,
                           flexShrink: 0,
-                        }}
-                      />
+              }}
+            />
                       <Typography variant="h5" sx={{ fontWeight: 600 }}>
-                        Instructions
-                      </Typography>
+                  Instructions
+                </Typography>
                     </Box>
                     <Box>
                       <List sx={{ pl: 0 }}>
-                        {recipe.steps.map((step, index) => (
-                          <ListItem
-                            key={index}
-                            sx={{
+                  {recipe.steps.map((step, index) => (
+                    <ListItem
+                      key={index}
+                      sx={{
                               py: 1.5,
-                              px: 0,
-                              alignItems: 'flex-start',
-                            }}
-                          >
-                            <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
-                              <Typography
-                                variant="h6"
-                                sx={{
-                                  fontWeight: 600,
+                        px: 0,
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', gap: 2, width: '100%' }}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
                                   color: 'text.secondary',
                                   minWidth: 32,
-                                  flexShrink: 0,
+                            flexShrink: 0,
                                   mt: 0.25,
-                                }}
-                              >
-                                {index + 1}.
-                              </Typography>
-                              <Typography
-                                variant="body1"
-                                sx={{
-                                  flex: 1,
-                                  wordWrap: 'break-word',
-                                  overflowWrap: 'break-word',
+                          }}
+                        >
+                          {index + 1}.
+                        </Typography>
+                        <Typography
+                          variant="body1"
+                          sx={{
+                            flex: 1,
+                            wordWrap: 'break-word',
+                            overflowWrap: 'break-word',
                                   lineHeight: 1.6,
-                                }}
-                              >
-                                {step}
-                              </Typography>
-                            </Box>
-                          </ListItem>
-                        ))}
-                      </List>
+                          }}
+                        >
+                          {step}
+                        </Typography>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
                     </Box>
-                  </Box>
-                </Grid>
-              </Grid>
-            )}
+              </Box>
+            </Grid>
+          </Grid>
+        )}
 
             {/* Cookbook Info */}
             {recipe.cookbook_name && (
