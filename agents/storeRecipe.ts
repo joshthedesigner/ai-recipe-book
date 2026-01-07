@@ -15,7 +15,7 @@ import { Recipe, AgentResponse } from '@/types';
 import { generateEmbedding, createRecipeSearchText } from '@/vector/embed';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { containsURL, extractURL, scrapeRecipe } from '@/utils/recipeScraper';
-import { mergeAutoTags } from '@/utils/autoTag';
+import { mergeAutoTags, getTagReviewStatus } from '@/utils/autoTag';
 import { getUserDefaultGroup, canUserAddRecipes, hasGroupAccess } from '@/utils/permissions';
 import { isYouTubeUrl } from '@/utils/youtubeHelpers';
 import { extractRecipeFromYouTubeVideo } from '@/utils/videoExtractor';
@@ -633,6 +633,11 @@ Would you still like to save this video link so you can easily find it in the fu
         contributor_name: contributorName,
         sections: (extractedRecipe as any).sections || undefined,
       };
+      
+      // Include needsTagReview flag if present
+      if ((extractedRecipe as any).needsTagReview !== undefined) {
+        (previewRecipe as any).needsTagReview = (extractedRecipe as any).needsTagReview;
+      }
 
       const preview = generateRecipePreview(previewRecipe);
 
@@ -814,8 +819,21 @@ async function extractRecipeData(text: string): Promise<any> {
       }
       
       // Apply auto-tagging to ensure all protein/ingredient categories are tagged
-      extracted.tags = mergeAutoTags(extracted.tags || [], extracted.ingredients);
+      // Include title and steps for cuisine detection
+      extracted.tags = mergeAutoTags(
+        extracted.tags || [],
+        extracted.ingredients,
+        extracted.title,
+        extracted.steps
+      );
       console.log('Auto-tags applied:', extracted.tags);
+      
+      // Check if tag review is needed (for cuisine detection)
+      (extracted as any).needsTagReview = getTagReviewStatus(
+        extracted.title,
+        extracted.ingredients,
+        extracted.steps
+      );
     }
     
     return extracted;
