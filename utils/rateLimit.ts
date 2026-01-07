@@ -139,10 +139,15 @@ async function checkRateLimitRedis(
 async function checkRateLimitMemory(
   request: Request,
   options: RateLimitOptions,
-  userId?: string
+  userId?: string,
+  endpointId?: string
 ): Promise<RateLimitResult> {
   const identifier = getIdentifier(request, userId);
-  const key = `${identifier}:${options.windowMs}`;
+  // Include endpointId and maxRequests in key to prevent endpoints from sharing limits
+  // endpointId distinguishes between different endpoints even if they have same config
+  const key = endpointId 
+    ? `${identifier}:${endpointId}:${options.windowMs}:${options.maxRequests}`
+    : `${identifier}:${options.windowMs}:${options.maxRequests}`;
   const now = Date.now();
   const resetTime = now + options.windowMs;
 
@@ -191,7 +196,8 @@ async function checkRateLimitMemory(
 export async function checkRateLimit(
   request: Request,
   options: RateLimitOptions,
-  userId?: string
+  userId?: string,
+  endpointId?: string // Optional endpoint identifier to separate limits
 ): Promise<RateLimitResult> {
   const identifier = getIdentifier(request, userId);
 
@@ -221,7 +227,7 @@ export async function checkRateLimit(
   }
 
   // Fallback to in-memory
-  return checkRateLimitMemory(request, options, userId);
+  return checkRateLimitMemory(request, options, userId, endpointId);
 }
 
 /**

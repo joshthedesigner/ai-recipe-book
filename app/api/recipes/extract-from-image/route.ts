@@ -213,7 +213,8 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await checkRateLimit(
       request,
       RATE_LIMITS.imageExtract,
-      user.id
+      user.id,
+      'image-extract' // Endpoint identifier to separate from other endpoints
     );
 
     if (!rateLimitResult.success) {

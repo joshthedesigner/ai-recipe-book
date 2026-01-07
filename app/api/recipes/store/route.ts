@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await checkRateLimit(
       request,
       RATE_LIMITS.recipeStore,
-      user.id
+      user.id,
+      'recipe-store' // Endpoint identifier to separate from other endpoints
     );
 
     if (!rateLimitResult.success) {
