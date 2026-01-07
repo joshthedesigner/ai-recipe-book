@@ -215,7 +215,7 @@ Return format: ["step 1", "step 2", "step 3"]`;
 function applyAutoTags(recipe: ScrapedRecipe): ScrapedRecipe {
   return {
     ...recipe,
-    tags: mergeAutoTags(recipe.tags, recipe.ingredients),
+    tags: mergeAutoTags(recipe.tags, recipe.ingredients, recipe.title, recipe.steps),
   };
 }
 
