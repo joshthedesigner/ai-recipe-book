@@ -106,31 +106,32 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
       setTimeout(() => reject(new Error('Vision API request timed out after 30 seconds')), 30000);
     });
 
-    const response = await Promise.race([
-      client.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: `What text do you see in this image? Include all numbers, measurements, and details. List everything you can read.`,
-              },
-              {
-                type: 'image_url',
-                image_url: {
-                  url: dataUrl,
-                  detail: 'high',
+    try {
+      const response = await Promise.race([
+        client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'text',
+                  text: `What text do you see in this image? Include all numbers, measurements, and details. List everything you can read.`,
                 },
-              },
-            ],
-          },
-        ],
-        max_tokens: 3000,
-      }),
-      timeoutPromise,
-    ]);
+                {
+                  type: 'image_url',
+                  image_url: {
+                    url: dataUrl,
+                    detail: 'high',
+                  },
+                },
+              ],
+            },
+          ],
+          max_tokens: 3000,
+        }),
+        timeoutPromise,
+      ]);
 
       const finishReason = response.choices[0].finish_reason;
       const wasTruncated = finishReason === 'length';

@@ -375,7 +375,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        message: error instanceof Error ? error.message : 'Sorry, I encountered an error saving the recipe. Please try again.', 'Sorry, I encountered an error saving the recipe. Please try again.',
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error saving the recipe. Please try again.',
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
