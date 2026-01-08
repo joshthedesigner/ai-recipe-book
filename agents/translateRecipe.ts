@@ -40,20 +40,39 @@ function countSteps(text: string): number {
   // Pattern 1: Lines starting with digits followed by period or parenthesis
   const numberedSteps = text.match(/^\s*\d+[\.)]/gm);
   
-  // Pattern 2: "Step N" patterns
+  // Pattern 2: "Step N" patterns (case insensitive)
   const stepKeywords = text.match(/\bstep\s+\d+/gi);
   
   // Pattern 3: Japanese/Chinese step patterns (第N步, Nつ目)
   const asianSteps = text.match(/[第]\d+[步]/g) || text.match(/\d+[つ]\s*[目め]/g);
+  
+  // Pattern 4: Dash/bullet numbered steps (1-, 2-, etc.)
+  const dashNumbered = text.match(/^\s*\d+\s*[-–—]/gm);
+  
+  // Pattern 5: Parentheses numbered steps in middle of line (1) (2) etc
+  const parenSteps = text.match(/\s\(\d+\)\s/g);
+  
+  // Pattern 6: Instructions with line breaks (more lines = more steps)
+  // Only count if we have clear separators
+  const linesWithContent = text.split(/\n\s*\n/).filter(line => {
+    const trimmed = line.trim();
+    return trimmed.length > 20 && !trimmed.match(/^(ingredients?|materials?|serves|prep| cook)/i);
+  });
   
   // Return the highest count (most reliable indicator)
   const counts = [
     numberedSteps?.length || 0,
     stepKeywords?.length || 0,
     asianSteps?.length || 0,
+    dashNumbered?.length || 0,
+    parenSteps?.length || 0,
+    linesWithContent.length, // Fallback for recipes without clear numbering
   ];
   
-  return Math.max(...counts);
+  const maxCount = Math.max(...counts);
+  console.log(`Step count detection - patterns found: numbered=${numberedSteps?.length || 0}, keywords=${stepKeywords?.length || 0}, dashes=${dashNumbered?.length || 0}, parens=${parenSteps?.length || 0}, lines=${linesWithContent.length}, max=${maxCount}`);
+  
+  return maxCount;
 }
 
 /**
@@ -111,7 +130,7 @@ Return ONLY the translated text, no explanations or comments.`;
           },
         ],
         temperature: 0.3,
-        max_tokens: 2500,
+        max_tokens: 4000, // Increased from 2500 to handle longer recipes without truncation
       });
     } catch (apiError: any) {
       // Re-throw with more context for better error handling
@@ -130,32 +149,62 @@ Return ONLY the translated text, no explanations or comments.`;
       throw new Error('Invalid response from translation service');
     }
 
+    // Check if response was truncated due to token limit
+    const finishReason = response.choices[0].finish_reason;
+    if (finishReason === 'length') {
+      console.warn('⚠️ Translation was truncated due to token limit (max_tokens reached)');
+      // We'll handle this in the retry logic with higher max_tokens
+    }
+
     let translatedText = response.choices[0].message?.content?.trim();
     
     if (!translatedText || translatedText.length === 0) {
       throw new Error('Translation returned empty result');
     }
 
-    // Fallback to original if translation is suspiciously short (likely truncated or failed)
-    if (translatedText.length < originalText.length * 0.1) {
-      console.warn('Translation result suspiciously short, may be incomplete');
-    }
-
     let translatedStepCount = countSteps(translatedText);
     
     console.log(`First translation has ${translatedStepCount} detected steps`);
 
-    // If step count doesn't match and we have steps, retry with explicit instruction
-    if (originalStepCount > 0 && translatedStepCount < originalStepCount) {
-      console.log(`Step count mismatch (${translatedStepCount}/${originalStepCount}), retrying...`);
+    // Retry if:
+    // 1. Step count doesn't match, OR
+    // 2. Response was truncated (finish_reason === 'length'), OR
+    // 3. Translation is significantly shorter (less than 50% of original)
+    const translationRatio = translatedText.length / originalText.length;
+    const wasTruncated = finishReason === 'length';
+    const isTooShort = translationRatio < 0.5;
+    const stepCountMismatch = originalStepCount > 0 && translatedStepCount < originalStepCount;
+
+    // Log warning if suspicious
+    if (translationRatio < 0.1) {
+      console.warn('Translation result suspiciously short, may be incomplete');
+    } else if (wasTruncated || isTooShort || stepCountMismatch) {
+      console.warn(`Translation may be incomplete: finish_reason=${finishReason}, ratio=${translationRatio.toFixed(2)}, steps=${translatedStepCount}/${originalStepCount}`);
+    }
+
+    if (stepCountMismatch || wasTruncated || isTooShort) {
+      let retryReason = '';
+      if (wasTruncated) {
+        retryReason = 'truncated';
+        console.log(`Translation was truncated (finish_reason=length), retrying with higher token limit...`);
+      } else if (stepCountMismatch) {
+        retryReason = 'step count mismatch';
+        console.log(`Step count mismatch (${translatedStepCount}/${originalStepCount}), retrying...`);
+      } else if (isTooShort) {
+        retryReason = 'too short';
+        console.log(`Translation too short (${Math.round(translationRatio * 100)}% of original), retrying...`);
+      }
       
-      const retryPrompt = `Your previous translation was incomplete. 
-
-The original recipe has ${originalStepCount} cooking steps, but your translation only included ${translatedStepCount} steps.
-
-Please re-translate the COMPLETE recipe, ensuring ALL ${originalStepCount} steps are included. Do not skip or summarize any steps.
-
-Original text to translate:`;
+      let retryPrompt = '';
+      if (wasTruncated) {
+        retryPrompt = `Your previous translation was cut off due to length limits. Please translate the COMPLETE recipe from start to finish. Include every single step, ingredient, and instruction. Do not stop early.`;
+      } else if (stepCountMismatch) {
+        retryPrompt = `Your previous translation was incomplete. The original recipe has ${originalStepCount} cooking steps, but your translation only included ${translatedStepCount} steps. Please re-translate the COMPLETE recipe, ensuring ALL ${originalStepCount} steps are included.`;
+      } else if (isTooShort) {
+        retryPrompt = `Your previous translation was too short (only ${Math.round(translationRatio * 100)}% of original length). Please translate the COMPLETE recipe with all details, steps, and ingredients included.`;
+      } else {
+        retryPrompt = `Please re-translate the COMPLETE recipe, ensuring nothing is missing.`;
+      }
 
       try {
         response = await client.chat.completions.create({
@@ -175,12 +224,34 @@ Original text to translate:`;
             },
           ],
           temperature: 0.3,
-          max_tokens: 2500,
+          max_tokens: 6000, // Significantly increased for retry to prevent truncation
         });
 
+        const retryFinishReason = response.choices[0].finish_reason;
         const retryTranslatedText = response.choices[0].message?.content?.trim();
+        
         if (retryTranslatedText && retryTranslatedText.length > 0) {
-          translatedText = retryTranslatedText;
+          // Only use retry if it's better (more steps or longer)
+          const retryStepCount = countSteps(retryTranslatedText);
+          const retryRatio = retryTranslatedText.length / originalText.length;
+          
+          // Use retry if it's clearly better (more steps or significantly longer)
+          // Always use retry if it wasn't truncated but original was
+          const retryIsBetter = retryStepCount > translatedStepCount || 
+                               (retryStepCount >= translatedStepCount && retryRatio > translationRatio + 0.1) ||
+                               (wasTruncated && retryFinishReason !== 'length');
+          
+          if (retryIsBetter) {
+            translatedText = retryTranslatedText;
+            translatedStepCount = retryStepCount;
+            console.log(`✅ Retry translation is better: ${retryStepCount} steps (was ${translatedStepCount}), ${Math.round(retryRatio * 100)}% length (was ${Math.round(translationRatio * 100)}%)`);
+          } else {
+            console.warn(`Retry translation not better, keeping first attempt (retry: ${retryStepCount} steps/${Math.round(retryRatio * 100)}% vs original: ${translatedStepCount} steps/${Math.round(translationRatio * 100)}%)`);
+          }
+          
+          if (retryFinishReason === 'length') {
+            console.warn('⚠️ Retry translation also truncated - recipe may be very long');
+          }
         } else {
           console.warn('Retry translation returned empty, keeping first attempt');
         }
