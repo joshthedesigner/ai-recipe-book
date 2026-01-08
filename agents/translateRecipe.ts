@@ -86,7 +86,7 @@ CRITICAL RULES:
 Return ONLY the translated text, no explanations or comments.`;
 
     let response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
       messages: [
         {
           role: 'system',
@@ -119,7 +119,7 @@ Please re-translate the COMPLETE recipe, ensuring ALL ${originalStepCount} steps
 Original text to translate:`;
 
       response = await client.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
         messages: [
           {
             role: 'system',
