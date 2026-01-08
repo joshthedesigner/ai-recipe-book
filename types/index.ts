@@ -47,6 +47,7 @@ export interface Recipe {
   is_new?: boolean; // Added by feed API to indicate new recipe since last view
   sections?: RecipeSection[]; // Optional structured sections when detected
   is_favorite?: boolean; // Whether the current user has favorited this recipe
+  embedding?: number[]; // Optional embedding vector (reused from review to confirmation)
 }
 
 // ========================================

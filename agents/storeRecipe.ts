@@ -178,18 +178,27 @@ export async function saveConfirmedRecipe(
       };
     }
 
-    // Generate embedding
-    let embedding;
-    try {
-      const searchText = createRecipeSearchText(recipe);
-      embedding = await generateEmbedding(searchText);
-    } catch (embedError) {
-      console.error('Error generating embedding:', embedError);
-      return {
-        success: false,
-        message: 'Sorry, I had trouble processing the recipe for search.',
-        error: embedError instanceof Error ? embedError.message : 'Embedding failed',
-      };
+    // Generate embedding (or reuse if already exists from review mode)
+    let embedding: number[] | undefined;
+    
+    if (recipe.embedding && Array.isArray(recipe.embedding) && recipe.embedding.length > 0) {
+      // Reuse embedding from review mode
+      console.log('Reusing embedding from review mode');
+      embedding = recipe.embedding;
+    } else {
+      // Generate new embedding
+      try {
+        const searchText = createRecipeSearchText(recipe);
+        embedding = await generateEmbedding(searchText);
+        console.log('Generated new embedding');
+      } catch (embedError) {
+        console.error('Error generating embedding:', embedError);
+        return {
+          success: false,
+          message: 'Sorry, I had trouble processing the recipe for search.',
+          error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+        };
+      }
     }
 
     // Check authentication

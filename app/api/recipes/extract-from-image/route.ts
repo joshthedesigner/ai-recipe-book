@@ -80,9 +80,16 @@ async function preprocessImage(buffer: Buffer, mimeType: string): Promise<{ buff
 }
 
 // Extract text from image using OpenAI Vision
-async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Promise<string> {
+async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Promise<{ text: string; wasTruncated: boolean }> {
   try {
     const client = getOpenAIClient();
+    
+    // Validate buffer size before base64 encoding
+    const MAX_BASE64_SIZE = 20 * 1024 * 1024; // 20MB base64 limit (roughly 15MB original)
+    const estimatedBase64Size = Math.ceil(imageBuffer.length * 1.33);
+    if (estimatedBase64Size > MAX_BASE64_SIZE) {
+      throw new Error('Image is too large to process. Please use a smaller image.');
+    }
     
     // Convert to base64
     const base64Image = bufferToBase64(imageBuffer);
@@ -94,54 +101,94 @@ async function extractTextFromImage(imageBuffer: Buffer, mimeType: string): Prom
       base64Length: base64Image.length,
     });
 
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'user',
-          content: [
-            {
-              type: 'text',
-              text: `What text do you see in this image? Include all numbers, measurements, and details. List everything you can read.`,
-            },
-            {
-              type: 'image_url',
-              image_url: {
-                url: dataUrl,
-                detail: 'high',
+    // Add timeout using Promise.race
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Vision API request timed out after 30 seconds')), 30000);
+    });
+
+    const response = await Promise.race([
+      client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: `What text do you see in this image? Include all numbers, measurements, and details. List everything you can read.`,
               },
-            },
-          ],
-        },
-      ],
-      max_tokens: 3000,
-    });
+              {
+                type: 'image_url',
+                image_url: {
+                  url: dataUrl,
+                  detail: 'high',
+                },
+              },
+            ],
+          },
+        ],
+        max_tokens: 3000,
+      }),
+      timeoutPromise,
+    ]);
 
-    console.log('🔍 Vision API response:', {
-      model: response.model,
-      finishReason: response.choices[0].finish_reason,
-      contentLength: response.choices[0].message.content?.length,
-      contentPreview: response.choices[0].message.content?.substring(0, 150),
-    });
+      const finishReason = response.choices[0].finish_reason;
+      const wasTruncated = finishReason === 'length';
 
-    const extractedText = response.choices[0].message.content;
-    
-    if (!extractedText || extractedText.trim().length === 0) {
-      throw new Error('No text found in image');
+      console.log('🔍 Vision API response:', {
+        model: response.model,
+        finishReason,
+        wasTruncated,
+        contentLength: response.choices[0].message.content?.length,
+        contentPreview: response.choices[0].message.content?.substring(0, 150),
+      });
+
+      const extractedText = response.choices[0].message.content;
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text found in image');
+      }
+
+      // Check if model refused
+      if (extractedText.toLowerCase().includes("i'm unable to") || 
+          extractedText.toLowerCase().includes("i cannot") ||
+          extractedText.toLowerCase().includes("i can't")) {
+        console.error('🔴 Vision API REFUSED to extract text:', extractedText);
+        throw new Error('Vision API refused to process this image. The image might be unclear or contain unsupported content.');
+      }
+
+      if (wasTruncated) {
+        console.warn('⚠️ Vision API response was truncated due to token limit');
+      }
+
+      console.log('✅ Text extracted successfully, length:', extractedText.length);
+      return { text: extractedText, wasTruncated };
+    } catch (apiError: any) {
+      // Re-throw with more context
+      if (apiError?.message?.includes('timed out')) {
+        throw new Error('Vision API request timed out. The image might be too large or complex. Please try a smaller image.');
+      } else if (apiError?.status === 429) {
+        throw new Error('Vision API rate limit exceeded. Please wait a moment and try again.');
+      } else if (apiError?.status === 400) {
+        throw new Error('Invalid image format or size. Please try a different image.');
+      }
+      
+      throw apiError;
     }
-
-    // Check if model refused
-    if (extractedText.toLowerCase().includes("i'm unable to") || 
-        extractedText.toLowerCase().includes("i cannot") ||
-        extractedText.toLowerCase().includes("i can't")) {
-      console.error('🔴 Vision API REFUSED to extract text:', extractedText);
-      throw new Error('Vision API refused to process this image. The image might be unclear or contain unsupported content.');
-    }
-
-    console.log('✅ Text extracted successfully, length:', extractedText.length);
-    return extractedText;
   } catch (error) {
     console.error('Error extracting text from image:', error);
+    
+    if (error instanceof Error) {
+      // Preserve specific error messages
+      if (error.message.includes('timeout') || error.message.includes('timed out')) {
+        throw error;
+      } else if (error.message.includes('rate limit')) {
+        throw error;
+      } else if (error.message.includes('too large')) {
+        throw error;
+      }
+    }
+    
     throw new Error('This image might be too low resolution or text is unclear. Try a sharper or better-lit image.');
   }
 }
@@ -151,27 +198,45 @@ async function detectLanguage(text: string): Promise<string> {
   try {
     const client = getOpenAIClient();
     
-    const response = await client.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: 'Detect the language of the provided text. Return ONLY the language code (e.g., "en", "es", "fr", "zh", "ja", "ko", etc.). Return "en" for English.',
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 10,
+    // Add timeout using Promise.race
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Language detection timed out')), 10000);
     });
 
-    const languageCode = response.choices[0].message.content?.trim().toLowerCase() || 'en';
-    return languageCode;
+    try {
+      const response = await Promise.race([
+        client.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: 'Detect the language of the provided text. Return ONLY the language code (e.g., "en", "es", "fr", "zh", "ja", "ko", etc.). Return "en" for English.',
+            },
+            {
+              role: 'user',
+              content: text,
+            },
+          ],
+          temperature: 0.3,
+          max_tokens: 10,
+        }),
+        timeoutPromise,
+      ]);
+
+      const languageCode = response.choices[0].message.content?.trim().toLowerCase() || 'en';
+      return languageCode;
+    } catch (apiError: any) {
+      if (apiError?.message?.includes('timed out')) {
+        console.warn('Language detection timed out, defaulting to English');
+        return 'en';
+      }
+      
+      throw apiError;
+    }
   } catch (error) {
     console.error('Error detecting language:', error);
-    return 'unknown';
+    // Default to English on error rather than 'unknown'
+    return 'en';
   }
 }
 
@@ -288,21 +353,75 @@ export async function POST(request: NextRequest) {
     }
 
     // Preprocess image (convert HEIC, resize if needed)
-    const { buffer: processedBuffer, mimeType } = await preprocessImage(buffer, file.type);
+    let processedBuffer: Buffer;
+    let mimeType: string;
+    try {
+      const preprocessResult = await preprocessImage(buffer, file.type);
+      processedBuffer = preprocessResult.buffer;
+      mimeType = preprocessResult.mimeType;
+    } catch (preprocessError) {
+      console.error('Image preprocessing failed:', preprocessError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: preprocessError instanceof Error 
+            ? preprocessError.message 
+            : 'Failed to process image. Please try a different format or smaller image.' 
+        },
+        { status: 400 }
+      );
+    }
 
     // Extract text using OCR
-    const extractedText = await extractTextFromImage(processedBuffer, mimeType);
+    let extractedText: string;
+    let ocrWasTruncated: boolean;
+    try {
+      const ocrResult = await extractTextFromImage(processedBuffer, mimeType);
+      extractedText = ocrResult.text;
+      ocrWasTruncated = ocrResult.wasTruncated;
+    } catch (ocrError) {
+      console.error('OCR extraction failed:', ocrError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: ocrError instanceof Error 
+            ? ocrError.message 
+            : 'Failed to extract text from image. Please try a clearer image.' 
+        },
+        { status: 500 }
+      );
+    }
+
+    // Validate extracted text
+    if (!extractedText || extractedText.trim().length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No text found in image. Please ensure the image contains readable text.' },
+        { status: 400 }
+      );
+    }
 
     // Detect language
-    const languageCode = await detectLanguage(extractedText);
+    let languageCode: string;
+    try {
+      languageCode = await detectLanguage(extractedText);
+    } catch (langError) {
+      console.error('Language detection failed:', langError);
+      // Default to English on error
+      languageCode = 'en';
+    }
+    
     const languageName = getLanguageName(languageCode);
-
     console.log(`Detected language: ${languageName} (${languageCode})`);
 
     // If not English and translation requested, translate using translation agent
     let finalText = extractedText;
     let translationStatus = 'none';
     let translationWarning: string | undefined;
+    
+    // Add OCR truncation warning if applicable
+    if (ocrWasTruncated) {
+      translationWarning = 'Note: Some text may have been cut off due to length limits.';
+    }
 
     if (languageCode !== 'en' && shouldTranslate) {
       console.log('Translating to English using translation agent...');
@@ -366,6 +485,7 @@ export async function POST(request: NextRequest) {
         translation_status: translationStatus,
         translation_warning: translationWarning,
         needs_translation: languageCode !== 'en' && !shouldTranslate,
+        ocr_truncated: ocrWasTruncated,
       },
     }, {
       headers,
@@ -373,7 +493,36 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing image:', error);
-          return errorResponse(error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      
+      if (errorMsg.includes('timeout')) {
+        return NextResponse.json(
+          { success: false, error: 'Request timed out. The image might be too large. Please try a smaller image.' },
+          { status: 504 }
+        );
+      } else if (errorMsg.includes('rate limit')) {
+        return NextResponse.json(
+          { success: false, error: 'Rate limit exceeded. Please wait a moment and try again.' },
+          { status: 429 }
+        );
+      } else if (errorMsg.includes('too large') || errorMsg.includes('file size')) {
+        return NextResponse.json(
+          { success: false, error: error.message },
+          { status: 400 }
+        );
+      } else if (errorMsg.includes('unauthorized') || errorMsg.includes('auth')) {
+        return NextResponse.json(
+          { success: false, error: 'Authentication failed. Please log in again.' },
+          { status: 401 }
+        );
+      }
+    }
+    
+    // Fallback to generic error handler
+    return errorResponse(error);
   }
 }
 

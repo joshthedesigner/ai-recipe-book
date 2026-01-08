@@ -320,45 +320,62 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: 'confirm',
-          userId: user?.id,
-          confirmRecipe: pendingRecipe,
-          groupId: activeGroup?.id || null,
-        }),
-      });
+      // Add timeout to confirmation request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
-      const data = await response.json();
-
-      if (data.success) {
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          message: '✅ Recipe saved! Would you like to add another?',
-          timestamp: new Date().toISOString(),
-          chatResponse: data.response,
-        };
-
-        setMessages((prev) => [...prev, assistantMessage]);
-        setPendingRecipe(null);
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'confirm',
+            userId: user?.id,
+            confirmRecipe: pendingRecipe,
+            groupId: activeGroup?.id || null,
+          }),
+          signal: controller.signal,
+        });
         
-        if (onRecipeAdded) {
-          onRecipeAdded();
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (data.success) {
+          const assistantMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            message: '✅ Recipe saved! Would you like to add another?',
+            timestamp: new Date().toISOString(),
+            chatResponse: data.response,
+          };
+
+          setMessages((prev) => [...prev, assistantMessage]);
+          setPendingRecipe(null);
+          
+          if (onRecipeAdded) {
+            onRecipeAdded();
+          }
+        } else {
+          throw new Error(data.error || 'Failed to save recipe');
         }
-      } else {
-        throw new Error(data.error || 'Failed to save recipe');
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('timeout'))) {
+          throw new Error('Request timed out. Please try again.');
+        }
+        
+        throw fetchError;
       }
     } catch (error) {
       console.error('Error confirming recipe:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        message: 'Sorry, I encountered an error saving the recipe. Please try again.',
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error saving the recipe. Please try again.', 'Sorry, I encountered an error saving the recipe. Please try again.',
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -436,31 +453,42 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       let detectedLanguage = 'en';
       let detectedLanguageName = 'English';
       let hasTranslationWarning = false;
+      let hasOcrTruncation = false;
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+      // Process images in parallel with concurrency limit (max 3 at a time)
+      const MAX_CONCURRENT = 3;
+      const processImage = async (file: File, index: number) => {
         const formData = new FormData();
         formData.append('image', file);
         formData.append('translate', translate.toString());
+
+        // Add timeout to fetch (45 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
         try {
           const response = await fetch('/api/recipes/extract-from-image', {
             method: 'POST',
             body: formData,
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
 
           // Handle HTTP errors
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
             
             if (response.status === 429) {
-              throw new Error(`Rate limit exceeded. Please wait a moment and try again. (Image ${i + 1}/${files.length})`);
+              throw new Error(`Rate limit exceeded. Please wait a moment and try again. (Image ${index + 1}/${files.length})`);
             } else if (response.status === 413) {
-              throw new Error(`Image ${i + 1}/${files.length} is too large. Maximum file size is 10MB.`);
+              throw new Error(`Image ${index + 1}/${files.length} is too large. Maximum file size is 10MB.`);
+            } else if (response.status === 504) {
+              throw new Error(`Request timed out for image ${index + 1}/${files.length}. The image might be too large.`);
             } else if (response.status >= 500) {
-              throw new Error(`Server error processing image ${i + 1}/${files.length}. Please try again.`);
+              throw new Error(`Server error processing image ${index + 1}/${files.length}. Please try again.`);
             } else {
-              throw new Error(errorData.error || `Failed to process image ${i + 1}/${files.length}`);
+              throw new Error(errorData.error || `Failed to process image ${index + 1}/${files.length}`);
             }
           }
 
@@ -470,32 +498,34 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
             // Provide more specific error messages
             const errorMsg = data.error || 'Failed to extract recipe from image';
             if (errorMsg.includes('rate limit')) {
-              throw new Error(`Rate limit exceeded for image ${i + 1}/${files.length}. Please wait and try again.`);
+              throw new Error(`Rate limit exceeded for image ${index + 1}/${files.length}. Please wait and try again.`);
             } else if (errorMsg.includes('too large') || errorMsg.includes('file size')) {
-              throw new Error(`Image ${i + 1}/${files.length} is too large. Maximum size is 10MB.`);
+              throw new Error(`Image ${index + 1}/${files.length} is too large. Maximum size is 10MB.`);
+            } else if (errorMsg.includes('timeout') || errorMsg.includes('timed out')) {
+              throw new Error(`Request timed out for image ${index + 1}/${files.length}. Please try a smaller image.`);
             } else {
-              throw new Error(`Error processing image ${i + 1}/${files.length}: ${errorMsg}`);
+              throw new Error(`Error processing image ${index + 1}/${files.length}: ${errorMsg}`);
             }
           }
 
-          const { raw_text, translated_text, language, language_name, needs_translation, translation_warning, translation_status } = data.data;
+          const { raw_text, translated_text, language, language_name, needs_translation, translation_warning, translation_status, ocr_truncated } = data.data;
 
           // Validate that we have text data
           if (!raw_text || raw_text.trim().length === 0) {
-            throw new Error(`No text found in image ${i + 1}/${files.length}. Please ensure the image contains readable text.`);
+            throw new Error(`No text found in image ${index + 1}/${files.length}. Please ensure the image contains readable text.`);
           }
 
-          // Handle translation status
-          if (translate && translation_status === 'failed' && translation_warning) {
-            console.warn(`Translation failed for image ${i + 1}:`, translation_warning);
-            // Continue with original text but log the warning
+          // Track OCR truncation
+          if (ocr_truncated) {
+            hasOcrTruncation = true;
+            console.warn(`OCR truncation detected for image ${index + 1}`);
           }
 
-        // Store language from first non-English image
-        if (needs_translation && detectedLanguage === 'en') {
-          detectedLanguage = language;
-          detectedLanguageName = language_name;
-        }
+          // Store language from first non-English image
+          if (needs_translation && detectedLanguage === 'en') {
+            detectedLanguage = language;
+            detectedLanguageName = language_name;
+          }
 
           // Store translation warning if present
           if (translation_warning) {
@@ -504,31 +534,87 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           }
 
           // Collect extracted or translated text
-          // Use translated text if available and translation was successful, otherwise use raw text
-          const textToAdd = (translate && translated_text && translation_status === 'completed') 
+          // Fix: Only use translated text if status is 'completed', otherwise use raw_text
+          // If translation_status is 'failed', we should NOT use translated_text even if it exists
+          const textToAdd = (translate && translation_status === 'completed' && translated_text && translated_text.trim().length > 0)
             ? translated_text 
             : raw_text;
-          extractedTexts.push(textToAdd);
+          
+          // Store results in correct order by index
+          extractedTexts[index] = textToAdd;
+          
+          // Update shared state variables (these need to be handled carefully in parallel)
+          if (ocr_truncated) {
+            hasOcrTruncation = true;
+          }
+          if (needs_translation && detectedLanguage === 'en') {
+            detectedLanguage = language;
+            detectedLanguageName = language_name;
+          }
+          if (translation_warning) {
+            hasTranslationWarning = true;
+          }
 
+          return { success: true, index };
         } catch (imageError) {
+          clearTimeout(timeoutId);
+          
+          // Handle timeout specifically
+          if (imageError instanceof Error && (imageError.name === 'AbortError' || imageError.message.includes('timeout'))) {
+            throw new Error(`Request timed out for image ${index + 1}/${files.length}. Please try a smaller image.`);
+          }
+          
           // Handle errors for individual images
-          console.error(`Error processing image ${i + 1}/${files.length}:`, imageError);
+          console.error(`Error processing image ${index + 1}/${files.length}:`, imageError);
           
           const errorMessage = imageError instanceof Error 
             ? imageError.message 
-            : `Failed to process image ${i + 1}/${files.length}`;
+            : `Failed to process image ${index + 1}/${files.length}`;
           
-          // If processing multiple images, show which one failed
-          if (files.length > 1) {
-            throw new Error(`${errorMessage}. Failed on image ${i + 1} of ${files.length}.`);
-          } else {
-            throw imageError; // Re-throw for single image to preserve original error
+          throw new Error(errorMessage);
+        }
+      };
+
+      // Process images in batches with concurrency limit
+      const processBatch = async (batch: { file: File; index: number }[]) => {
+        return Promise.allSettled(
+          batch.map(({ file, index }) => processImage(file, index))
+        );
+      };
+
+      // Split files into batches
+      const batches: { file: File; index: number }[][] = [];
+      for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
+        batches.push(
+          files.slice(i, i + MAX_CONCURRENT).map((file, batchIndex) => ({
+            file,
+            index: i + batchIndex,
+          }))
+        );
+      }
+
+      // Process batches sequentially, but images within batch in parallel
+      for (const batch of batches) {
+        const results = await processBatch(batch);
+        
+        // Check for failures in this batch
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+          const firstFailure = failures[0];
+          if (firstFailure.status === 'rejected') {
+            const error = firstFailure.reason;
+            throw new Error(error?.message || 'Failed to process one or more images');
           }
         }
       }
 
-      // Combine all extracted texts
-      const combinedText = extractedTexts.join('\n\n---\n\n');
+      // Combine all extracted texts (filter out undefined entries from parallel processing)
+      const combinedText = extractedTexts.filter(Boolean).join('\n\n---\n\n');
+      
+      // Validate we have at least some text
+      if (!combinedText || combinedText.trim().length === 0) {
+        throw new Error('No text could be extracted from any of the images. Please try clearer images.');
+      }
 
       // If any image needs translation and we haven't translated yet, ask user
       if (detectedLanguage !== 'en' && !translate) {
@@ -550,9 +636,16 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         
         let sourceMessage = 'Great! I extracted the recipe from your photo. 📖';
         
-        // Add warning if translation was incomplete
+        // Add warnings if needed
+        const warnings: string[] = [];
+        if (hasOcrTruncation) {
+          warnings.push('⚠️ **Note:** Some text may have been cut off due to length limits.');
+        }
         if (hasTranslationWarning && translate) {
-          sourceMessage += '\n\n⚠️ **Note:** Translation may be incomplete. Please review the recipe carefully before saving.';
+          warnings.push('⚠️ **Note:** Translation may be incomplete. Please review the recipe carefully before saving.');
+        }
+        if (warnings.length > 0) {
+          sourceMessage += '\n\n' + warnings.join('\n\n');
         }
         
         const sourceText = 'Do you want to share a source? You can add a cookbook, friend\'s name, or anything else.';
@@ -664,23 +757,41 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         groupId: activeGroup?.id,
       });
 
-      // Store the recipe with cookbook info
-      const storeResponse = await fetch('/api/recipes/store', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: pendingCookbookInfo!.extractedText,
-          userId: user?.id,
-          reviewMode: true,
-          cookbookName: cookbookName || null,
-          cookbookPage: cookbookPage || null,
-          groupId: activeGroup?.id || null,
-        }),
-      });
+      // Validate extracted text before sending
+      if (!pendingCookbookInfo?.extractedText || pendingCookbookInfo.extractedText.trim().length === 0) {
+        throw new Error('No recipe text available. Please try uploading the image again.');
+      }
 
-      const storeData = await storeResponse.json();
+      const extractedText = pendingCookbookInfo.extractedText;
+      const MAX_MESSAGE_LENGTH = 50000;
+      if (extractedText.length > MAX_MESSAGE_LENGTH) {
+        throw new Error(`Recipe text is too long (${extractedText.length} characters). Maximum is ${MAX_MESSAGE_LENGTH} characters.`);
+      }
+
+      // Store the recipe with cookbook info (with timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+      try {
+        const storeResponse = await fetch('/api/recipes/store', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: extractedText,
+            userId: user?.id,
+            reviewMode: true,
+            cookbookName: cookbookName || null,
+            cookbookPage: cookbookPage || null,
+            groupId: activeGroup?.id || null,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        const storeData = await storeResponse.json();
       
       console.log('🟡 Store API response:', {
         success: storeData.success,
@@ -716,9 +827,18 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         }
 
         setPendingCookbookInfo(null);
-      } else {
-        console.error('🔴 Store failed:', storeData.error);
-        throw new Error(storeData.error || 'Failed to process recipe');
+        } else {
+          console.error('🔴 Store failed:', storeData.error);
+          throw new Error(storeData.error || 'Failed to process recipe');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('timeout'))) {
+          throw new Error('Request timed out. The recipe might be too long. Please try again.');
+        }
+        
+        throw fetchError;
       }
     } catch (error) {
       console.error('Error processing cookbook info:', error);
@@ -729,7 +849,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-      showToast('Failed to save recipe. Please try again.', 'error');
+      showToast(error instanceof Error ? error.message : 'Failed to save recipe. Please try again.', 'error');
       setPendingCookbookInfo(null);
     } finally {
       setIsLoading(false);
