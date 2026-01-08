@@ -76,50 +76,14 @@ export async function translateRecipe(
     
     const translationPrompt = `Translate this complete recipe from ${sourceLanguage} to ${targetLanguage}.
 
-🚫 CRITICAL PROHIBITIONS:
-- DO NOT summarize, condense, or shorten any content
-- DO NOT combine multiple steps into one
-- DO NOT skip any ingredients, steps, or instructions
-- DO NOT add explanatory text or translations in parentheses
-- DO NOT paraphrase - translate directly and literally
-- DO NOT change the recipe structure or format
+CRITICAL RULES:
+- Preserve ALL cooking steps, ingredients, measurements, and notes
+- Maintain original structure and numbering
+- Do not skip, summarize, or combine any sections
+- Keep all quantities exact (e.g., "200g" stays "200g", not "about 200g")
+- Preserve cooking temperatures and times exactly
 
-✅ PRESERVATION RULES:
-
-MEASUREMENTS & QUANTITIES:
-- Keep ALL numbers and units EXACTLY as written: "200g" → "200g" (NOT "200 grams" or "about 200g")
-- Preserve fractions precisely: "1/2 cup" → "1/2 cup" (NOT "half cup")
-- Maintain temperature formats: "180°C" → "180°C" (or "350°F" if converted, but keep number exact)
-- Keep time formats: "15 minutes" stays "15 minutes" (NOT "about 15 minutes")
-- Preserve ranges: "3-4 minutes" → "3-4 minutes"
-- Keep percentages: "50% humidity" → "50% humidity"
-
-RECIPE STRUCTURE:
-- Maintain original section order (title, ingredients, steps, notes)
-- Preserve all formatting: line breaks, numbering, bullet points
-- Keep original numbering system (1, 2, 3... or Step 1, Step 2...)
-- Preserve ingredient list structure (one per line or bullet format)
-- Maintain any subsections or categories
-
-INGREDIENTS:
-- Translate ingredient names naturally but keep measurements exact
-- Preserve preparation notes: "1 large onion, diced" → "1 large onion, diced"
-- Keep optional ingredients marked: "(optional)" stays "(optional)"
-- Preserve brand names or specific varieties if mentioned
-- Maintain ingredient order as in original
-
-COOKING INSTRUCTIONS:
-- Translate technique names accurately (simmer, sauté, braise, etc.)
-- Preserve all timing information: "for 10 minutes" → "for 10 minutes"
-- Keep temperature references exact: "at 350°F" → "at 350°F"
-- Maintain cooking cues: "until golden brown" → "until golden brown"
-- Preserve serving suggestions if present
-
-📝 OUTPUT REQUIREMENTS:
-- Return ONLY the translated recipe text
-- No explanations, comments, or notes about the translation
-- No markdown formatting unless present in original
-- Maintain the same text structure as the original`;
+Return ONLY the translated text, no explanations or comments.`;
 
     let response = await client.chat.completions.create({
       model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
@@ -150,18 +114,7 @@ COOKING INSTRUCTIONS:
 
 The original recipe has ${originalStepCount} cooking steps, but your translation only included ${translatedStepCount} steps.
 
-🚫 CRITICAL: You MUST include ALL ${originalStepCount} steps. Do NOT:
-- Skip any steps
-- Summarize or combine steps
-- Condense multiple steps into one
-
-✅ You MUST:
-- Translate every single step individually
-- Preserve all measurements, times, and temperatures exactly
-- Maintain the original structure and numbering
-- Include every ingredient and instruction
-
-Please re-translate the COMPLETE recipe with ALL ${originalStepCount} steps included.
+Please re-translate the COMPLETE recipe, ensuring ALL ${originalStepCount} steps are included. Do not skip or summarize any steps.
 
 Original text to translate:`;
 
