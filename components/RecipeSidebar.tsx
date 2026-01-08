@@ -15,6 +15,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageIcon from '@mui/icons-material/Image';
 import MessageBubble from '@/components/MessageBubble';
+import ListWithHeader from '@/components/ListWithHeader';
 import RecipeCard from '@/components/RecipeCard';
 import { ChatResponse, Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +30,10 @@ interface Message {
   message: string;
   timestamp: string;
   chatResponse?: ChatResponse;
+  listWithHeader?: {
+    header?: string;
+    items: string[];
+  }; // Optional list with header component props
 }
 
 interface RecipeSidebarProps {
@@ -192,14 +197,14 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
   }, [messages]);
 
   const handleSend = async () => {
-    // Check if we have either text or images
-    if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
-
-    // If we're waiting for cookbook info, process it
+    // If we're waiting for source info, allow empty input to skip
     if (pendingCookbookInfo) {
       await processCookbookInfo(input.trim());
       return;
     }
+
+    // Check if we have either text or images
+    if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
 
     // If images are queued, process them
     if (imageQueue.length > 0) {
@@ -469,23 +474,33 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         };
         setMessages((prev) => [...prev, assistantMessage]);
       } else {
-        // Ask for cookbook information
+        // Ask for source information
         setPendingCookbookInfo({ extractedText: combinedText });
         
-        let cookbookMessage = 'Great! I extracted the recipe from your photo. 📖';
+        let sourceMessage = 'Great! I extracted the recipe from your photo. 📖';
         
         // Add warning if translation was incomplete
         if (hasTranslationWarning && translate) {
-          cookbookMessage += '\n\n⚠️ **Note:** Translation may be incomplete. Please review the recipe carefully before saving.';
+          sourceMessage += '\n\n⚠️ **Note:** Translation may be incomplete. Please review the recipe carefully before saving.';
         }
         
-        cookbookMessage += '\n\nWhich cookbook is this from? Please provide the name and page number.\n\n*Example: "Joy of Cooking, Page 245" or just "Joy of Cooking" if you don\'t know the page.*';
+        const sourceText = 'Do you want to share a source? You can add a cookbook, friend\'s name, or anything else.';
+        const listItems = [
+          '*"Joy of Cooking, Page 245" (for cookbooks)*',
+          '*"Sarah\'s recipe" (for friends)*',
+          '*"Grandma\'s cookbook" (for family recipes)*',
+          '*Or just skip by leaving it blank*'
+        ];
         
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          message: cookbookMessage,
+          message: sourceMessage + '\n\n' + sourceText,
           timestamp: new Date().toISOString(),
+          listWithHeader: {
+            header: '*Examples:*',
+            items: listItems,
+          },
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
@@ -528,16 +543,24 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     setIsLoading(true);
 
     try {
-      // Parse cookbook name and page from user input
-      // Expected format: "Book Name, Page 123" or "Book Name, p123" or just "Book Name"
-      let cookbookName = userInput;
+      // Parse source name and optional page number from user input
+      // Expected formats:
+      // - "Book Name, Page 123" or "Book Name, p123" (for cookbooks with pages)
+      // - "Friend's Name" or "Sarah's recipe" (for friends/family)
+      // - Any other source description
+      let cookbookName = userInput.trim();
       let cookbookPage: string | null = null;
 
-      // Try to extract page number
-      const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
-      if (pageMatch) {
-        cookbookPage = pageMatch[2];
-        cookbookName = userInput.substring(0, pageMatch.index).trim();
+      // If input is empty, skip source
+      if (!cookbookName) {
+        cookbookName = null;
+      } else {
+        // Try to extract page number (only if it looks like a cookbook format)
+        const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
+        if (pageMatch) {
+          cookbookPage = pageMatch[2];
+          cookbookName = userInput.substring(0, pageMatch.index).trim();
+        }
       }
 
       console.log('🟡 Calling /api/recipes/store with:', {
@@ -679,8 +702,17 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         >
           {messages.map((msg) => (
             <Box key={msg.id}>
-              {/* Only show message bubble if there's a message */}
-              {msg.message && <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp} />}
+              {/* Only show message bubble if there's a message or list with header */}
+              {(msg.message || msg.listWithHeader) && (
+                <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp}>
+                  {msg.listWithHeader && (
+                    <ListWithHeader 
+                      header={msg.listWithHeader.header}
+                      items={msg.listWithHeader.items}
+                    />
+                  )}
+                </MessageBubble>
+              )}
 
               {/* Display recipe if present */}
               {msg.chatResponse?.recipe && (
