@@ -437,23 +437,59 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       let detectedLanguageName = 'English';
       let hasTranslationWarning = false;
 
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
         const formData = new FormData();
         formData.append('image', file);
         formData.append('translate', translate.toString());
 
-        const response = await fetch('/api/recipes/extract-from-image', {
-          method: 'POST',
-          body: formData,
-        });
+        try {
+          const response = await fetch('/api/recipes/extract-from-image', {
+            method: 'POST',
+            body: formData,
+          });
 
-        const data = await response.json();
+          // Handle HTTP errors
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            
+            if (response.status === 429) {
+              throw new Error(`Rate limit exceeded. Please wait a moment and try again. (Image ${i + 1}/${files.length})`);
+            } else if (response.status === 413) {
+              throw new Error(`Image ${i + 1}/${files.length} is too large. Maximum file size is 10MB.`);
+            } else if (response.status >= 500) {
+              throw new Error(`Server error processing image ${i + 1}/${files.length}. Please try again.`);
+            } else {
+              throw new Error(errorData.error || `Failed to process image ${i + 1}/${files.length}`);
+            }
+          }
 
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to extract recipe from image');
-        }
+          const data = await response.json();
 
-        const { raw_text, translated_text, language, language_name, needs_translation, translation_warning } = data.data;
+          if (!data.success) {
+            // Provide more specific error messages
+            const errorMsg = data.error || 'Failed to extract recipe from image';
+            if (errorMsg.includes('rate limit')) {
+              throw new Error(`Rate limit exceeded for image ${i + 1}/${files.length}. Please wait and try again.`);
+            } else if (errorMsg.includes('too large') || errorMsg.includes('file size')) {
+              throw new Error(`Image ${i + 1}/${files.length} is too large. Maximum size is 10MB.`);
+            } else {
+              throw new Error(`Error processing image ${i + 1}/${files.length}: ${errorMsg}`);
+            }
+          }
+
+          const { raw_text, translated_text, language, language_name, needs_translation, translation_warning, translation_status } = data.data;
+
+          // Validate that we have text data
+          if (!raw_text || raw_text.trim().length === 0) {
+            throw new Error(`No text found in image ${i + 1}/${files.length}. Please ensure the image contains readable text.`);
+          }
+
+          // Handle translation status
+          if (translate && translation_status === 'failed' && translation_warning) {
+            console.warn(`Translation failed for image ${i + 1}:`, translation_warning);
+            // Continue with original text but log the warning
+          }
 
         // Store language from first non-English image
         if (needs_translation && detectedLanguage === 'en') {
@@ -461,15 +497,34 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
           detectedLanguageName = language_name;
         }
 
-        // Store translation warning if present
-        if (translation_warning) {
-          console.warn('Translation warning:', translation_warning);
-          hasTranslationWarning = true;
-        }
+          // Store translation warning if present
+          if (translation_warning) {
+            console.warn('Translation warning:', translation_warning);
+            hasTranslationWarning = true;
+          }
 
-        // Collect extracted or translated text
-        const textToAdd = translate ? translated_text : raw_text;
-        extractedTexts.push(textToAdd);
+          // Collect extracted or translated text
+          // Use translated text if available and translation was successful, otherwise use raw text
+          const textToAdd = (translate && translated_text && translation_status === 'completed') 
+            ? translated_text 
+            : raw_text;
+          extractedTexts.push(textToAdd);
+
+        } catch (imageError) {
+          // Handle errors for individual images
+          console.error(`Error processing image ${i + 1}/${files.length}:`, imageError);
+          
+          const errorMessage = imageError instanceof Error 
+            ? imageError.message 
+            : `Failed to process image ${i + 1}/${files.length}`;
+          
+          // If processing multiple images, show which one failed
+          if (files.length > 1) {
+            throw new Error(`${errorMessage}. Failed on image ${i + 1} of ${files.length}.`);
+          } else {
+            throw imageError; // Re-throw for single image to preserve original error
+          }
+        }
       }
 
       // Combine all extracted texts
@@ -525,15 +580,38 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       }
 
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Error processing images:', error);
+      
+      // Provide user-friendly error messages
+      let errorMsg = 'Sorry, I encountered an error processing your images. Please try again.';
+      
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('rate limit')) {
+          errorMsg = 'Too many requests. Please wait a moment and try again.';
+        } else if (errorMessage.includes('too large') || errorMessage.includes('file size')) {
+          errorMsg = 'One or more images are too large. Maximum file size is 10MB per image.';
+        } else if (errorMessage.includes('no text found') || errorMessage.includes('unclear')) {
+          errorMsg = 'Could not read text from the image. Please try a clearer image with better lighting.';
+        } else if (errorMessage.includes('translation')) {
+          errorMsg = 'Image processed successfully, but translation failed. Showing original text.';
+        } else if (errorMessage.includes('network') || errorMessage.includes('fetch')) {
+          errorMsg = 'Network error. Please check your connection and try again.';
+        } else {
+          // Use the actual error message if it's user-friendly
+          errorMsg = error.message;
+        }
+      }
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        message: error instanceof Error ? error.message : 'Sorry, I encountered an error processing the image. Please try again.',
+        message: errorMsg,
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-      showToast('Failed to process images. Please try again.', 'error');
+      showToast(errorMsg, 'error');
       setImageQueue([]);
       setPendingTranslation(null);
     } finally {
@@ -572,10 +650,10 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         cookbookName = null;
       } else {
         // Try to extract page number (only if it looks like a cookbook format)
-        const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
-        if (pageMatch) {
-          cookbookPage = pageMatch[2];
-          cookbookName = userInput.substring(0, pageMatch.index).trim();
+      const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
+      if (pageMatch) {
+        cookbookPage = pageMatch[2];
+        cookbookName = userInput.substring(0, pageMatch.index).trim();
         }
       }
 

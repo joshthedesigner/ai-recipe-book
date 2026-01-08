@@ -85,23 +85,62 @@ CRITICAL RULES:
 
 Return ONLY the translated text, no explanations or comments.`;
 
-    let response = await client.chat.completions.create({
-      model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
-      messages: [
-        {
-          role: 'system',
-          content: translationPrompt,
-        },
-        {
-          role: 'user',
-          content: originalText,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 2500,
-    });
+    // Validate input text
+    if (!originalText || originalText.trim().length === 0) {
+      throw new Error('Original text is empty or invalid');
+    }
 
-    let translatedText = response.choices[0].message.content || originalText;
+    // Check text length (rough estimate: 1 token ≈ 4 characters)
+    const estimatedTokens = Math.ceil(originalText.length / 4);
+    if (estimatedTokens > 100000) {
+      throw new Error('Recipe text is too long to translate');
+    }
+
+    let response;
+    try {
+      response = await client.chat.completions.create({
+        model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
+        messages: [
+          {
+            role: 'system',
+            content: translationPrompt,
+          },
+          {
+            role: 'user',
+            content: originalText,
+          },
+        ],
+        temperature: 0.3,
+        max_tokens: 2500,
+      });
+    } catch (apiError: any) {
+      // Re-throw with more context for better error handling
+      if (apiError?.status === 429) {
+        throw new Error('rate limit: Translation service is rate limited');
+      } else if (apiError?.status === 401 || apiError?.status === 403) {
+        throw new Error('API key: Authentication failed');
+      } else if (apiError?.code === 'ECONNABORTED' || apiError?.message?.includes('timeout')) {
+        throw new Error('timeout: Translation request timed out');
+      }
+      throw apiError;
+    }
+
+    // Validate response
+    if (!response || !response.choices || response.choices.length === 0) {
+      throw new Error('Invalid response from translation service');
+    }
+
+    let translatedText = response.choices[0].message?.content?.trim();
+    
+    if (!translatedText || translatedText.length === 0) {
+      throw new Error('Translation returned empty result');
+    }
+
+    // Fallback to original if translation is suspiciously short (likely truncated or failed)
+    if (translatedText.length < originalText.length * 0.1) {
+      console.warn('Translation result suspiciously short, may be incomplete');
+    }
+
     let translatedStepCount = countSteps(translatedText);
     
     console.log(`First translation has ${translatedStepCount} detected steps`);
@@ -118,27 +157,38 @@ Please re-translate the COMPLETE recipe, ensuring ALL ${originalStepCount} steps
 
 Original text to translate:`;
 
-      response = await client.chat.completions.create({
-        model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
-        messages: [
-          {
-            role: 'system',
-            content: translationPrompt,
-          },
-          {
-            role: 'user',
-            content: retryPrompt,
-          },
-          {
-            role: 'user',
-            content: originalText,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 2500,
-      });
+      try {
+        response = await client.chat.completions.create({
+          model: 'gpt-4o', // Upgraded from gpt-4o-mini for better translation quality
+          messages: [
+            {
+              role: 'system',
+              content: translationPrompt,
+            },
+            {
+              role: 'user',
+              content: retryPrompt,
+            },
+            {
+              role: 'user',
+              content: originalText,
+            },
+          ],
+          temperature: 0.3,
+          max_tokens: 2500,
+        });
 
-      translatedText = response.choices[0].message.content || translatedText;
+        const retryTranslatedText = response.choices[0].message?.content?.trim();
+        if (retryTranslatedText && retryTranslatedText.length > 0) {
+          translatedText = retryTranslatedText;
+        } else {
+          console.warn('Retry translation returned empty, keeping first attempt');
+        }
+      } catch (retryError) {
+        console.warn('Retry translation failed, using first attempt:', retryError);
+        // Keep the first translation attempt if retry fails
+      }
+
       translatedStepCount = countSteps(translatedText);
       
       console.log(`Retry translation has ${translatedStepCount} detected steps`);
@@ -162,6 +212,48 @@ Original text to translate:`;
 
   } catch (error) {
     console.error('Error translating recipe:', error);
+    
+    // Handle specific OpenAI API errors
+    if (error instanceof Error) {
+      // Rate limit errors
+      if (error.message.includes('rate limit') || error.message.includes('429')) {
+        return {
+          success: false,
+          translatedText: originalText,
+          warning: 'Translation service is temporarily busy. Please try again in a moment. Showing original text.',
+        };
+      }
+      
+      // Invalid API key or authentication errors
+      if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('unauthorized')) {
+        console.error('OpenAI API authentication error:', error.message);
+        return {
+          success: false,
+          translatedText: originalText,
+          warning: 'Translation service configuration error. Showing original text.',
+        };
+      }
+      
+      // Network or timeout errors
+      if (error.message.includes('timeout') || error.message.includes('network') || error.message.includes('ECONNRESET')) {
+        return {
+          success: false,
+          translatedText: originalText,
+          warning: 'Translation request timed out. Please try again. Showing original text.',
+        };
+      }
+      
+      // Token limit or content too long
+      if (error.message.includes('token') || error.message.includes('length') || error.message.includes('too long')) {
+        return {
+          success: false,
+          translatedText: originalText,
+          warning: 'Recipe text is too long to translate. Showing original text.',
+        };
+      }
+    }
+    
+    // Generic fallback for unknown errors
     return {
       success: false,
       translatedText: originalText,

@@ -307,20 +307,44 @@ export async function POST(request: NextRequest) {
     if (languageCode !== 'en' && shouldTranslate) {
       console.log('Translating to English using translation agent...');
       
-      const result = await translateRecipe(extractedText, languageName, 'English');
-      
-      if (result.success) {
-        finalText = result.translatedText;
-        translationStatus = 'completed';
-        
-        if (result.warning) {
-          translationWarning = result.warning;
-          console.warn('Translation warning:', result.warning);
+      try {
+        // Validate extracted text before translation
+        if (!extractedText || extractedText.trim().length === 0) {
+          throw new Error('No text extracted from image to translate');
         }
-      } else {
-        // Translation failed, keep original
-        translationWarning = result.warning || 'Translation failed';
-        console.error('Translation failed:', result.warning);
+
+        const result = await translateRecipe(extractedText, languageName, 'English');
+        
+        if (result.success) {
+          // Validate translation result before using it
+          if (result.translatedText && result.translatedText.trim().length > 0) {
+            finalText = result.translatedText;
+            translationStatus = 'completed';
+            
+            if (result.warning) {
+              translationWarning = result.warning;
+              console.warn('Translation warning:', result.warning);
+            }
+          } else {
+            // Translation returned empty, keep original
+            translationStatus = 'failed';
+            translationWarning = 'Translation returned empty result. Showing original text.';
+            console.error('Translation returned empty text');
+          }
+        } else {
+          // Translation failed, keep original
+          translationStatus = 'failed';
+          translationWarning = result.warning || 'Translation failed. Showing original text.';
+          console.error('Translation failed:', result.warning);
+        }
+      } catch (translationError) {
+        // Handle unexpected errors during translation
+        console.error('Unexpected error during translation:', translationError);
+        translationStatus = 'failed';
+        translationWarning = translationError instanceof Error 
+          ? `Translation error: ${translationError.message}. Showing original text.`
+          : 'An unexpected error occurred during translation. Showing original text.';
+        // Continue with original text - don't fail the entire request
       }
     } else if (languageCode !== 'en') {
       translationStatus = 'requested';
