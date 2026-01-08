@@ -564,7 +564,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       // - "Book Name, Page 123" or "Book Name, p123" (for cookbooks with pages)
       // - "Friend's Name" or "Sarah's recipe" (for friends/family)
       // - Any other source description
-      let cookbookName = userInput.trim();
+      let cookbookName: string | null = userInput.trim() || null;
       let cookbookPage: string | null = null;
 
       // If input is empty, skip source
