@@ -630,6 +630,22 @@ Would you still like to save this video link so you can easily find it in the fu
     // If in review mode, return the recipe for confirmation
     if (reviewMode) {
       console.log('Review mode enabled - returning recipe for confirmation');
+      
+      // Generate embedding now so it can be reused on confirmation
+      console.log('Generating embedding for recipe preview...');
+      let embedding;
+      try {
+        const searchText = createRecipeSearchText(extractedRecipe);
+        embedding = await generateEmbedding(searchText);
+      } catch (embedError) {
+        console.error('Error generating embedding:', embedError);
+        return {
+          success: false,
+          message: 'Sorry, I had trouble processing the recipe for search. The recipe might be too long. Try using a shorter version.',
+          error: embedError instanceof Error ? embedError.message : 'Embedding failed',
+        };
+      }
+      
       const previewRecipe: Recipe = {
         title: extractedRecipe.title,
         ingredients: extractedRecipe.ingredients,
@@ -641,6 +657,7 @@ Would you still like to save this video link so you can easily find it in the fu
         cookbook_page: cookbookPage || null,
         contributor_name: contributorName,
         sections: (extractedRecipe as any).sections || undefined,
+        embedding: embedding, // Include embedding so it can be reused on confirmation
       };
       
       // Include needsTagReview flag if present
