@@ -8,9 +8,10 @@ interface MessageBubbleProps {
   message: string;
   timestamp?: string;
   children?: React.ReactNode; // Optional children for custom components (e.g., ListWithHeader)
+  images?: string[]; // Optional array of image preview URLs (data URLs)
 }
 
-export default function MessageBubble({ role, message, timestamp, children }: MessageBubbleProps) {
+export default function MessageBubble({ role, message, timestamp, children, images }: MessageBubbleProps) {
   const isUser = role === 'user';
 
   return (
@@ -92,6 +93,44 @@ export default function MessageBubble({ role, message, timestamp, children }: Me
           wordBreak: 'break-word',
         }}
       >
+        {/* Display images if present */}
+        {images && images.length > 0 && (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              gap: 1,
+              mb: message ? 1 : 0, // Add spacing if there's also text
+            }}
+          >
+            {images.map((imageUrl, index) => (
+              <Box
+                key={index}
+                sx={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '100px', // Reduced by 3/4 (from original 400px)
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  flexShrink: 0,
+                }}
+              >
+                <img
+                  src={imageUrl}
+                  alt={`Uploaded image ${index + 1}`}
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                  }}
+                />
+              </Box>
+            ))}
+          </Box>
+        )}
         {message && <ReactMarkdown>{message}</ReactMarkdown>}
         {children}
       </Box>

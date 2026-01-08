@@ -34,6 +34,7 @@ interface Message {
     header?: string;
     items: string[];
   }; // Optional list with header component props
+  images?: string[]; // Optional array of image preview URLs (data URLs)
 }
 
 interface RecipeSidebarProps {
@@ -206,8 +207,23 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     // Check if we have either text or images
     if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
 
-    // If images are queued, process them
+    // If images are queued, add them as user message and then process
     if (imageQueue.length > 0) {
+      const imagePreviews = imageQueue.map(img => img.preview);
+      
+      // Create user message with images
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        role: 'user',
+        message: input.trim() || '', // Include any text input with the image
+        timestamp: new Date().toISOString(),
+        images: imagePreviews,
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setInput(''); // Clear input after adding message
+      
+      // Process images
       await processImages(imageQueue.map(img => img.file));
       return;
     }
@@ -702,9 +718,14 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         >
           {messages.map((msg) => (
             <Box key={msg.id}>
-              {/* Only show message bubble if there's a message or list with header */}
-              {(msg.message || msg.listWithHeader) && (
-                <MessageBubble role={msg.role} message={msg.message} timestamp={msg.timestamp}>
+              {/* Only show message bubble if there's a message, images, or list with header */}
+              {(msg.message || msg.images || msg.listWithHeader) && (
+                <MessageBubble 
+                  role={msg.role} 
+                  message={msg.message} 
+                  timestamp={msg.timestamp}
+                  images={msg.images}
+                >
                   {msg.listWithHeader && (
                     <ListWithHeader 
                       header={msg.listWithHeader.header}
