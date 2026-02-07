@@ -28,7 +28,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
@@ -356,7 +357,7 @@ export default function RecipeDetailPage() {
                 <Button
                   onClick={handleToggleFavorite}
                   disabled={togglingFavorite}
-                  startIcon={<BookmarkIcon sx={{ fontSize: '1rem' }} />}
+                  startIcon={isFavorite ? <FavoriteIcon sx={{ fontSize: '1rem' }} /> : <FavoriteBorderIcon sx={{ fontSize: '1rem' }} />}
                   sx={{
                     textTransform: 'none',
                     color: isFavorite ? 'primary.main' : 'text.secondary',

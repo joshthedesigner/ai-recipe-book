@@ -30,6 +30,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { Recipe } from '@/types';
 import { getYouTubeThumbnail, getYouTubeThumbnailSrcSet } from '@/utils/youtubeHelpers';
 import { useToast } from '@/contexts/ToastContext';
@@ -75,6 +76,8 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
   const menuOpen = Boolean(anchorEl);
   const tagsContainerRef = useRef<HTMLDivElement>(null);
   const [visibleTagsCount, setVisibleTagsCount] = useState<number>(recipe.tags?.length || 0);
+  // Optimistic favorite state - updates immediately on click
+  const [optimisticFavorite, setOptimisticFavorite] = useState<boolean>(recipe.is_favorite || false);
 
   // Get image URL - prefer recipe image, fallback to YouTube thumbnail
   const getImageUrl = (): string | null => {
@@ -118,10 +121,19 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
     }
   };
 
+  // Sync optimistic state when recipe prop changes
+  useEffect(() => {
+    setOptimisticFavorite(recipe.is_favorite || false);
+  }, [recipe.is_favorite]);
+
   const handleToggleFavorite = async (event: MouseEvent) => {
     event.stopPropagation(); // Prevent card click
     handleMenuClose();
     if (!recipe.id) return;
+
+    // Optimistically update UI immediately
+    const newFavoriteState = !optimisticFavorite;
+    setOptimisticFavorite(newFavoriteState);
 
     try {
       const response = await fetch(`/api/recipes/${recipe.id}/favorite`, {
@@ -131,17 +143,24 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
       const data = await response.json();
 
       if (data.success) {
+        // Update to actual state from server
+        setOptimisticFavorite(data.is_favorite);
         showToast(
           data.is_favorite ? 'Added to favorites' : 'Removed from favorites',
           'success'
         );
+        // Notify parent component
         if (onFavoriteToggle) {
           onFavoriteToggle(recipe.id, data.is_favorite);
         }
       } else {
+        // Revert optimistic update on failure
+        setOptimisticFavorite(!newFavoriteState);
         showToast('Failed to update favorite', 'error');
       }
     } catch (error) {
+      // Revert optimistic update on error
+      setOptimisticFavorite(!newFavoriteState);
       console.error('Error toggling favorite:', error);
       showToast('Failed to update favorite', 'error');
     }
@@ -510,6 +529,26 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
               <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.3, flex: 1 }}>
                 {recipe.title}
               </Typography>
+              {onFavoriteToggle && (
+                <IconButton
+                  size="small"
+                  onClick={handleToggleFavorite}
+                  sx={{
+                    flexShrink: 0,
+                    color: optimisticFavorite ? 'primary.main' : 'text.secondary',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                      color: optimisticFavorite ? 'primary.dark' : 'primary.main',
+                    },
+                  }}
+                >
+                  {optimisticFavorite ? (
+                    <BookmarkIcon fontSize="small" />
+                  ) : (
+                    <BookmarkBorderIcon fontSize="small" />
+                  )}
+                </IconButton>
+              )}
             </Box>
 
             <Box sx={{ mt: 'auto', pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
@@ -665,9 +704,13 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
         >
           <MenuItem onClick={handleToggleFavorite}>
             <ListItemIcon>
-              <BookmarkIcon fontSize="small" color={recipe.is_favorite ? 'primary' : 'inherit'} />
+              {optimisticFavorite ? (
+                <BookmarkIcon fontSize="small" color="primary" />
+              ) : (
+                <BookmarkBorderIcon fontSize="small" />
+              )}
             </ListItemIcon>
-            <MenuItemText>{recipe.is_favorite ? 'Remove from favorites' : 'Add to favorites'}</MenuItemText>
+            <MenuItemText>{optimisticFavorite ? 'Remove from favorites' : 'Add to favorites'}</MenuItemText>
           </MenuItem>
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>

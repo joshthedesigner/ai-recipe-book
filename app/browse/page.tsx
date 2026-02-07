@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import FavoriteIcon from '@mui/icons-material/Favorite';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -434,7 +434,7 @@ export default function BrowsePage() {
 
             {/* Favorites Filter Chip */}
             <Chip
-              icon={<BookmarkIcon />}
+              icon={<FavoriteIcon />}
               label="Favorites"
               onClick={() => setFilterFavorites(!filterFavorites)}
               color={filterFavorites ? 'primary' : 'default'}
