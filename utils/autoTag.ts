@@ -451,6 +451,10 @@ export function detectCuisines(
   let hasLowConfidence = false;
   let hasAnyMatches = false;
   
+  // Track best match to avoid multiple cuisine tags
+  let bestMatch: { cuisine: string; score: number } | null = null;
+  const allMatches: Array<{ cuisine: string; score: number }> = [];
+  
   for (const config of CUISINE_CONFIGS) {
     const ingredientMatches = config.ingredients.filter(ing => 
       combinedText.includes(ing.toLowerCase())
@@ -464,14 +468,25 @@ export function detectCuisines(
     const minMatches = config.minMatches || 2;
     
     if (totalMatches >= minMatches) {
-      // High confidence - auto-add the tag
-      detectedTags.push(config.name);
+      // High confidence match - track it
+      allMatches.push({ cuisine: config.name, score: totalMatches });
       hasAnyMatches = true;
+      
+      // Update best match if this is better
+      if (!bestMatch || totalMatches > bestMatch.score) {
+        bestMatch = { cuisine: config.name, score: totalMatches };
+      }
     } else if (totalMatches > 0) {
       // Some matches but not enough - flag for user review
       hasLowConfidence = true;
       hasAnyMatches = true;
     }
+  }
+  
+  // Only add the BEST match to avoid multiple cuisine tags
+  // This prevents false positives from shared ingredients (e.g., soy sauce, garlic, ginger)
+  if (bestMatch) {
+    detectedTags.push(bestMatch.cuisine);
   }
   
   // Review needed if: low confidence matches OR no matches at all
@@ -481,8 +496,34 @@ export function detectCuisines(
 }
 
 /**
+ * All cuisine tags (main cuisines + regional variants) for filtering
+ */
+const ALL_CUISINE_TAGS = new Set([
+  // Main cuisines
+  'chinese', 'italian', 'japanese', 'mexican', 'thai', 'indian', 'korean',
+  'french', 'greek', 'american', 'vietnamese', 'middle eastern', 'mediterranean',
+  // Regional variants (from CUISINE_HIERARCHY)
+  'goan', 'punjabi', 'bengali', 'south indian', 'north indian', 'gujarati', 'maharashtrian',
+  'sichuan', 'szechuan', 'cantonese', 'hunan', 'shanghainese',
+  'tuscan', 'neapolitan', 'sicilian', 'roman',
+  'tex-mex', 'oaxacan', 'yucatecan',
+  'cajun', 'creole', 'southern',
+  'provençal', 'alsatian', 'breton',
+  'okinawan',
+  'catalan', 'andalusian', 'basque',
+  'lebanese', 'turkish', 'persian', 'moroccan',
+]);
+
+/**
+ * Remove cuisine tags from a tag array
+ */
+function removeCuisineTags(tags: string[]): string[] {
+  return tags.filter(tag => !ALL_CUISINE_TAGS.has(tag.toLowerCase().trim()));
+}
+
+/**
  * Merge auto-generated tags with existing tags (removes duplicates)
- * @param existingTags - Tags already present
+ * @param existingTags - Tags already present (may include AI-added cuisine tags)
  * @param ingredients - Array of ingredient strings
  * @param title - Recipe title (optional, for cuisine detection)
  * @param steps - Array of cooking steps (optional, for cuisine detection)
@@ -494,19 +535,23 @@ export function mergeAutoTags(
   title?: string,
   steps?: string[]
 ): string[] {
-  // Step 1: Get protein tags (existing functionality)
+  // Step 1: Remove any existing cuisine tags (from AI or previous runs)
+  // We'll re-detect cuisine tags using our logic to ensure only ONE cuisine tag
+  const tagsWithoutCuisine = removeCuisineTags(existingTags);
+  
+  // Step 2: Get protein tags (existing functionality)
   const autoTags = generateAutoTags(ingredients);
   
-  // Step 2: Get cuisine tags (NEW functionality)
+  // Step 3: Get cuisine tags using our detection (returns only BEST match)
   const cuisineResult = detectCuisines(title || '', ingredients, steps || []);
   
-  // Step 3: Combine all tags
-  const combined = [...existingTags, ...autoTags, ...cuisineResult.tags];
+  // Step 4: Combine all tags (cuisine tags from our detection, not from existing)
+  const combined = [...tagsWithoutCuisine, ...autoTags, ...cuisineResult.tags];
   
-  // Step 4: Expand cuisine tags (e.g., "goan" → add "indian")
+  // Step 5: Expand cuisine tags (e.g., "goan" → add "indian")
   const expanded = expandCuisineTags(combined);
   
-  // Step 5: Remove duplicates and return
+  // Step 6: Remove duplicates and return
   return [...new Set(expanded.map(tag => tag.toLowerCase()))];
 }
 
