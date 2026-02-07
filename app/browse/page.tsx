@@ -22,6 +22,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import TopNav from '@/components/TopNav';
@@ -31,6 +32,8 @@ import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import AddRecipeButton from '@/components/AddRecipeButton';
 import AppButton from '@/components/AppButton';
 import RecipeSidebar from '@/components/RecipeSidebar';
+import FilterDrawer from '@/components/FilterDrawer';
+import { Badge } from '@mui/material';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -73,6 +76,7 @@ export default function BrowsePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
 
   // Filter options are now provided by the server via facets API response
@@ -309,10 +313,23 @@ export default function BrowsePage() {
     setSearchQuery('');
     setFilterCuisine('');
     setFilterMainIngredient('');
+    setFilterFavorites(false);
     handleSortChange(SORT_OPTIONS.RECENTLY_ADDED); // Reset to default
   };
 
-  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
+  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterFavorites || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
+  
+  // Count active filters for badge (exclude default sort)
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (searchQuery) count++;
+    if (filterCuisine) count++;
+    if (filterMainIngredient) count++;
+    if (filterFavorites) count++;
+    // Sort only counts if changed from default
+    if (sortBy !== SORT_OPTIONS.RECENTLY_ADDED) count++;
+    return count;
+  }, [searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
 
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
@@ -355,10 +372,10 @@ export default function BrowsePage() {
             </Box>
 
             {/* Search and Filters */}
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 0, width: { xs: '100%', sm: 'auto' } }}>
             {/* Search Bar */}
             <TextField
-              placeholder="Search recipes, ingredients, or tags..."
+              placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
@@ -376,86 +393,124 @@ export default function BrowsePage() {
                 ),
               }}
               size="small"
-              sx={{ width: { xs: '100%', sm: 400 } }}
-            />
-
-            {/* Sort by Dropdown */}
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel id="sort-by-label">Sort by</InputLabel>
-              <Select
-                labelId="sort-by-label"
-                id="sort-by-select"
-                value={sortBy}
-                label="Sort by"
-                onChange={(e) => handleSortChange(e.target.value as SortOption)}
-              >
-                <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
-                <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
-                <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* Cuisines Filter */}
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
-              <Select
-                labelId="cuisine-filter-label"
-                id="cuisine-filter-select"
-                value={filterCuisine}
-                label="Cuisines"
-                onChange={(e) => setFilterCuisine(e.target.value)}
-              >
-                <MenuItem value="">All Cuisines</MenuItem>
-                {availableCuisines.map((cuisine) => (
-                  <MenuItem key={cuisine} value={cuisine}>
-                    {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Ingredients Filter */}
-            <FormControl size="small" sx={{ minWidth: 160 }}>
-              <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
-              <Select
-                labelId="ingredient-filter-label"
-                id="ingredient-filter-select"
-                value={filterMainIngredient}
-                label="Ingredients"
-                onChange={(e) => setFilterMainIngredient(e.target.value)}
-              >
-                <MenuItem value="">All Ingredients</MenuItem>
-                {availableIngredients.map((ingredient) => (
-                  <MenuItem key={ingredient} value={ingredient}>
-                    {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            {/* Favorites Filter Chip */}
-            <Chip
-              icon={filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-              label="Favorites"
-              onClick={() => setFilterFavorites(!filterFavorites)}
-              color={filterFavorites ? 'primary' : 'default'}
-              variant="outlined" // Always use outlined to prevent visual flash
-              size="small"
-              sx={{
-                cursor: 'pointer',
-                fontWeight: filterFavorites ? 600 : 400,
-                height: '40px', // Match MUI Select small size height
-                paddingLeft: '14px', // Match Select small padding
-                paddingRight: '14px', // Match Select small padding
-                minWidth: '120px', // Fixed width to prevent layout shift
-                justifyContent: 'center', // Center content within fixed width
-                // When selected, use primary border color; otherwise default
-                borderColor: filterFavorites ? 'primary.main' : 'divider',
-                '&:hover': {
-                  borderColor: 'text.primary', // Darken border on hover to match MUI Select
-                },
+              sx={{ 
+                flex: { xs: '1 1 auto', sm: '0 0 auto' },
+                minWidth: 0,
+                width: { xs: 'auto', sm: 400 }
               }}
             />
+
+            {/* Filter Button (Mobile Only) */}
+            {isMobile && (
+              <Badge
+                badgeContent={activeFilterCount > 0 ? activeFilterCount : 0}
+                color="error"
+                sx={{
+                  '& .MuiBadge-badge': {
+                    fontSize: '9px',
+                    height: '16px',
+                    minWidth: '16px',
+                  },
+                  flexShrink: 0, // Prevent filter button from shrinking
+                }}
+              >
+                <IconButton
+                  onClick={() => setFilterDrawerOpen(true)}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                    },
+                  }}
+                >
+                  <FilterListIcon />
+                </IconButton>
+              </Badge>
+            )}
+
+            {/* Desktop Filters - Hidden on Mobile */}
+            {!isMobile && (
+              <>
+                {/* Sort by Dropdown */}
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <InputLabel id="sort-by-label">Sort by</InputLabel>
+                  <Select
+                    labelId="sort-by-label"
+                    id="sort-by-select"
+                    value={sortBy}
+                    label="Sort by"
+                    onChange={(e) => handleSortChange(e.target.value as SortOption)}
+                  >
+                    <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
+                    <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
+                    <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
+                  </Select>
+                </FormControl>
+
+                {/* Cuisines Filter */}
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
+                  <Select
+                    labelId="cuisine-filter-label"
+                    id="cuisine-filter-select"
+                    value={filterCuisine}
+                    label="Cuisines"
+                    onChange={(e) => setFilterCuisine(e.target.value)}
+                  >
+                    <MenuItem value="">All Cuisines</MenuItem>
+                    {availableCuisines.map((cuisine) => (
+                      <MenuItem key={cuisine} value={cuisine}>
+                        {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Ingredients Filter */}
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
+                  <Select
+                    labelId="ingredient-filter-label"
+                    id="ingredient-filter-select"
+                    value={filterMainIngredient}
+                    label="Ingredients"
+                    onChange={(e) => setFilterMainIngredient(e.target.value)}
+                  >
+                    <MenuItem value="">All Ingredients</MenuItem>
+                    {availableIngredients.map((ingredient) => (
+                      <MenuItem key={ingredient} value={ingredient}>
+                        {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Favorites Filter Chip */}
+                <Chip
+                  icon={filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                  label="Favorites"
+                  onClick={() => setFilterFavorites(!filterFavorites)}
+                  color={filterFavorites ? 'primary' : 'default'}
+                  variant="outlined" // Always use outlined to prevent visual flash
+                  size="small"
+                  sx={{
+                    cursor: 'pointer',
+                    fontWeight: filterFavorites ? 600 : 400,
+                    height: '40px', // Match MUI Select small size height
+                    paddingLeft: '14px', // Match Select small padding
+                    paddingRight: '14px', // Match Select small padding
+                    minWidth: '120px', // Fixed width to prevent layout shift
+                    justifyContent: 'center', // Center content within fixed width
+                    // When selected, use primary border color; otherwise default
+                    borderColor: filterFavorites ? 'primary.main' : 'divider',
+                    '&:hover': {
+                      borderColor: 'text.primary', // Darken border on hover to match MUI Select
+                    },
+                  }}
+                />
+              </>
+            )}
             </Box>
           </Box>
         </Container>
@@ -603,6 +658,24 @@ export default function BrowsePage() {
         open={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
         onRecipeAdded={handleRecipeAdded}
+      />
+
+      {/* Filter Drawer (Mobile Only) */}
+      <FilterDrawer
+        open={filterDrawerOpen}
+        onClose={() => setFilterDrawerOpen(false)}
+        sortBy={sortBy}
+        filterCuisine={filterCuisine}
+        filterMainIngredient={filterMainIngredient}
+        filterFavorites={filterFavorites}
+        availableCuisines={availableCuisines}
+        availableIngredients={availableIngredients}
+        sortOptions={SORT_OPTIONS}
+        onSortChange={(value) => handleSortChange(value as SortOption)}
+        onCuisineChange={setFilterCuisine}
+        onIngredientChange={setFilterMainIngredient}
+        onFavoritesChange={setFilterFavorites}
+        onReset={clearFilters}
       />
 
     </Box>

@@ -74,6 +74,7 @@ export function useInfiniteRecipes(params: InfiniteRecipesParams) {
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     initialPageParam: 0,
     staleTime: 60 * 1000, // 1 minute
+    placeholderData: (previousData) => previousData, // Keep previous data visible during refetch to prevent filter options from disappearing
   });
 }
 
