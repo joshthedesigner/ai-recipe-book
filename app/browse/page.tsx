@@ -22,7 +22,8 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -434,7 +435,7 @@ export default function BrowsePage() {
 
             {/* Favorites Filter Chip */}
             <Chip
-              icon={<FavoriteIcon />}
+              icon={filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
               label="Favorites"
               onClick={() => setFilterFavorites(!filterFavorites)}
               color={filterFavorites ? 'primary' : 'default'}
