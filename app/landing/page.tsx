@@ -6,7 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import PeopleIcon from '@mui/icons-material/People';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import AppButton from '@/components/AppButton';
 import Footer from '@/components/Footer';
 
@@ -16,7 +16,7 @@ export default function LandingPage() {
   const faqs = [
     {
       question: 'How much does RecipeAssist cost?',
-      answer: 'RecipeAssist is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve and share their culinary heritage.'
+      answer: 'RecipeAssist is completely free to use with unlimited recipes and features. There are no limits, no trials, and no hidden fees. We believe everyone should have access to preserve their culinary heritage.'
     },
     {
       question: 'How does AI help with my recipes?',
@@ -28,11 +28,7 @@ export default function LandingPage() {
     },
     {
       question: 'Are my recipes private?',
-      answer: 'Yes! Your recipes are completely private by default. Just like keeping a binder of recipes at home in your kitchen, your recipes are your own personal space. You control exactly what you share and with whom.'
-    },
-    {
-      question: 'How does friend sharing work?',
-      answer: 'You can add friends by searching for their email address. Once they accept your friend request, you can browse each other\'s recipe collections. Your recipes remain private unless you explicitly share them with friends.'
+      answer: 'Yes! Your recipes are completely private. Just like keeping a binder of recipes at home in your kitchen, your recipes are your own personal space.'
     }
   ];
 
@@ -144,7 +140,7 @@ export default function LandingPage() {
                 mx: 'auto',
                   }}
                 >
-                  Save recipes from anywhere, organize with AI, and share with the people you love.
+                  Save recipes from anywhere, organize with AI, and never lose a recipe again.
                 </Typography>
             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 'calc(16px + 12px)', justifyContent: 'center' }}>
                   <AppButton
@@ -317,7 +313,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                <PeopleIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+                <AutoAwesomeIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
               </Box>
               <Typography
                 variant="h6"
@@ -328,7 +324,7 @@ export default function LandingPage() {
                   mb: 1,
                 }}
               >
-                Share & collaborate
+                AI-powered organization
               </Typography>
               <Typography
                 variant="body2"
@@ -338,7 +334,7 @@ export default function LandingPage() {
                   lineHeight: 1.6,
                 }}
               >
-                Invite friends to view your recipes and build your culinary legacy together.
+                Get cooking advice, ingredient substitutions, and recipe tips from our AI assistant.
               </Typography>
             </Box>
           </Grid>
@@ -416,7 +412,7 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* Share with Friends Section */}
+      {/* AI Chat Assistant Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
@@ -430,7 +426,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Share with friends and family.
+                Get instant cooking help from AI.
               </Typography>
               <Typography
                 variant="body1"
@@ -441,16 +437,15 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                Keep your recipes private or share them with the people you love. 
-                Browse each other's collections, discover family favorites, and build your culinary legacy together.
+                Chat with our AI assistant for cooking advice, ingredient substitutions, technique tips, and recipe modifications. Get help right when you need it.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                 {[
-                  'Invite friends by email instantly',
-                  'View each other\'s recipe collections',
-                  'Your recipes stay private by default',
-                  'Share culinary traditions across generations'
+                  'Ask for ingredient substitutions',
+                  'Get cooking technique advice',
+                  'Modify recipes to your preferences',
+                  'Translate recipes to any language'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
@@ -471,8 +466,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/mitch.png"
-                  alt="Share recipes with friends and family"
+                  src="/add.png"
+                  alt="AI chat assistant for cooking help"
                   style={{
                     width: '100%',
                     height: 'auto',
