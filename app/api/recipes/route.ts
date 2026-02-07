@@ -338,10 +338,61 @@ export async function GET(request: NextRequest) {
         }
       });
       
-      // Check which cuisines exist in tags
+      // First, add known cuisines that exist in tags
       CUISINE_OPTIONS.forEach(cuisine => {
         if (allTags.has(cuisine.toLowerCase())) {
           availableCuisines.push(cuisine);
+        }
+      });
+      
+      // Only include known geographic/cuisine names - be very strict
+      // We'll only add tags that are explicitly known country/region/cuisine names
+      const ingredientSet = new Set(INGREDIENT_OPTIONS.map(ing => ing.toLowerCase()));
+      const knownCuisineSet = new Set(CUISINE_OPTIONS.map(c => c.toLowerCase()));
+      const proteinTags = new Set(['vegetarian', 'vegan', 'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'tofu']);
+      
+      // Whitelist of known geographic/cuisine names (country names, region names, cuisine names)
+      // Only tags that match these patterns will be included in the filter
+      const KNOWN_GEOGRAPHIC_NAMES = new Set([
+        // Country-based cuisines
+        'indonesian', 'ethiopian', 'peruvian', 'brazilian', 'moroccan', 'turkish', 'persian', 
+        'lebanese', 'spanish', 'portuguese', 'german', 'british', 'irish', 'scottish', 'welsh',
+        'australian', 'canadian', 'filipino', 'malaysian', 'singaporean', 'thai', 'vietnamese',
+        'cambodian', 'laotian', 'myanmar', 'burmese', 'nepalese', 'bangladeshi', 'pakistani',
+        'sri lankan', 'afghan', 'iranian', 'iraqi', 'syrian', 'jordanian', 'palestinian',
+        'israeli', 'egyptian', 'tunisian', 'algerian', 'libyan', 'sudanese', 'ethiopian',
+        'eritrean', 'somali', 'kenyan', 'tanzanian', 'ugandan', 'ghanaian', 'nigerian',
+        'senegalese', 'south african', 'zimbabwean', 'botswanan', 'namibian',
+        'argentine', 'argentinian', 'chilean', 'colombian', 'venezuelan', 'ecuadorian',
+        'bolivian', 'paraguayan', 'uruguayan', 'guyanese', 'surinamese', 'trinidadian',
+        'jamaican', 'cuban', 'haitian', 'dominican', 'puerto rican', 'guatemalan',
+        'honduran', 'nicaraguan', 'costa rican', 'panamanian', 'belizean', 'salvadoran',
+        'russian', 'ukrainian', 'polish', 'czech', 'slovak', 'hungarian', 'romanian',
+        'bulgarian', 'serbian', 'croatian', 'slovenian', 'bosnian', 'macedonian',
+        'albanian', 'georgian', 'armenian', 'azerbaijani', 'kazakh', 'uzbek',
+        'mongolian', 'tibetan', 'nepalese', 'bhutanese', 'bangladeshi',
+        // Regional cuisines
+        'caribbean', 'african', 'asian', 'european', 'scandinavian', 'nordic', 'baltic',
+        'balkan', 'iberian', 'slavic', 'south american', 'north african', 'west african',
+        'east african', 'southeast asian', 'south asian', 'central asian', 'middle eastern',
+        'mediterranean', 'central american', 'north american', 'oceanic', 'polynesian',
+        'melanesian', 'micronesian'
+      ]);
+      
+      allTags.forEach(tag => {
+        const lowerTag = tag.toLowerCase();
+        const isKnownTag = knownCuisineSet.has(lowerTag) || 
+                          ingredientSet.has(lowerTag) || 
+                          proteinTags.has(lowerTag);
+        
+        // Skip if it's a known tag (already added above)
+        if (isKnownTag) return;
+        
+        // Only include if it's in our whitelist of known geographic names
+        if (KNOWN_GEOGRAPHIC_NAMES.has(lowerTag)) {
+          if (!availableCuisines.includes(lowerTag)) {
+            availableCuisines.push(lowerTag);
+          }
         }
       });
       

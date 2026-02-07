@@ -5,6 +5,22 @@
  * Used across all recipe entry methods (URL scraping, text input, image extraction).
  */
 
+import OpenAI from 'openai';
+
+// Lazy-load OpenAI client for AI-based cuisine detection
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is not set');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
+
 /**
  * Cuisine hierarchy mapping - regional cuisines to parent cuisines
  */
@@ -433,19 +449,105 @@ export function expandCuisineTags(tags: string[]): string[] {
 }
 
 /**
- * Detect cuisines from recipe content
- * @param title - Recipe title
- * @param ingredients - Array of ingredient strings
- * @param steps - Array of cooking step strings
- * @returns Object with detected tags and review flag
+ * AI-powered cuisine detection prompt
+ * First analyzes title, then expands to full recipe if needed
  */
-export function detectCuisines(
+const CUISINE_DETECTION_PROMPT = `You are a cuisine classification expert. Analyze the recipe and determine its primary cuisine.
+
+Return JSON with:
+{
+  "cuisine": "cuisine_name" | null,
+  "confidence": 0.0-1.0,
+  "reasoning": "brief explanation"
+}
+
+Rules:
+- Return the primary cuisine name (e.g., "japanese", "indonesian", "ethiopian", "peruvian", etc.)
+- Return null if cuisine is unclear, fusion, or you cannot determine it
+- Only return ONE cuisine (the primary one)
+- Use lowercase, single-word cuisine names when possible (e.g., "middle eastern" is acceptable)
+- Confidence should be high (0.8+) for clear matches
+- Consider dish names, ingredients, cooking methods, and cultural context
+- Be conservative - if unsure, return null with low confidence
+- Title is the strongest signal - if title clearly indicates cuisine, use that
+- If title is unclear, analyze ingredients and cooking methods`;
+
+/**
+ * Use AI to detect cuisine from recipe
+ * First checks title, then expands to full recipe if confidence is low
+ */
+async function detectCuisineWithAI(
+  title: string,
+  ingredients: string[],
+  steps: string[]
+): Promise<{ cuisine: string | null; confidence: number; reasoning: string } | null> {
+  try {
+    const client = getOpenAIClient();
+    
+    // First pass: Analyze title only (faster, cheaper)
+    const titlePrompt = `Recipe title: "${title}"
+
+Based on the title alone, determine the cuisine. If the title clearly indicates a cuisine (e.g., "Japanese Sake Steamed Clams", "Shawarma Pargiyot", "Spaghetti Carbonara"), return that cuisine with high confidence.
+
+If the title is unclear or generic, return null with low confidence.`;
+
+    const titleResponse = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: CUISINE_DETECTION_PROMPT },
+        { role: 'user', content: titlePrompt }
+      ],
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      max_tokens: 150,
+    });
+
+    const titleResult = JSON.parse(titleResponse.choices[0].message.content || '{}');
+    
+    // If title analysis gives high confidence, return it
+    if (titleResult.cuisine && titleResult.confidence >= 0.8) {
+      return titleResult;
+    }
+    
+    // Second pass: Analyze full recipe (if title was unclear)
+    const fullPrompt = `Recipe:
+Title: "${title}"
+Ingredients: ${ingredients.join(', ')}
+Steps: ${steps.join(' | ')}
+
+Analyze the full recipe to determine cuisine. Consider dish names, ingredients, cooking methods, and cultural context.`;
+
+    const fullResponse = await client.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: CUISINE_DETECTION_PROMPT },
+        { role: 'user', content: fullPrompt }
+      ],
+      temperature: 0,
+      response_format: { type: 'json_object' },
+      max_tokens: 200,
+    });
+
+    const fullResult = JSON.parse(fullResponse.choices[0].message.content || '{}');
+    return fullResult;
+
+  } catch (error) {
+    console.error('Error in AI cuisine detection:', error);
+    return null;
+  }
+}
+
+/**
+ * Fallback: Detect cuisines using ingredient/dish matching
+ * Used when AI is unavailable or fails
+ */
+function detectCuisinesByIngredients(
   title: string,
   ingredients: string[],
   steps: string[]
 ): { tags: string[]; needsReview: boolean } {
-  // Combine all text for searching
-  const combinedText = `${title || ''} ${(ingredients || []).join(' ')} ${(steps || []).join(' ')}`.toLowerCase();
+  const titleLower = (title || '').toLowerCase();
+  const combinedText = `${titleLower} ${(ingredients || []).join(' ')} ${(steps || []).join(' ')}`.toLowerCase();
   
   const detectedTags: string[] = [];
   let hasLowConfidence = false;
@@ -453,23 +555,34 @@ export function detectCuisines(
   
   // Track best match to avoid multiple cuisine tags
   let bestMatch: { cuisine: string; score: number } | null = null;
-  const allMatches: Array<{ cuisine: string; score: number }> = [];
   
   for (const config of CUISINE_CONFIGS) {
+    // Check if cuisine name appears in title (strong signal - worth 3 points)
+    const titleMatch = titleLower.includes(config.name.toLowerCase()) ? 3 : 0;
+    
+    // Count ingredient matches
     const ingredientMatches = config.ingredients.filter(ing => 
       combinedText.includes(ing.toLowerCase())
     ).length;
     
-    const dishMatches = config.dishes.filter(dish => 
+    // Count dish matches - check both in title and in full text
+    const dishMatchesInTitle = config.dishes.filter(dish => 
+      titleLower.includes(dish.toLowerCase())
+    ).length;
+    
+    const dishMatchesInText = config.dishes.filter(dish => 
       combinedText.includes(dish.toLowerCase())
     ).length;
     
-    const totalMatches = ingredientMatches + dishMatches;
+    // Dish matches in title are worth 5 points each (very strong signal)
+    // Dish matches elsewhere are worth 2 points each
+    const dishMatches = (dishMatchesInTitle * 5) + ((dishMatchesInText - dishMatchesInTitle) * 2);
+    
+    // Total score: title match + ingredient matches + weighted dish matches
+    const totalMatches = titleMatch + ingredientMatches + dishMatches;
     const minMatches = config.minMatches || 2;
     
     if (totalMatches >= minMatches) {
-      // High confidence match - track it
-      allMatches.push({ cuisine: config.name, score: totalMatches });
       hasAnyMatches = true;
       
       // Update best match if this is better
@@ -477,22 +590,65 @@ export function detectCuisines(
         bestMatch = { cuisine: config.name, score: totalMatches };
       }
     } else if (totalMatches > 0) {
-      // Some matches but not enough - flag for user review
       hasLowConfidence = true;
       hasAnyMatches = true;
     }
   }
   
-  // Only add the BEST match to avoid multiple cuisine tags
-  // This prevents false positives from shared ingredients (e.g., soy sauce, garlic, ginger)
+  // Only add the BEST match
   if (bestMatch) {
     detectedTags.push(bestMatch.cuisine);
   }
   
-  // Review needed if: low confidence matches OR no matches at all
   const needsReview = hasLowConfidence || !hasAnyMatches;
-  
   return { tags: detectedTags, needsReview };
+}
+
+/**
+ * Detect cuisines from recipe content
+ * Uses AI-first approach: AI analyzes title, then full recipe if needed
+ * Falls back to ingredient/dish matching if AI fails
+ * @param title - Recipe title
+ * @param ingredients - Array of ingredient strings
+ * @param steps - Array of cooking step strings
+ * @returns Object with detected tags and review flag
+ */
+export async function detectCuisines(
+  title: string,
+  ingredients: string[],
+  steps: string[]
+): Promise<{ tags: string[]; needsReview: boolean }> {
+  // Step 1: Quick check for dish name in title (fast, no API call)
+  const titleLower = (title || '').toLowerCase();
+  
+  for (const config of CUISINE_CONFIGS) {
+    const dishInTitle = config.dishes.find(dish => 
+      titleLower.includes(dish.toLowerCase())
+    );
+    
+    if (dishInTitle) {
+      // Dish name in title = automatic match (no AI needed)
+      return { tags: [config.name], needsReview: false };
+    }
+  }
+  
+  // Step 2: Use AI to analyze (title first, then full recipe if needed)
+  try {
+    const aiResult = await detectCuisineWithAI(title, ingredients, steps);
+    
+    if (aiResult && aiResult.cuisine && aiResult.confidence >= 0.8) {
+      // High confidence AI result
+      return { tags: [aiResult.cuisine], needsReview: false };
+    }
+    
+    // Low confidence or null - fall back to ingredient matching
+    console.log('AI cuisine detection had low confidence, falling back to ingredient matching');
+    return detectCuisinesByIngredients(title, ingredients, steps);
+  } catch (error) {
+    console.error('AI cuisine detection failed, falling back to ingredient matching:', error);
+    // Step 3: Fallback to ingredient/dish matching
+    return detectCuisinesByIngredients(title, ingredients, steps);
+  }
 }
 
 /**
@@ -515,7 +671,10 @@ const ALL_CUISINE_TAGS = new Set([
 ]);
 
 /**
- * Remove cuisine tags from a tag array
+ * Remove known cuisine tags from a tag array
+ * This is used to remove old/incorrect cuisine tags before re-detection
+ * Note: We only remove cuisines from our known list - AI-detected cuisines not in this list
+ * will be preserved (they're trusted as correct)
  */
 function removeCuisineTags(tags: string[]): string[] {
   return tags.filter(tag => !ALL_CUISINE_TAGS.has(tag.toLowerCase().trim()));
@@ -529,24 +688,29 @@ function removeCuisineTags(tags: string[]): string[] {
  * @param steps - Array of cooking steps (optional, for cuisine detection)
  * @returns Combined unique tags
  */
-export function mergeAutoTags(
+export async function mergeAutoTags(
   existingTags: string[],
   ingredients: string[],
   title?: string,
   steps?: string[]
-): string[] {
-  // Step 1: Remove any existing cuisine tags (from AI or previous runs)
-  // We'll re-detect cuisine tags using our logic to ensure only ONE cuisine tag
-  const tagsWithoutCuisine = removeCuisineTags(existingTags);
+): Promise<string[]> {
+  // Step 1: Separate known cuisine tags from unknown cuisine tags
+  // We'll re-detect known cuisine tags, but preserve unknown ones (likely AI-detected)
+  const tagsWithoutKnownCuisine = existingTags.filter(tag => 
+    !ALL_CUISINE_TAGS.has(tag.toLowerCase().trim())
+  );
   
   // Step 2: Get protein tags (existing functionality)
   const autoTags = generateAutoTags(ingredients);
   
   // Step 3: Get cuisine tags using our detection (returns only BEST match)
-  const cuisineResult = detectCuisines(title || '', ingredients, steps || []);
+  const cuisineResult = await detectCuisines(title || '', ingredients, steps || []);
   
-  // Step 4: Combine all tags (cuisine tags from our detection, not from existing)
-  const combined = [...tagsWithoutCuisine, ...autoTags, ...cuisineResult.tags];
+  // Step 4: Combine all tags
+  // - Tags without known cuisines (includes unknown cuisine tags that AI detected)
+  // - Auto-generated protein tags
+  // - Newly detected cuisine tags (from AI or ingredient matching)
+  const combined = [...tagsWithoutKnownCuisine, ...autoTags, ...cuisineResult.tags];
   
   // Step 5: Expand cuisine tags (e.g., "goan" → add "indian")
   const expanded = expandCuisineTags(combined);
@@ -562,11 +726,12 @@ export function mergeAutoTags(
  * @param steps - Array of cooking step strings
  * @returns True if user should review tags
  */
-export function getTagReviewStatus(
+export async function getTagReviewStatus(
   title: string,
   ingredients: string[],
   steps: string[]
-): boolean {
-  return detectCuisines(title, ingredients, steps).needsReview;
+): Promise<boolean> {
+  const result = await detectCuisines(title, ingredients, steps);
+  return result.needsReview;
 }
 
