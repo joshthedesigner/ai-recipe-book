@@ -296,8 +296,8 @@ export default function MobileNav() {
                     </Typography>
                   </ButtonBase>
 
-                  {/* Feed */}
-                  {user && (
+                  {/* Feed - Hidden until core features are being used */}
+                  {false && user && (
                     <ButtonBase
                       onClick={() => router.push('/feed')}
                       sx={{
@@ -334,8 +334,8 @@ export default function MobileNav() {
                             height: '16px',
                             minWidth: '16px',
                           },
-                      }}
-                    >
+                        }}
+                      >
                       <DynamicFeedIcon 
                         sx={{ 
                           fontSize: 20, 
@@ -357,8 +357,8 @@ export default function MobileNav() {
                     </ButtonBase>
                   )}
 
-                  {/* Friends */}
-                  {user && (
+                  {/* Friends - Hidden until core features are being used */}
+                  {false && user && (
                     <ButtonBase
                       onClick={() => router.push('/friends')}
                         sx={{
@@ -421,8 +421,8 @@ export default function MobileNav() {
 
                 {/* Right Side - Search & User */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
-                  {/* Search */}
-                  {user && !groupsLoading && (
+                  {/* Search Friends - Hidden until core features are being used */}
+                  {false && user && !groupsLoading && (
                     <ButtonBase
                       onClick={handleSearchExpand}
                       sx={{

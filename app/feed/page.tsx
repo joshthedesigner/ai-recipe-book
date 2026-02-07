@@ -54,6 +54,11 @@ export default function FeedPage() {
   const { showToast } = useToast();
   const { groups, switchGroup } = useGroup();
   
+  // Redirect to browse page - Feed feature is hidden until core features are being used
+  useEffect(() => {
+    router.replace('/browse');
+  }, [router]);
+  
   const [recipes, setRecipes] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

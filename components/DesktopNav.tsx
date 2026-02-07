@@ -281,8 +281,8 @@ export default function DesktopNav() {
               </Typography>
             </ButtonBase>
 
-            {/* Feed */}
-            {user && (
+            {/* Feed - Hidden until core features are being used */}
+            {false && user && (
               <ButtonBase
                 onClick={() => router.push('/feed')}
                 sx={{
@@ -341,8 +341,8 @@ export default function DesktopNav() {
               </ButtonBase>
             )}
 
-            {/* Friends */}
-            {user && (
+            {/* Friends - Hidden until core features are being used */}
+            {false && user && (
               <ButtonBase
                 onClick={() => router.push('/friends')}
                 sx={{
@@ -404,8 +404,8 @@ export default function DesktopNav() {
 
           {/* Right Side - Search & User */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-            {/* Friends Search */}
-            {user && !groupsLoading && (
+            {/* Friends Search - Hidden until core features are being used */}
+            {false && user && !groupsLoading && (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <FriendsSearch />
               </Box>
