@@ -702,16 +702,6 @@ export default function RecipeCard({ recipe, compact = false, onClick, onDelete,
             horizontal: 'right',
           }}
         >
-          <MenuItem onClick={handleToggleFavorite}>
-            <ListItemIcon>
-              {optimisticFavorite ? (
-                <BookmarkIcon fontSize="small" color="primary" />
-              ) : (
-                <BookmarkBorderIcon fontSize="small" />
-              )}
-            </ListItemIcon>
-            <MenuItemText>{optimisticFavorite ? 'Remove from favorites' : 'Add to favorites'}</MenuItemText>
-          </MenuItem>
           <MenuItem onClick={handleDelete}>
             <ListItemIcon>
               <DeleteIcon fontSize="small" color="error" />
