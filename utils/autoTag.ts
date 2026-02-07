@@ -73,6 +73,7 @@ interface CuisineConfig {
 }
 
 const CUISINE_CONFIGS: CuisineConfig[] = [
+  // Japanese
   {
     name: 'japanese',
     ingredients: [
@@ -88,9 +89,252 @@ const CUISINE_CONFIGS: CuisineConfig[] = [
       'takoyaki', 'sukiyaki', 'shabu-shabu', 'tonkatsu', 'karaage', 'gyoza',
       'miso soup', 'chawanmushi', 'yakiniku', 'teppanyaki'
     ],
-    minMatches: 2, // Need at least 2 indicators (ingredient OR dish)
+    minMatches: 2,
   },
-  // More cuisines can be added here easily
+
+  // Chinese
+  {
+    name: 'chinese',
+    ingredients: [
+      'soy sauce', 'hoisin', 'oyster sauce', 'sesame oil', 'rice wine',
+      'shaoxing wine', 'five spice', 'star anise', 'szechuan peppercorn',
+      'black bean sauce', 'doubanjiang', 'fermented black beans',
+      'chinese black vinegar', 'dark soy', 'light soy', 'ginger', 'garlic',
+      'scallions', 'green onions', 'bok choy', 'napa cabbage', 'chinese broccoli',
+      'gai lan', 'snow peas', 'water chestnuts', 'bamboo shoots',
+      'wood ear mushrooms', 'shiitake', 'tofu', 'pork belly', 'chinese sausage',
+      'lap cheong', 'szechuan pepper', 'sichuan pepper', 'chinese five spice',
+      'douchi', 'fermented black bean', 'tianmianjiang', 'sweet bean sauce'
+    ],
+    dishes: [
+      'kung pao', 'mapo tofu', 'general tso', 'sweet and sour', 'peking duck',
+      'dim sum', 'dumplings', 'wonton', 'wontons', 'spring rolls', 'egg rolls',
+      'chow mein', 'lo mein', 'fried rice', 'hot pot', 'char siu', 'char sui',
+      'moo shu', 'orange chicken', 'mongolian beef', 'szechuan', 'sichuan',
+      'hunan', 'cantonese', 'shanghai', 'beijing', 'soup dumplings',
+      'xiao long bao', 'dan dan noodles', 'twice cooked pork', 'ma po tofu',
+      'kung pao chicken', 'beef and broccoli', 'mongolian chicken',
+      'sesame chicken', 'lemon chicken', 'cashew chicken', 'chinese chicken',
+      'chinese takeout', 'chinese food', 'stir fry', 'stir-fry'
+    ],
+    minMatches: 2,
+  },
+
+  // Italian
+  {
+    name: 'italian',
+    ingredients: [
+      'olive oil', 'garlic', 'basil', 'oregano', 'parmesan', 'pecorino',
+      'mozzarella', 'prosciutto', 'pancetta', 'balsamic', 'capers',
+      'anchovies', 'sun-dried tomatoes', 'artichokes', 'arugula', 'radicchio',
+      'cannellini beans', 'borlotti beans', 'risotto rice', 'arborio rice',
+      'polenta', 'mascarpone', 'ricotta', 'gorgonzola', 'pasta', 'gnocchi',
+      'marinara', 'pesto', 'pomodoro', 'ragu', 'bolognese'
+    ],
+    dishes: [
+      'pasta', 'pizza', 'risotto', 'osso buco', 'carbonara', 'amatriciana',
+      'cacio e pepe', 'aglio e olio', 'puttanesca', 'arrabbiata',
+      'bolognese', 'ragu', 'lasagna', 'lasagne', 'cannelloni', 'ravioli',
+      'tortellini', 'gnocchi', 'polenta', 'bruschetta', 'caprese',
+      'tiramisu', 'gelato', 'panna cotta', 'cannoli', 'zeppole',
+      'fettuccine', 'spaghetti', 'penne', 'rigatoni', 'linguine',
+      'italian food', 'italian cuisine'
+    ],
+    minMatches: 2,
+  },
+
+  // American
+  {
+    name: 'american',
+    ingredients: [
+      'cheddar cheese', 'american cheese', 'bacon', 'bbq sauce', 'ketchup',
+      'mustard', 'mayonnaise', 'pickles', 'hamburger buns', 'hot dog buns',
+      'corn', 'potatoes', 'sweet potatoes', 'pumpkin', 'cranberries',
+      'maple syrup', 'pecans', 'walnuts', 'peanut butter', 'jelly',
+      'graham crackers', 'marshmallows', 'chocolate chips'
+    ],
+    dishes: [
+      'hamburger', 'cheeseburger', 'hot dog', 'bbq', 'barbecue', 'ribs',
+      'fried chicken', 'chicken wings', 'buffalo wings', 'mac and cheese',
+      'macaroni and cheese', 'apple pie', 'pumpkin pie', 'pecan pie',
+      'chocolate chip cookies', 'brownies', 's\'mores', 'cornbread',
+      'biscuits', 'gravy', 'meatloaf', 'pot roast', 'clam chowder',
+      'new england clam chowder', 'cobb salad', 'caesar salad',
+      'american food', 'southern food', 'cajun', 'creole'
+    ],
+    minMatches: 2,
+  },
+
+  // French
+  {
+    name: 'french',
+    ingredients: [
+      'butter', 'cream', 'shallots', 'tarragon', 'thyme', 'rosemary',
+      'dijon mustard', 'white wine', 'red wine', 'cognac', 'brandy',
+      'gruyere', 'brie', 'camembert', 'goat cheese', 'chevre',
+      'truffle', 'foie gras', 'duck', 'duck fat', 'herbes de provence',
+      'french butter', 'creme fraiche', 'mirepoix'
+    ],
+    dishes: [
+      'coq au vin', 'boeuf bourguignon', 'ratatouille', 'cassoulet',
+      'bouillabaisse', 'quiche', 'souffle', 'crepes', 'croissants',
+      'baguette', 'french onion soup', 'vichyssoise', 'confit',
+      'terrine', 'pate', 'escargot', 'duck confit', 'steak frites',
+      'beef bourguignon', 'chicken coq au vin', 'french food',
+      'french cuisine', 'provencal', 'provençal'
+    ],
+    minMatches: 2,
+  },
+
+  // Greek
+  {
+    name: 'greek',
+    ingredients: [
+      'feta cheese', 'kalamata olives', 'olive oil', 'oregano', 'lemon',
+      'yogurt', 'tzatziki', 'hummus', 'tahini', 'phyllo dough', 'filo',
+      'spanakopita', 'dolmades', 'grape leaves', 'lamb', 'octopus',
+      'halloumi', 'mizithra', 'kasseri', 'greek yogurt'
+    ],
+    dishes: [
+      'moussaka', 'spanakopita', 'baklava', 'gyro', 'souvlaki',
+      'tzatziki', 'hummus', 'dolmades', 'stuffed grape leaves',
+      'greek salad', 'horiatiki', 'pastitsio', 'saganaki',
+      'greek food', 'greek cuisine', 'mediterranean'
+    ],
+    minMatches: 2,
+  },
+
+  // Indian
+  {
+    name: 'indian',
+    ingredients: [
+      'curry', 'turmeric', 'cumin', 'coriander', 'garam masala',
+      'cardamom', 'cinnamon', 'cloves', 'fenugreek', 'mustard seeds',
+      'curry leaves', 'ginger', 'garlic', 'ghee', 'yogurt', 'paneer',
+      'basmati rice', 'lentils', 'dal', 'chickpeas', 'chana',
+      'tamarind', 'coconut milk', 'coconut', 'asafoetida', 'hing',
+      'red chili', 'green chili', 'mango powder', 'amchur'
+    ],
+    dishes: [
+      'curry', 'tikka masala', 'butter chicken', 'chicken tikka',
+      'biryani', 'dal', 'lentil curry', 'samosas', 'naan', 'roti',
+      'paratha', 'dosa', 'idli', 'vada', 'pakora', 'bhaji',
+      'palak paneer', 'saag paneer', 'aloo gobi', 'chana masala',
+      'tandoori', 'vindaloo', 'korma', 'rogan josh', 'indian food',
+      'indian cuisine'
+    ],
+    minMatches: 2,
+  },
+
+  // Korean
+  {
+    name: 'korean',
+    ingredients: [
+      'gochujang', 'gochugaru', 'kimchi', 'soy sauce', 'sesame oil',
+      'rice vinegar', 'garlic', 'ginger', 'scallions', 'sesame seeds',
+      'doenjang', 'ssamjang', 'rice', 'noodles', 'tofu', 'beef',
+      'pork belly', 'short ribs', 'galbi', 'bulgogi'
+    ],
+    dishes: [
+      'kimchi', 'bulgogi', 'galbi', 'bibimbap', 'korean bbq',
+      'japchae', 'tteokbokki', 'korean fried chicken', 'soondubu',
+      'kimchi jjigae', 'doenjang jjigae', 'samgyeopsal', 'bossam',
+      'korean food', 'korean cuisine'
+    ],
+    minMatches: 2,
+  },
+
+  // Mexican
+  {
+    name: 'mexican',
+    ingredients: [
+      'cilantro', 'lime', 'jalapeno', 'serrano', 'chipotle', 'adobo',
+      'cumin', 'oregano', 'chili powder', 'corn', 'black beans',
+      'pinto beans', 'refried beans', 'avocado', 'tomatillo', 'salsa',
+      'queso', 'cotija', 'monterey jack', 'tortillas', 'corn tortillas',
+      'flour tortillas', 'mexican cheese'
+    ],
+    dishes: [
+      'tacos', 'burritos', 'enchiladas', 'quesadillas', 'tostadas',
+      'nachos', 'guacamole', 'salsa', 'pico de gallo', 'mole',
+      'pozole', 'chiles rellenos', 'tamales', 'churros', 'flan',
+      'mexican food', 'mexican cuisine', 'tex-mex'
+    ],
+    minMatches: 2,
+  },
+
+  // Thai
+  {
+    name: 'thai',
+    ingredients: [
+      'coconut milk', 'lemongrass', 'lime leaves', 'kaffir lime',
+      'thai basil', 'fish sauce', 'palm sugar', 'galangal', 'ginger',
+      'thai chili', 'bird\'s eye chili', 'tamarind', 'curry paste',
+      'red curry paste', 'green curry paste', 'massaman curry',
+      'pad thai sauce', 'rice noodles', 'jasmine rice'
+    ],
+    dishes: [
+      'pad thai', 'green curry', 'red curry', 'massaman curry',
+      'tom yum', 'tom kha', 'pad see ew', 'pad kee mao', 'drunk noodles',
+      'som tam', 'papaya salad', 'larb', 'thai food', 'thai cuisine',
+      'thai curry'
+    ],
+    minMatches: 2,
+  },
+
+  // Vietnamese
+  {
+    name: 'vietnamese',
+    ingredients: [
+      'fish sauce', 'nuoc cham', 'rice noodles', 'rice paper',
+      'vermicelli', 'bean sprouts', 'mint', 'cilantro', 'basil',
+      'lime', 'lemongrass', 'hoisin', 'sriracha', 'jasmine rice',
+      'star anise', 'cinnamon', 'five spice'
+    ],
+    dishes: [
+      'pho', 'banh mi', 'spring rolls', 'summer rolls', 'goi cuon',
+      'bun', 'vermicelli bowl', 'banh xeo', 'com tam', 'broken rice',
+      'vietnamese food', 'vietnamese cuisine'
+    ],
+    minMatches: 2,
+  },
+
+  // Middle Eastern
+  {
+    name: 'middle eastern',
+    ingredients: [
+      'tahini', 'hummus', 'pita', 'za\'atar', 'sumac', 'cumin',
+      'coriander', 'cardamom', 'allspice', 'pomegranate', 'dates',
+      'figs', 'yogurt', 'labneh', 'feta', 'halloumi', 'lamb',
+      'chickpeas', 'lentils', 'bulgur', 'couscous', 'phyllo', 'filo'
+    ],
+    dishes: [
+      'hummus', 'baba ganoush', 'falafel', 'shawarma', 'kebab',
+      'kabob', 'kofta', 'tabbouleh', 'fattoush', 'baklava',
+      'knafeh', 'mansaf', 'maqluba', 'middle eastern food',
+      'middle eastern cuisine', 'lebanese', 'turkish', 'persian',
+      'iranian', 'moroccan'
+    ],
+    minMatches: 2,
+  },
+
+  // Mediterranean
+  {
+    name: 'mediterranean',
+    ingredients: [
+      'olive oil', 'olives', 'feta', 'tomatoes', 'cucumber',
+      'bell peppers', 'eggplant', 'zucchini', 'artichokes', 'capers',
+      'anchovies', 'lemons', 'oregano', 'basil', 'thyme', 'rosemary',
+      'garlic', 'chickpeas', 'lentils', 'bulgur', 'couscous',
+      'halloumi', 'yogurt', 'tahini', 'hummus'
+    ],
+    dishes: [
+      'mediterranean food', 'mediterranean cuisine', 'greek salad',
+      'caprese', 'ratatouille', 'hummus', 'baba ganoush', 'falafel',
+      'couscous', 'paella', 'gazpacho', 'tapas', 'mezze'
+    ],
+    minMatches: 2,
+  },
 ];
 
 /**
