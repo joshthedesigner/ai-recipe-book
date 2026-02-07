@@ -176,13 +176,13 @@ export async function POST(request: NextRequest) {
           const steps = Array.isArray(recipe.steps) ? recipe.steps : [];
           const title = recipe.title || '';
 
-          // Start with tags without cuisine, then merge auto-tags
-          const correctTags = mergeAutoTags(
-            tagsWithoutCuisine,
-            ingredients,
-            title,
-            steps
-          );
+              // Start with tags without cuisine, then merge auto-tags
+              const correctTags = await mergeAutoTags(
+                tagsWithoutCuisine,
+                ingredients,
+                title,
+                steps
+              );
 
           // Step 3: Check if tags actually changed
           const tagsChanged = JSON.stringify(existingTags.sort()) !== JSON.stringify(correctTags.sort());

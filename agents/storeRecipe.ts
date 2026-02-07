@@ -846,7 +846,7 @@ async function extractRecipeData(text: string): Promise<any> {
       
       // Apply auto-tagging to ensure all protein/ingredient categories are tagged
       // Include title and steps for cuisine detection
-      extracted.tags = mergeAutoTags(
+      extracted.tags = await mergeAutoTags(
         extracted.tags || [],
         extracted.ingredients,
         extracted.title,
@@ -855,7 +855,7 @@ async function extractRecipeData(text: string): Promise<any> {
       console.log('Auto-tags applied:', extracted.tags);
       
       // Check if tag review is needed (for cuisine detection)
-      (extracted as any).needsTagReview = getTagReviewStatus(
+      (extracted as any).needsTagReview = await getTagReviewStatus(
         extracted.title,
         extracted.ingredients,
         extracted.steps
