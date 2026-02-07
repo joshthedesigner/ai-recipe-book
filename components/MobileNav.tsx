@@ -19,7 +19,6 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import HomeIcon from '@mui/icons-material/Home';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import PeopleIcon from '@mui/icons-material/People';
 import Link from 'next/link';
@@ -247,54 +246,25 @@ export default function MobileNav() {
             ) : (
               /* COLLAPSED: Nav Items */
               <>
-                {/* Navigation Items - Left (Home/Friends) */}
+                {/* Logo */}
+                <Box
+                  onClick={handleHomeClick}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    mr: 1,
+                  }}
+                >
+                  <img 
+                    src="/logo1.svg" 
+                    alt="RecipeAssist" 
+                    style={{ height: '25px', width: 'auto' }}
+                  />
+                </Box>
+
+                {/* Navigation Items - Left (Feed/Friends) */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {/* Home */}
-                  <ButtonBase
-                    onClick={handleHomeClick}
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 0.25,
-                      p: 0.75,
-                      borderRadius: 1,
-                      position: 'relative',
-                      '&:hover': {
-                        bgcolor: 'action.hover',
-                      },
-                      // Selected state indicator - only when on /browse AND viewing own cookbook
-                      '&::after': (pathname === '/browse' && activeGroup?.isOwn) ? {
-                        content: '""',
-                        position: 'absolute',
-                        bottom: 0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '80%',
-                        height: '3px',
-                        bgcolor: 'text.primary',
-                        borderRadius: '2px 2px 0 0',
-                      } : {},
-                    }}
-                  >
-                    <HomeIcon 
-                      sx={{ 
-                        fontSize: 20, 
-                        color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary'
-                      }} 
-                    />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '10px',
-                        color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary',
-                        fontWeight: (pathname === '/browse' && activeGroup?.isOwn) ? 600 : 400,
-                        lineHeight: 1,
-                      }}
-                    >
-                      Your Recipes
-                    </Typography>
-                  </ButtonBase>
 
                   {/* Feed - Hidden until core features are being used */}
                   {false && user && (

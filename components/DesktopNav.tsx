@@ -218,18 +218,11 @@ export default function DesktopNav() {
         >
           {/* Logo */}
           <Box
-            onClick={() => {
-              const ownGroup = groups.find(g => g.isOwn);
-              if (ownGroup) {
-                switchGroup(ownGroup.id);
-                router.push('/browse');
-              }
-            }}
-            style={{
+            onClick={handleHomeClick}
+            sx={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
-              textDecoration: 'none',
               cursor: 'pointer',
             }}
           >
@@ -240,46 +233,8 @@ export default function DesktopNav() {
             />
           </Box>
 
-          {/* Navigation Items - Left (Home/Friends) */}
+          {/* Navigation Items - Left (Feed/Friends) */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', ml: 5 }}>
-            {/* Home */}
-            <ButtonBase
-              onClick={handleHomeClick}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                px: 1.5,
-                py: 1,
-                borderRadius: 1,
-                position: 'relative',
-                '&:hover': {
-                  bgcolor: 'action.hover',
-                },
-                // Selected state indicator - only when on /browse AND viewing own cookbook
-                '&::after': (pathname === '/browse' && activeGroup?.isOwn) ? {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '80%',
-                  height: '3px',
-                  bgcolor: 'text.primary',
-                  borderRadius: '2px 2px 0 0',
-                } : {},
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  fontSize: '14px',
-                  color: (pathname === '/browse' && activeGroup?.isOwn) ? 'text.primary' : 'text.secondary',
-                  fontWeight: (pathname === '/browse' && activeGroup?.isOwn) ? 600 : 400,
-                }}
-              >
-                Your Recipes
-              </Typography>
-            </ButtonBase>
 
             {/* Feed - Hidden until core features are being used */}
             {false && user && (
