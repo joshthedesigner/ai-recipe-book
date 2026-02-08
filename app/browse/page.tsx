@@ -20,6 +20,7 @@ import {
   IconButton,
   Chip,
   Fab,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -195,6 +196,43 @@ export default function BrowsePage() {
 
   // Total count from first page
   const totalRecipeCount = data?.pages[0]?.count ?? 0;
+
+  // Generate dynamic recipe count description based on active filters (without count)
+  const getRecipeCountDescription = (): string => {
+    const parts: string[] = [];
+    
+    // Add cuisine filter
+    if (filterCuisine) {
+      const cuisineName = filterCuisine.charAt(0).toUpperCase() + filterCuisine.slice(1);
+      parts.push(cuisineName);
+    }
+    
+    // Add ingredient filter
+    if (filterMainIngredient) {
+      const ingredientName = filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1);
+      parts.push(ingredientName);
+    }
+    
+    // Add favorites filter
+    if (filterFavorites) {
+      parts.push('favorited');
+    }
+    
+    // Build the description
+    if (parts.length > 0) {
+      // Combine parts: "Chinese chicken" or "Chinese favorited" etc.
+      const filterText = parts.join(' ');
+      return `${filterText} recipe${totalRecipeCount !== 1 ? 's' : ''}`;
+    }
+    
+    // If search query is active but no other filters
+    if (searchQuery) {
+      return `recipe${totalRecipeCount !== 1 ? 's' : ''} matching "${searchQuery}"`;
+    }
+    
+    // Default: no filters
+    return `recipe${totalRecipeCount !== 1 ? 's' : ''}`;
+  };
 
   // Infinite scroll using IntersectionObserver
   const sentinelRef = useInfiniteScroll(
@@ -520,6 +558,29 @@ export default function BrowsePage() {
                   >
                     {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                   </IconButton>
+
+                  {/* Reset Filters Button */}
+                  <Button
+                    onClick={clearFilters}
+                    disabled={!hasActiveFilters}
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      color: 'text.secondary',
+                      fontSize: '0.875rem',
+                      minWidth: 'auto',
+                      px: 1.5,
+                      '&:hover': {
+                        bgcolor: 'transparent',
+                        color: 'text.primary',
+                      },
+                      '&:disabled': {
+                        color: 'text.disabled',
+                      },
+                    }}
+                  >
+                    Reset Filters
+                  </Button>
                 </>
               )}
             </Box>
@@ -605,7 +666,9 @@ export default function BrowsePage() {
               color="text.secondary"
               sx={{ mb: 2, fontSize: 16 }}
             >
-              Displaying <Box component="strong" sx={{ color: 'text.primary' }}>{totalRecipeCount}</Box> recipes
+              Displaying{' '}
+              <Box component="strong" sx={{ color: 'text.primary' }}>{totalRecipeCount}</Box>{' '}
+              {getRecipeCountDescription()}
             </Typography>
             <Grid container spacing={3}>
               {sortedRecipes.map((recipe, index) => {

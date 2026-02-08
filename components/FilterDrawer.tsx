@@ -154,7 +154,7 @@ export default function FilterDrawer({
                   },
                 }}
               >
-                Reset
+                Reset Filters
               </Typography>
             )}
             <IconButton onClick={onClose} size="small">
