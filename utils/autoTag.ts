@@ -236,8 +236,9 @@ const CUISINE_CONFIGS: CuisineConfig[] = [
       'biryani', 'dal', 'lentil curry', 'samosas', 'naan', 'roti',
       'paratha', 'dosa', 'idli', 'vada', 'pakora', 'bhaji',
       'palak paneer', 'saag paneer', 'aloo gobi', 'chana masala',
-      'tandoori', 'vindaloo', 'korma', 'rogan josh', 'indian food',
-      'indian cuisine'
+      'tandoori', 'vindaloo', 'korma', 'rogan josh', 'molee', 'molly',
+      'meen molee', 'fish molee', 'kerala fish curry', 'kerala curry',
+      'indian food', 'indian cuisine'
     ],
     minMatches: 2,
   },
@@ -566,13 +567,18 @@ function detectCuisinesByIngredients(
     ).length;
     
     // Count dish matches - check both in title and in full text
-    const dishMatchesInTitle = config.dishes.filter(dish => 
-      titleLower.includes(dish.toLowerCase())
-    ).length;
+    // Use word boundary matching to avoid false positives
+    const dishMatchesInTitle = config.dishes.filter(dish => {
+      const dishLower = dish.toLowerCase();
+      const wordBoundaryRegex = new RegExp(`\\b${dishLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return wordBoundaryRegex.test(titleLower);
+    }).length;
     
-    const dishMatchesInText = config.dishes.filter(dish => 
-      combinedText.includes(dish.toLowerCase())
-    ).length;
+    const dishMatchesInText = config.dishes.filter(dish => {
+      const dishLower = dish.toLowerCase();
+      const wordBoundaryRegex = new RegExp(`\\b${dishLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return wordBoundaryRegex.test(combinedText);
+    }).length;
     
     // Dish matches in title are worth 5 points each (very strong signal)
     // Dish matches elsewhere are worth 2 points each
@@ -619,12 +625,17 @@ export async function detectCuisines(
   steps: string[]
 ): Promise<{ tags: string[]; needsReview: boolean }> {
   // Step 1: Quick check for dish name in title (fast, no API call)
+  // Use word boundary matching to avoid false positives (e.g., "molee" matching "mole")
   const titleLower = (title || '').toLowerCase();
   
   for (const config of CUISINE_CONFIGS) {
-    const dishInTitle = config.dishes.find(dish => 
-      titleLower.includes(dish.toLowerCase())
-    );
+    const dishInTitle = config.dishes.find(dish => {
+      const dishLower = dish.toLowerCase();
+      // Use word boundary matching: check if dish appears as a whole word
+      // This prevents "molee" from matching "mole" or "molly" from matching "mole"
+      const wordBoundaryRegex = new RegExp(`\\b${dishLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return wordBoundaryRegex.test(titleLower);
+    });
     
     if (dishInTitle) {
       // Dish name in title = automatic match (no AI needed)
