@@ -31,8 +31,6 @@ import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
-import AddRecipeButton from '@/components/AddRecipeButton';
-import AppButton from '@/components/AppButton';
 import RecipeSidebar from '@/components/RecipeSidebar';
 import FilterDrawer from '@/components/FilterDrawer';
 import { Badge } from '@mui/material';
@@ -362,171 +360,53 @@ export default function BrowsePage() {
       >
         <Container maxWidth="xl" sx={{ pt: { xs: 0.5, sm: 1 }, pb: 1 }}>
           {/* Header Title and Search/Filters */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
-            {/* Title and CTA */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flex: { xs: '1 1 100%', sm: '0 0 auto' }, mb: { xs: -0.5, sm: 0 } }}>
-              <Typography 
-                variant="h4" 
-                sx={{ 
-                  fontWeight: 600, 
-                  mb: 0, 
-                  fontSize: '24px',
-                  display: { xs: 'none', sm: 'block' }, // Hide on mobile
-                }}
-              >
-                {activeGroup?.isFriend 
-                  ? `${activeGroup.name}` 
-                  : 'Your recipes'}
-              </Typography>
-              {canAddRecipes && (
-                <Box sx={{ display: { xs: 'none', sm: 'block' } }}> {/* Hide on mobile */}
-                  <AddRecipeButton onClick={() => setSidebarOpen(true)} />
-                </Box>
-              )}
+          <Box sx={{ display: 'flex', flexDirection: 'row', gap: { xs: 1, sm: 2 }, alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: { xs: 'nowrap', sm: 'wrap' }, py: 1 }}>
+            {/* Title and CTA - Removed on desktop (using FAB instead) */}
+            <Box sx={{ display: 'none' }}>
+              {/* Title and button removed - using FAB for both mobile and desktop */}
             </Box>
 
-            {/* Search and Filters */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'flex-end' }, flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 0, width: { xs: '100%', sm: 'auto' } }}>
-            {/* Search Bar */}
-            <TextField
-              placeholder="Search recipes..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-                endAdornment: searchQuery && (
-                  <InputAdornment position="end">
-                    <IconButton size="small" onClick={() => setSearchQuery('')}>
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-              size="small"
-              sx={{ 
-                flex: { xs: '1 1 auto', sm: '0 0 auto' },
-                minWidth: 0,
-                width: { xs: 'auto', sm: 400 }
-              }}
-            />
-
-            {/* Favorite Button (Mobile Only) */}
-            {isMobile && (
-              <IconButton
-                onClick={() => setFilterFavorites(!filterFavorites)}
-                sx={{
-                  border: '1px solid',
-                  borderColor: filterFavorites ? 'primary.main' : 'divider',
-                  color: filterFavorites ? 'primary.main' : 'text.secondary',
-                  '&:hover': {
-                    bgcolor: 'action.hover',
-                    borderColor: filterFavorites ? 'primary.dark' : 'text.primary',
-                  },
+            {/* Search Bar - Left Aligned */}
+            <Box sx={{ display: 'flex', alignItems: 'center', flex: { xs: '1 1 0%', sm: '0 0 auto' }, minWidth: 0, mr: { xs: 1, sm: 0 } }}>
+              <TextField
+                placeholder="Search recipes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearchQuery('')}>
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
                 }}
-              >
-                {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-              </IconButton>
-            )}
-
-            {/* Filter Button (Mobile Only) */}
-            {isMobile && (
-              <Badge
-                badgeContent={activeFilterCount > 0 ? activeFilterCount : 0}
-                color="error"
-                sx={{
-                  '& .MuiBadge-badge': {
-                    fontSize: '9px',
-                    height: '16px',
-                    minWidth: '16px',
-                  },
-                  flexShrink: 0, // Prevent filter button from shrinking
+                size="small"
+                sx={{ 
+                  width: { xs: '100%', sm: '533px' },
+                  minWidth: 0,
+                  '& .MuiOutlinedInput-root': {
+                    minWidth: 0,
+                  }
                 }}
-              >
-                <IconButton
-                  onClick={() => setFilterDrawerOpen(true)}
-                  sx={{
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      bgcolor: 'action.hover',
-                    },
-                  }}
-                >
-                  <FilterListIcon />
-                </IconButton>
-              </Badge>
-            )}
+              />
+            </Box>
 
-            {/* Desktop Filters - Hidden on Mobile */}
-            {!isMobile && (
-              <>
-                {/* Sort by Dropdown */}
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel id="sort-by-label">Sort by</InputLabel>
-                  <Select
-                    labelId="sort-by-label"
-                    id="sort-by-select"
-                    value={sortBy}
-                    label="Sort by"
-                    onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                  >
-                    <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
-                    <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
-                    <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Cuisines Filter */}
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
-                  <Select
-                    labelId="cuisine-filter-label"
-                    id="cuisine-filter-select"
-                    value={filterCuisine}
-                    label="Cuisines"
-                    onChange={(e) => setFilterCuisine(e.target.value)}
-                  >
-                    <MenuItem value="">All Cuisines</MenuItem>
-                    {availableCuisines.map((cuisine) => (
-                      <MenuItem key={cuisine} value={cuisine}>
-                        {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Ingredients Filter */}
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
-                  <Select
-                    labelId="ingredient-filter-label"
-                    id="ingredient-filter-select"
-                    value={filterMainIngredient}
-                    label="Ingredients"
-                    onChange={(e) => setFilterMainIngredient(e.target.value)}
-                  >
-                    <MenuItem value="">All Ingredients</MenuItem>
-                    {availableIngredients.map((ingredient) => (
-                      <MenuItem key={ingredient} value={ingredient}>
-                        {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {/* Favorites Filter Icon Button */}
+            {/* Filters and Favorite - Right Aligned on Desktop, Inline on Mobile */}
+            <Box sx={{ display: 'flex', gap: { xs: 1, sm: 2 }, alignItems: 'center', flexShrink: 0 }}>
+              {/* Favorite Button (Mobile Only) */}
+              {isMobile && (
                 <IconButton
                   onClick={() => setFilterFavorites(!filterFavorites)}
                   sx={{
                     border: '1px solid',
                     borderColor: filterFavorites ? 'primary.main' : 'divider',
                     color: filterFavorites ? 'primary.main' : 'text.secondary',
-                    height: '40px', // Match MUI Select small size height
-                    width: '40px', // Square to match height
                     '&:hover': {
                       bgcolor: 'action.hover',
                       borderColor: filterFavorites ? 'primary.dark' : 'text.primary',
@@ -535,8 +415,113 @@ export default function BrowsePage() {
                 >
                   {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
                 </IconButton>
-              </>
-            )}
+              )}
+
+              {/* Filter Button (Mobile Only) */}
+              {isMobile && (
+                <Badge
+                  badgeContent={activeFilterCount > 0 ? activeFilterCount : 0}
+                  color="error"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontSize: '9px',
+                      height: '16px',
+                      minWidth: '16px',
+                    },
+                    flexShrink: 0, // Prevent filter button from shrinking
+                  }}
+                >
+                  <IconButton
+                    onClick={() => setFilterDrawerOpen(true)}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
+                  >
+                    <FilterListIcon />
+                  </IconButton>
+                </Badge>
+              )}
+
+              {/* Desktop Filters - Hidden on Mobile */}
+              {!isMobile && (
+                <>
+                  {/* Sort by Dropdown */}
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel id="sort-by-label">Sort by</InputLabel>
+                    <Select
+                      labelId="sort-by-label"
+                      id="sort-by-select"
+                      value={sortBy}
+                      label="Sort by"
+                      onChange={(e) => handleSortChange(e.target.value as SortOption)}
+                    >
+                      <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
+                      <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
+                      <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* Cuisines Filter */}
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
+                    <Select
+                      labelId="cuisine-filter-label"
+                      id="cuisine-filter-select"
+                      value={filterCuisine}
+                      label="Cuisines"
+                      onChange={(e) => setFilterCuisine(e.target.value)}
+                    >
+                      <MenuItem value="">All Cuisines</MenuItem>
+                      {availableCuisines.map((cuisine) => (
+                        <MenuItem key={cuisine} value={cuisine}>
+                          {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Ingredients Filter */}
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
+                    <Select
+                      labelId="ingredient-filter-label"
+                      id="ingredient-filter-select"
+                      value={filterMainIngredient}
+                      label="Ingredients"
+                      onChange={(e) => setFilterMainIngredient(e.target.value)}
+                    >
+                      <MenuItem value="">All Ingredients</MenuItem>
+                      {availableIngredients.map((ingredient) => (
+                        <MenuItem key={ingredient} value={ingredient}>
+                          {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+
+                  {/* Favorites Filter Icon Button */}
+                  <IconButton
+                    onClick={() => setFilterFavorites(!filterFavorites)}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: filterFavorites ? 'primary.main' : 'divider',
+                      color: filterFavorites ? 'primary.main' : 'text.secondary',
+                      height: '40px', // Match MUI Select small size height
+                      width: '40px', // Square to match height
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                        borderColor: filterFavorites ? 'primary.dark' : 'text.primary',
+                      },
+                    }}
+                  >
+                    {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                  </IconButton>
+                </>
+              )}
             </Box>
           </Box>
         </Container>
@@ -702,8 +687,8 @@ export default function BrowsePage() {
         onReset={clearFilters}
       />
 
-      {/* Floating Action Button for Mobile - Add Recipe */}
-      {canAddRecipes && isMobile && (
+      {/* Floating Action Button - Add Recipe (Mobile and Desktop) */}
+      {canAddRecipes && (
         <Fab
           color="primary"
           aria-label="add recipe"
@@ -713,9 +698,9 @@ export default function BrowsePage() {
             bottom: 24,
             right: 24,
             zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
             '&:hover': {
-              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
             },
           }}
         >
