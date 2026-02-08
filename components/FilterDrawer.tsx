@@ -175,27 +175,9 @@ export default function FilterDrawer({
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Filters
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {onReset && (
-              <Typography
-                variant="body2"
-                onClick={onReset}
-                sx={{
-                  color: 'text.secondary',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  '&:hover': {
-                    color: 'text.primary',
-                  },
-                }}
-              >
-                Reset Filters
-              </Typography>
-            )}
-            <IconButton onClick={onClose} size="small">
-              <CloseIcon />
-            </IconButton>
-          </Box>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
         </Box>
 
         {/* Filter Content */}
@@ -288,14 +270,26 @@ export default function FilterDrawer({
 
         </Box>
 
-        {/* Footer with Done Button */}
+        {/* Footer with Reset and Done Buttons */}
         <Box
           sx={{
             p: 2,
             borderTop: '1px solid',
             borderColor: 'divider',
+            display: 'flex',
+            gap: 2,
           }}
         >
+          {onReset && (
+            <AppButton
+              variant="secondary"
+              fullWidth
+              onClick={onReset}
+              disabled={!filterCuisine && !filterMainIngredient && sortBy === sortOptions.RECENTLY_ADDED}
+            >
+              Reset
+            </AppButton>
+          )}
           <AppButton
             variant="primary"
             fullWidth
