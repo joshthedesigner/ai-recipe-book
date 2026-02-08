@@ -10,7 +10,6 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  ButtonBase,
   Divider,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -69,6 +68,23 @@ export default function FilterDrawer({
     }));
   };
 
+  // Calculate filter counts for each section
+  const getFilterCount = (sectionKey: keyof typeof expandedSections): number => {
+    switch (sectionKey) {
+      case 'sort':
+        // Count as 1 if sort is not the default (RECENTLY_ADDED)
+        return sortBy !== sortOptions.RECENTLY_ADDED ? 1 : 0;
+      case 'cuisines':
+        // Count as 1 if a cuisine filter is selected
+        return filterCuisine ? 1 : 0;
+      case 'ingredients':
+        // Count as 1 if an ingredient filter is selected
+        return filterMainIngredient ? 1 : 0;
+      default:
+        return 0;
+    }
+  };
+
   const CollapsibleSection = ({ 
     title, 
     sectionKey, 
@@ -79,10 +95,11 @@ export default function FilterDrawer({
     children: React.ReactNode;
   }) => {
     const isExpanded = expandedSections[sectionKey];
+    const count = getFilterCount(sectionKey);
     
     return (
       <Box>
-        <ButtonBase
+        <Box
           onClick={() => toggleSection(sectionKey)}
           sx={{
             width: '100%',
@@ -91,18 +108,36 @@ export default function FilterDrawer({
             justifyContent: 'space-between',
             py: 1.5,
             px: 0,
+            cursor: 'pointer',
             '&:hover': {
-              bgcolor: 'transparent',
+              bgcolor: 'action.hover',
             },
           }}
         >
           <Typography variant="body1" sx={{ fontWeight: 500, fontSize: '16px' }}>
-            {title}
+            {title}{count > 0 ? ` (${count})` : ''}
           </Typography>
-          <IconButton size="small" sx={{ p: 0.5 }}>
+          <Box
+            component="div"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleSection(sectionKey);
+            }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              '&:hover': {
+                bgcolor: 'action.hover',
+              },
+            }}
+          >
             {isExpanded ? <RemoveIcon /> : <AddIcon />}
-          </IconButton>
-        </ButtonBase>
+          </Box>
+        </Box>
         {isExpanded && (
           <Box sx={{ pl: 0, pr: 0, pb: 2 }}>
             {children}
