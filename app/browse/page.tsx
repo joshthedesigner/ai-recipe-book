@@ -19,12 +19,14 @@ import {
   MenuItem,
   IconButton,
   Chip,
+  Fab,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import AddIcon from '@mui/icons-material/Add';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -319,17 +321,17 @@ export default function BrowsePage() {
 
   const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterFavorites || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
   
-  // Count active filters for badge (exclude default sort)
+  // Count active filters for badge (exclude default sort and favorites - favorites has its own button)
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (searchQuery) count++;
     if (filterCuisine) count++;
     if (filterMainIngredient) count++;
-    if (filterFavorites) count++;
+    // Don't count favorites - it has its own button now
     // Sort only counts if changed from default
     if (sortBy !== SORT_OPTIONS.RECENTLY_ADDED) count++;
     return count;
-  }, [searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
+  }, [searchQuery, filterCuisine, filterMainIngredient, sortBy]);
 
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
@@ -358,17 +360,29 @@ export default function BrowsePage() {
           zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
         }}
       >
-        <Container maxWidth="xl" sx={{ py: 2 }}>
+        <Container maxWidth="xl" sx={{ pt: { xs: 0.5, sm: 1 }, pb: 1 }}>
           {/* Header Title and Search/Filters */}
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 2 }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: 'wrap' }}>
             {/* Title and CTA */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flex: { xs: '1 1 100%', sm: '0 0 auto' } }}>
-              <Typography variant="h4" sx={{ fontWeight: 600, mb: 0, fontSize: '24px' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap', flex: { xs: '1 1 100%', sm: '0 0 auto' }, mb: { xs: -0.5, sm: 0 } }}>
+              <Typography 
+                variant="h4" 
+                sx={{ 
+                  fontWeight: 600, 
+                  mb: 0, 
+                  fontSize: '24px',
+                  display: { xs: 'none', sm: 'block' }, // Hide on mobile
+                }}
+              >
                 {activeGroup?.isFriend 
                   ? `${activeGroup.name}` 
                   : 'Your recipes'}
               </Typography>
-              {canAddRecipes && <AddRecipeButton onClick={() => setSidebarOpen(true)} />}
+              {canAddRecipes && (
+                <Box sx={{ display: { xs: 'none', sm: 'block' } }}> {/* Hide on mobile */}
+                  <AddRecipeButton onClick={() => setSidebarOpen(true)} />
+                </Box>
+              )}
             </Box>
 
             {/* Search and Filters */}
@@ -399,6 +413,24 @@ export default function BrowsePage() {
                 width: { xs: 'auto', sm: 400 }
               }}
             />
+
+            {/* Favorite Button (Mobile Only) */}
+            {isMobile && (
+              <IconButton
+                onClick={() => setFilterFavorites(!filterFavorites)}
+                sx={{
+                  border: '1px solid',
+                  borderColor: filterFavorites ? 'primary.main' : 'divider',
+                  color: filterFavorites ? 'primary.main' : 'text.secondary',
+                  '&:hover': {
+                    bgcolor: 'action.hover',
+                    borderColor: filterFavorites ? 'primary.dark' : 'text.primary',
+                  },
+                }}
+              >
+                {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+              </IconButton>
+            )}
 
             {/* Filter Button (Mobile Only) */}
             {isMobile && (
@@ -486,29 +518,23 @@ export default function BrowsePage() {
                   </Select>
                 </FormControl>
 
-                {/* Favorites Filter Chip */}
-                <Chip
-                  icon={filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                  label="Favorites"
+                {/* Favorites Filter Icon Button */}
+                <IconButton
                   onClick={() => setFilterFavorites(!filterFavorites)}
-                  color={filterFavorites ? 'primary' : 'default'}
-                  variant="outlined" // Always use outlined to prevent visual flash
-                  size="small"
                   sx={{
-                    cursor: 'pointer',
-                    fontWeight: filterFavorites ? 600 : 400,
-                    height: '40px', // Match MUI Select small size height
-                    paddingLeft: '14px', // Match Select small padding
-                    paddingRight: '14px', // Match Select small padding
-                    minWidth: '120px', // Fixed width to prevent layout shift
-                    justifyContent: 'center', // Center content within fixed width
-                    // When selected, use primary border color; otherwise default
+                    border: '1px solid',
                     borderColor: filterFavorites ? 'primary.main' : 'divider',
+                    color: filterFavorites ? 'primary.main' : 'text.secondary',
+                    height: '40px', // Match MUI Select small size height
+                    width: '40px', // Square to match height
                     '&:hover': {
-                      borderColor: 'text.primary', // Darken border on hover to match MUI Select
+                      bgcolor: 'action.hover',
+                      borderColor: filterFavorites ? 'primary.dark' : 'text.primary',
                     },
                   }}
-                />
+                >
+                  {filterFavorites ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                </IconButton>
               </>
             )}
             </Box>
@@ -667,17 +693,35 @@ export default function BrowsePage() {
         sortBy={sortBy}
         filterCuisine={filterCuisine}
         filterMainIngredient={filterMainIngredient}
-        filterFavorites={filterFavorites}
         availableCuisines={availableCuisines}
         availableIngredients={availableIngredients}
         sortOptions={SORT_OPTIONS}
         onSortChange={(value) => handleSortChange(value as SortOption)}
         onCuisineChange={setFilterCuisine}
         onIngredientChange={setFilterMainIngredient}
-        onFavoritesChange={setFilterFavorites}
         onReset={clearFilters}
       />
 
+      {/* Floating Action Button for Mobile - Add Recipe */}
+      {canAddRecipes && isMobile && (
+        <Fab
+          color="primary"
+          aria-label="add recipe"
+          onClick={() => setSidebarOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            '&:hover': {
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2)',
+            },
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      )}
     </Box>
   );
 }

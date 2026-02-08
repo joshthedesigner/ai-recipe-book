@@ -16,8 +16,6 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AppButton from './AppButton';
 
 interface FilterDrawerProps {
@@ -27,7 +25,6 @@ interface FilterDrawerProps {
   sortBy: string;
   filterCuisine: string;
   filterMainIngredient: string;
-  filterFavorites: boolean;
   // Available options
   availableCuisines: string[];
   availableIngredients: string[];
@@ -42,7 +39,6 @@ interface FilterDrawerProps {
   onSortChange: (value: string) => void;
   onCuisineChange: (value: string) => void;
   onIngredientChange: (value: string) => void;
-  onFavoritesChange: (value: boolean) => void;
   onReset?: () => void; // Optional reset callback
 }
 
@@ -52,21 +48,18 @@ export default function FilterDrawer({
   sortBy,
   filterCuisine,
   filterMainIngredient,
-  filterFavorites,
   availableCuisines,
   availableIngredients,
   sortOptions,
   onSortChange,
   onCuisineChange,
   onIngredientChange,
-  onFavoritesChange,
   onReset,
 }: FilterDrawerProps) {
   const [expandedSections, setExpandedSections] = useState({
     sort: true,
     cuisines: true,
     ingredients: true,
-    favorites: true,
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -258,22 +251,6 @@ export default function FilterDrawer({
             </RadioGroup>
           </CollapsibleSection>
 
-          {/* Favorites Section */}
-          <CollapsibleSection title="Favorites" sectionKey="favorites">
-            <Box sx={{ mt: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={filterFavorites}
-                    onChange={(e) => onFavoritesChange(e.target.checked)}
-                    icon={<BookmarkBorderIcon />}
-                    checkedIcon={<BookmarkIcon />}
-                  />
-                }
-                label="Favorites"
-              />
-            </Box>
-          </CollapsibleSection>
         </Box>
 
         {/* Footer with Done Button */}
