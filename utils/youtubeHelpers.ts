@@ -5,6 +5,7 @@
  */
 
 import { Innertube } from 'youtubei.js';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 /**
  * Extract YouTube video ID from various URL formats
@@ -67,54 +68,61 @@ export function getYouTubeThumbnailSrcSet(videoUrl: string): string | null {
 
 /**
  * Fetch YouTube video captions/subtitles
- * Uses youtube-transcript library for reliable caption extraction
+ * Tries youtubei.js first, falls back to youtube-transcript-ts if it fails
  */
 export async function getYouTubeCaptions(videoId: string): Promise<string | null> {
+  console.log(`🎥 [youtubeHelpers] Fetching captions for YouTube video: ${videoId}`);
+  console.log(`🎥 [youtubeHelpers] Full URL: https://www.youtube.com/watch?v=${videoId}`);
+  
+  // Try youtubei.js first (primary method)
   try {
-    console.log(`🎥 Fetching captions for YouTube video: ${videoId}`);
-    console.log(`   Full URL: https://www.youtube.com/watch?v=${videoId}`);
-    
+    console.log('🎥 [youtubeHelpers] Attempt 1: Trying youtubei.js...');
+    console.log('🎥 [youtubeHelpers] Initializing Innertube...');
     // Initialize Innertube (YouTube's internal API)
     const youtube = await Innertube.create();
+    console.log('🎥 [youtubeHelpers] ✅ Innertube initialized');
     
+    console.log('🎥 [youtubeHelpers] Getting video info...');
     // Get video info
     const info = await youtube.getInfo(videoId);
     
-    console.log('📹 Video info retrieved:', {
+    console.log('🎥 [youtubeHelpers] 📹 Video info retrieved:', {
       title: info.basic_info.title,
       hasCaptions: !!info.captions,
+      captionsType: typeof info.captions,
     });
     
+    console.log('🎥 [youtubeHelpers] Getting transcript/captions...');
     // Get transcript/captions
     const transcriptData = await info.getTranscript();
     
-    console.log('📝 Transcript data:', {
+    console.log('🎥 [youtubeHelpers] 📝 Transcript data:', {
       exists: !!transcriptData,
       hasContent: !!transcriptData?.transcript,
       segmentCount: transcriptData?.transcript?.content?.body?.initial_segments?.length,
+      transcriptType: typeof transcriptData?.transcript,
     });
     
     if (!transcriptData || !transcriptData.transcript) {
-      console.log('❌ No transcript available for video:', videoId);
-      return null;
+      console.error('🎥 [youtubeHelpers] ❌ No transcript available for video:', videoId);
+      throw new Error('No transcript data from youtubei.js');
     }
     
     // Extract text from transcript segments
     const content = transcriptData.transcript.content;
     if (!content || !content.body) {
-      console.log('❌ No transcript content available');
-      return null;
+      console.error('🎥 [youtubeHelpers] ❌ No transcript content available');
+      throw new Error('No transcript content from youtubei.js');
     }
     
     const segments = content.body.initial_segments;
     
     if (!segments || segments.length === 0) {
-      console.log('❌ No caption segments found');
-      return null;
+      console.error('🎥 [youtubeHelpers] ❌ No caption segments found');
+      throw new Error('No caption segments from youtubei.js');
     }
     
-    // Log first segment structure to understand the format
-    console.log('🔍 First segment structure:', JSON.stringify(segments[0], null, 2).substring(0, 500));
+    console.log(`🎥 [youtubeHelpers] Found ${segments.length} caption segments`);
     
     // Combine all segments into full text
     // Try different possible text locations in the segment object
@@ -137,18 +145,65 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
       .join(' ')
       .trim();
     
-    console.log(`✅ Extracted ${fullTranscript.length} characters of captions from YouTube video`);
-    console.log(`   ${segments.length} caption segments combined`);
-    console.log(`   Preview: ${fullTranscript.substring(0, 200)}...`);
+    if (fullTranscript.length > 0) {
+      console.log(`🎥 [youtubeHelpers] ✅ Extracted ${fullTranscript.length} characters of captions from YouTube video using youtubei.js`);
+      console.log(`🎥 [youtubeHelpers] ${segments.length} caption segments combined`);
+      console.log(`🎥 [youtubeHelpers] Preview: ${fullTranscript.substring(0, 200)}...`);
+      return fullTranscript;
+    }
     
-    return fullTranscript;
+    throw new Error('Empty transcript from youtubei.js');
     
-  } catch (error) {
-    console.error('❌ Error fetching YouTube captions:', error);
-    console.error('   Error type:', error?.constructor?.name);
-    console.error('   Error message:', error instanceof Error ? error.message : String(error));
-    console.log('💡 Video may not have captions, captions disabled, or access restricted');
-    return null;
+  } catch (youtubeiError) {
+    // Check if it's the specific 400 error we're seeing
+    const isBlockedError = youtubeiError instanceof Error && 
+      (youtubeiError.message.includes('400') || 
+       youtubeiError.message.includes('FAILED_PRECONDITION') ||
+       youtubeiError.message.includes('Precondition check failed'));
+    
+    if (isBlockedError) {
+      console.log('🎥 [youtubeHelpers] ⚠️ youtubei.js blocked by YouTube API, trying fallback...');
+    } else {
+      console.log('🎥 [youtubeHelpers] ⚠️ youtubei.js failed, trying fallback...');
+      console.error('🎥 [youtubeHelpers] youtubei.js error:', youtubeiError);
+    }
+    
+    // Fallback to youtube-transcript-ts
+    try {
+      console.log('🎥 [youtubeHelpers] Attempt 2: Trying youtube-transcript-ts fallback...');
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (!transcript || transcript.length === 0) {
+        console.error('🎥 [youtubeHelpers] ❌ No transcript segments from youtube-transcript-ts');
+        return null;
+      }
+      
+      // Combine all transcript items into full text
+      const fullTranscript = transcript
+        .map(item => item.text)
+        .join(' ')
+        .trim();
+      
+      if (fullTranscript.length > 0) {
+        console.log(`🎥 [youtubeHelpers] ✅ Extracted ${fullTranscript.length} characters of captions using youtube-transcript-ts fallback`);
+        console.log(`🎥 [youtubeHelpers] ${transcript.length} transcript items combined`);
+        console.log(`🎥 [youtubeHelpers] Preview: ${fullTranscript.substring(0, 200)}...`);
+        return fullTranscript;
+      }
+      
+      console.error('🎥 [youtubeHelpers] ❌ Empty transcript from youtube-transcript-ts');
+      return null;
+      
+    } catch (fallbackError) {
+      console.error('🎥 [youtubeHelpers] ❌ Fallback method also failed:', fallbackError);
+      console.error('🎥 [youtubeHelpers] Error type:', fallbackError?.constructor?.name);
+      console.error('🎥 [youtubeHelpers] Error message:', fallbackError instanceof Error ? fallbackError.message : String(fallbackError));
+      if (fallbackError instanceof Error && fallbackError.stack) {
+        console.error('🎥 [youtubeHelpers] Error stack:', fallbackError.stack);
+      }
+      console.log('🎥 [youtubeHelpers] 💡 Video may not have captions, captions disabled, or access restricted');
+      return null;
+    }
   }
 }
 

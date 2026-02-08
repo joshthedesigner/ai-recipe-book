@@ -71,9 +71,8 @@ const INITIAL_MESSAGE: Message = {
 I can help you add delicious recipes in a few easy ways:
 
 🍴 Paste a recipe URL
-📺 Paste a YouTube video link
 📸 Upload a photo of a recipe
-📝 Describe a recipe in your own words
+📝 Copy and paste a recipe
 
 I can even translate recipes from other languages! 🌍
 
@@ -243,6 +242,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     // Check if this is a YouTube URL and start progress updates
     const isYouTube = isYouTubeUrl(input.trim());
     if (isYouTube) {
+      console.log('🎥 [RecipeSidebar] YouTube URL detected:', input.trim());
       startProgressUpdates();
     }
 
@@ -259,6 +259,12 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         10
       );
 
+      console.log('🎥 [RecipeSidebar] Sending message to /api/chat', {
+        isYouTube,
+        messageLength: userMessage.message.length,
+        userId: user?.id,
+      });
+
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -271,7 +277,23 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
         }),
       });
 
+      console.log('🎥 [RecipeSidebar] Received response from /api/chat', {
+        status: response.status,
+        ok: response.ok,
+      });
+
       const data = await response.json();
+
+      console.log('🎥 [RecipeSidebar] Response data:', {
+        success: data.success,
+        hasNeedsReview: !!data.response?.needsReview,
+        hasPendingRecipe: !!data.response?.pendingRecipe,
+        intent: data.response?.intent,
+        error: data.error,
+        messagePreview: data.response?.message?.substring(0, 200),
+        hasPreviewMarker: data.response?.message?.includes('📋 **Recipe Preview**'),
+        fullResponse: data.response,
+      });
 
       if (data.success) {
         const assistantMessage: Message = {
