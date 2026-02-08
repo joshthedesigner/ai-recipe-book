@@ -2,6 +2,8 @@
 
 import { useState, useEffect, MouseEvent } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Box,
   Container,
@@ -47,6 +49,8 @@ export default function RecipeDetailPage() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -316,99 +320,90 @@ export default function RecipeDetailPage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
-        {/* Single fixed-width container for all content */}
-        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
-          {/* Header: Source URL and Delete button */}
-          <Box sx={{ mb: 3 }}>
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              gap: 1,
-              pb: 2, 
-              borderBottom: 1, 
-              borderColor: 'divider' 
-            }}>
-              {/* Source URL */}
-              {recipe.source_url && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 0.5,
-                  flexShrink: 0,
-                }}>
-                  {/* Full text on desktop */}
-                  <Typography
-                    variant="body2"
-                    component="a"
-                    href={recipe.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{ 
-                      color: 'text.secondary',
-                      textDecoration: 'none',
-                      textTransform: 'uppercase',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.05em',
-                      display: { xs: 'none', sm: 'block' },
-                      '&:hover': {
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Via {getSourceName(recipe.source_url)}
-                  </Typography>
-                  {/* "Recipe" + icon on mobile */}
-                  <Box
-                    component="a"
-                    href={recipe.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{
-                      display: { xs: 'flex', sm: 'none' },
-                      alignItems: 'center',
-                      gap: 0.5,
-                      color: 'text.secondary',
-                      textDecoration: 'none',
-                      textTransform: 'uppercase',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.05em',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
-                    }}
-                  >
-                    <Typography
-                      component="span"
-                      sx={{
-                        textTransform: 'uppercase',
-                        fontSize: '0.75rem',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      The Recipe
-                    </Typography>
-                    <OpenInNewIcon sx={{ fontSize: '0.875rem' }} />
-                  </Box>
-                  {/* Icon next to text on desktop */}
-                  <OpenInNewIcon sx={{ 
-                    fontSize: '0.875rem', 
-                    color: 'text.secondary', 
-                    flexShrink: 0,
-                    display: { xs: 'none', sm: 'block' },
-                  }} />
-                </Box>
-              )}
-              
-              {/* Favorite and Delete buttons */}
+      {/* Sub-nav: Source URL and Action Buttons */}
+      <Box
+        sx={{
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+        }}
+      >
+        <Container maxWidth="xl" sx={{ pt: { xs: 0.5, sm: 1 }, pb: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'row', 
+            gap: { xs: 1, sm: 2 }, 
+            alignItems: 'center', 
+            justifyContent: { xs: 'flex-start', sm: 'space-between' }, 
+            flexWrap: { xs: 'nowrap', sm: 'wrap' }, 
+            py: 1 
+          }}>
+            {/* Source URL - Left Aligned */}
+            {recipe.source_url && (
               <Box sx={{ 
                 display: 'flex', 
-                gap: 1, 
-                alignItems: 'center',
-                flexShrink: 0,
+                alignItems: 'center', 
+                gap: 0.5,
+                flex: { xs: '1 1 0%', sm: '0 0 auto' },
+                minWidth: 0,
               }}>
-                {/* Favorite button */}
+                {/* Full "Via [source]" text on mobile and desktop */}
+                <Typography
+                  variant="body2"
+                  component="a"
+                  href={recipe.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ 
+                    color: 'text.secondary',
+                    textDecoration: 'none',
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Via {getSourceName(recipe.source_url)}
+                  <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
+                </Typography>
+              </Box>
+            )}
+            
+            {/* Favorite and Delete buttons - Right Aligned */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: { xs: 1, sm: 2 }, 
+              alignItems: 'center',
+              flexShrink: 0,
+            }}>
+              {/* Favorite button - Icon only on mobile, Button with text on desktop */}
+              {isMobile ? (
+                <IconButton
+                  onClick={handleToggleFavorite}
+                  disabled={togglingFavorite}
+                  sx={{
+                    border: '1px solid',
+                    borderColor: isFavorite ? 'primary.main' : 'divider',
+                    color: isFavorite ? 'primary.main' : 'text.secondary',
+                    height: { xs: '36px', sm: '40px' },
+                    width: { xs: '36px', sm: '40px' },
+                    '&:hover': {
+                      bgcolor: 'action.hover',
+                      borderColor: isFavorite ? 'primary.dark' : 'text.primary',
+                    },
+                  }}
+                >
+                  {isFavorite ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                </IconButton>
+              ) : (
                 <Button
                   onClick={handleToggleFavorite}
                   disabled={togglingFavorite}
@@ -427,30 +422,56 @@ export default function RecipeDetailPage() {
                 >
                   {isFavorite ? 'Favorited' : 'Favorite'}
                 </Button>
+              )}
 
-                {/* Delete button - only for own recipes */}
-                {isOwnRecipe && (
-                <Button
+              {/* Delete button - only for own recipes - Icon only on mobile, Button with text on desktop */}
+              {isOwnRecipe && (
+                isMobile ? (
+                  <IconButton
+                    onClick={handleDeleteClick}
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      color: 'text.secondary',
+                      height: { xs: '36px', sm: '40px' },
+                      width: { xs: '36px', sm: '40px' },
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                        borderColor: 'error.main',
+                        color: 'error.main',
+                      },
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                ) : (
+                  <Button
                     onClick={handleDeleteClick}
                     startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
-                  sx={{ 
-                    textTransform: 'none',
-                    color: 'text.secondary',
+                    sx={{ 
+                      textTransform: 'none',
+                      color: 'text.secondary',
                       fontSize: '0.875rem',
                       minWidth: 'auto',
                       px: 1,
-                    '&:hover': {
+                      '&:hover': {
                         bgcolor: 'transparent',
                         color: 'error.main',
-                    },
-                  }}
-                >
+                      },
+                    }}
+                  >
                     Delete
-                </Button>
+                  </Button>
+                )
               )}
             </Box>
           </Box>
+        </Container>
       </Box>
+
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+        {/* Single fixed-width container for all content */}
+        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
 
           {/* Centered Title */}
           <Typography
