@@ -374,7 +374,7 @@ export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeC
               right: 0,
               bottom: 0,
               zIndex: 9999,
-              height: '100vh',
+              height: '100dvh', // Use dynamic viewport height - adjusts when keyboard appears
               width: '100vw',
               display: 'flex',
               flexDirection: 'column',
