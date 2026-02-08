@@ -28,8 +28,8 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckIcon from '@mui/icons-material/Check';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
@@ -321,40 +321,98 @@ export default function RecipeDetailPage() {
         <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
           {/* Header: Source URL and Delete button */}
           <Box sx={{ mb: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              gap: 1,
+              pb: 2, 
+              borderBottom: 1, 
+              borderColor: 'divider' 
+            }}>
               {/* Source URL */}
               {recipe.source_url && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5,
+                  flexShrink: 0,
+                }}>
+                  {/* Full text on desktop */}
                   <Typography
                     variant="body2"
                     component="a"
                     href={recipe.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-              sx={{ 
+                    sx={{ 
                       color: 'text.secondary',
                       textDecoration: 'none',
                       textTransform: 'uppercase',
                       fontSize: '0.75rem',
                       letterSpacing: '0.05em',
-                '&:hover': {
+                      display: { xs: 'none', sm: 'block' },
+                      '&:hover': {
                         textDecoration: 'underline',
-                },
-              }}
-            >
+                      },
+                    }}
+                  >
                     Via {getSourceName(recipe.source_url)}
                   </Typography>
-                  <OpenInNewIcon sx={{ fontSize: '0.875rem', color: 'text.secondary' }} />
-          </Box>
+                  {/* "Recipe" + icon on mobile */}
+                  <Box
+                    component="a"
+                    href={recipe.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      display: { xs: 'flex', sm: 'none' },
+                      alignItems: 'center',
+                      gap: 0.5,
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      textTransform: 'uppercase',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
+                      '&:hover': {
+                        color: 'primary.main',
+                      },
+                    }}
+                  >
+                    <Typography
+                      component="span"
+                      sx={{
+                        textTransform: 'uppercase',
+                        fontSize: '0.75rem',
+                        letterSpacing: '0.05em',
+                      }}
+                    >
+                      The Recipe
+                    </Typography>
+                    <OpenInNewIcon sx={{ fontSize: '0.875rem' }} />
+                  </Box>
+                  {/* Icon next to text on desktop */}
+                  <OpenInNewIcon sx={{ 
+                    fontSize: '0.875rem', 
+                    color: 'text.secondary', 
+                    flexShrink: 0,
+                    display: { xs: 'none', sm: 'block' },
+                  }} />
+                </Box>
               )}
               
               {/* Favorite and Delete buttons */}
-              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: 1, 
+                alignItems: 'center',
+                flexShrink: 0,
+              }}>
                 {/* Favorite button */}
                 <Button
                   onClick={handleToggleFavorite}
                   disabled={togglingFavorite}
-                  startIcon={isFavorite ? <FavoriteIcon sx={{ fontSize: '1rem' }} /> : <FavoriteBorderIcon sx={{ fontSize: '1rem' }} />}
+                  startIcon={isFavorite ? <BookmarkIcon sx={{ fontSize: '1rem' }} /> : <BookmarkBorderIcon sx={{ fontSize: '1rem' }} />}
                   sx={{
                     textTransform: 'none',
                     color: isFavorite ? 'primary.main' : 'text.secondary',
