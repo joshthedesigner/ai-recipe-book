@@ -323,14 +323,25 @@ export async function storeRecipe(
     // Step 1: Check if message contains a URL
     if (containsURL(message)) {
       const url = extractURL(message);
+      console.log('🎥 [storeRecipe] URL detected:', url);
+      
       if (url) {
         // Check if it's a YouTube video URL
         if (isYouTubeUrl(url)) {
-          console.log('YouTube video detected:', url);
+          console.log('🎥 [storeRecipe] YouTube video detected:', url);
+          console.log('🎥 [storeRecipe] Starting video extraction...');
           
           try {
+            console.log('🎥 [storeRecipe] Calling extractRecipeFromYouTubeVideo...');
             const videoRecipe = await extractRecipeFromYouTubeVideo(url);
-            console.log('✅ Recipe extracted from YouTube video (using captions - FREE!)');
+            console.log('🎥 [storeRecipe] ✅ Recipe extracted from YouTube video (using captions - FREE!)');
+            console.log('🎥 [storeRecipe] Extracted recipe:', {
+              title: videoRecipe.title,
+              ingredientsCount: videoRecipe.ingredients?.length || 0,
+              stepsCount: videoRecipe.steps?.length || 0,
+              sectionsCount: videoRecipe.sections?.length || 0,
+              incomplete: videoRecipe.incomplete,
+            });
             
             // If in review mode, return for confirmation
             if (reviewMode) {
@@ -408,10 +419,16 @@ export async function storeRecipe(
               data: data,
             };
           } catch (videoError) {
-            console.error('Error processing video:', videoError);
+            console.error('🎥 [storeRecipe] ❌ Error processing video:', videoError);
+            console.error('🎥 [storeRecipe] Error details:', {
+              name: videoError instanceof Error ? videoError.name : 'Unknown',
+              message: videoError instanceof Error ? videoError.message : String(videoError),
+              stack: videoError instanceof Error ? videoError.stack : undefined,
+            });
             
             // Check if it's the special "video link only" case
             if (videoError instanceof Error && videoError.message === 'VIDEO_LINK_ONLY') {
+              console.log('🎥 [storeRecipe] VIDEO_LINK_ONLY error detected');
               // Offer to save just the video link for future reference
               return {
                 success: false,
@@ -423,6 +440,7 @@ Would you still like to save this video link so you can easily find it in the fu
             }
             
             // Return specific error for other video processing failures
+            console.log('🎥 [storeRecipe] Returning generic video error');
             return {
               success: false,
               message: videoError instanceof Error ? videoError.message : 'Failed to extract recipe from video. The video may not have captions or may not contain a recipe.',

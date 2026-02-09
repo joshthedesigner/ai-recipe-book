@@ -149,7 +149,7 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
       console.log(`🎥 [youtubeHelpers] ✅ Extracted ${fullTranscript.length} characters of captions from YouTube video using youtubei.js`);
       console.log(`🎥 [youtubeHelpers] ${segments.length} caption segments combined`);
       console.log(`🎥 [youtubeHelpers] Preview: ${fullTranscript.substring(0, 200)}...`);
-      return fullTranscript;
+    return fullTranscript;
     }
     
     throw new Error('Empty transcript from youtubei.js');
@@ -202,7 +202,7 @@ export async function getYouTubeCaptions(videoId: string): Promise<string | null
         console.error('🎥 [youtubeHelpers] Error stack:', fallbackError.stack);
       }
       console.log('🎥 [youtubeHelpers] 💡 Video may not have captions, captions disabled, or access restricted');
-      return null;
+    return null;
     }
   }
 }

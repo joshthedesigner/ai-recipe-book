@@ -342,7 +342,7 @@ export default function RecipeDetailPage() {
             py: 1 
           }}>
             {/* Source URL - Left Aligned */}
-            {recipe.source_url && (
+              {recipe.source_url && (
               <Box sx={{ 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -351,32 +351,32 @@ export default function RecipeDetailPage() {
                 minWidth: 0,
               }}>
                 {/* Full "Via [source]" text on mobile and desktop */}
-                <Typography
-                  variant="body2"
-                  component="a"
-                  href={recipe.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ 
-                    color: 'text.secondary',
-                    textDecoration: 'none',
-                    textTransform: 'uppercase',
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.05em',
+                  <Typography
+                    variant="body2"
+                    component="a"
+                    href={recipe.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+              sx={{ 
+                      color: 'text.secondary',
+                      textDecoration: 'none',
+                      textTransform: 'uppercase',
+                      fontSize: '0.75rem',
+                      letterSpacing: '0.05em',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 0.5,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Via {getSourceName(recipe.source_url)}
+                '&:hover': {
+                        textDecoration: 'underline',
+                },
+              }}
+            >
+                    Via {getSourceName(recipe.source_url)}
                   <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
-                </Typography>
-              </Box>
-            )}
-            
+                  </Typography>
+          </Box>
+              )}
+              
             {/* Favorite and Delete buttons - Right Aligned */}
             <Box sx={{ 
               display: 'flex', 
@@ -425,7 +425,7 @@ export default function RecipeDetailPage() {
               )}
 
               {/* Delete button - only for own recipes - Icon only on mobile, Button with text on desktop */}
-              {isOwnRecipe && (
+                {isOwnRecipe && (
                 isMobile ? (
                   <IconButton
                     onClick={handleDeleteClick}
@@ -445,23 +445,23 @@ export default function RecipeDetailPage() {
                     <DeleteIcon />
                   </IconButton>
                 ) : (
-                  <Button
+                <Button
                     onClick={handleDeleteClick}
                     startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
-                    sx={{ 
-                      textTransform: 'none',
-                      color: 'text.secondary',
+                  sx={{ 
+                    textTransform: 'none',
+                    color: 'text.secondary',
                       fontSize: '0.875rem',
                       minWidth: 'auto',
                       px: 1,
-                      '&:hover': {
+                    '&:hover': {
                         bgcolor: 'transparent',
                         color: 'error.main',
-                      },
-                    }}
-                  >
+                    },
+                  }}
+                >
                     Delete
-                  </Button>
+                </Button>
                 )
               )}
             </Box>

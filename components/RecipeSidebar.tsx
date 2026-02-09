@@ -203,6 +203,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       return;
     }
 
+
     // Check if we have either text or images
     if ((!input.trim() && imageQueue.length === 0) || isLoading || uploadingImage) return;
 
@@ -824,25 +825,22 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       if (storeData.success) {
         console.log('🟢 Store success! Recipe:', storeData.recipe);
         
-        const assistantMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          message: '', // No text message, just show the recipe card
-          timestamp: new Date().toISOString(),
-          chatResponse: {
-            message: '',
-            needsReview: true,
-            pendingRecipe: storeData.recipe,
-            recipe: storeData.recipe,
-          },
-        };
-
-        console.log('🟢 Setting assistant message:', assistantMessage);
-        setMessages((prev) => [...prev, assistantMessage]);
-
-        // Set pending recipe for confirmation
+        // Show recipe preview directly
         if (storeData.recipe) {
-          console.log('🟢 Setting pending recipe for confirmation');
+          const previewMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            message: 'Here\'s your recipe preview:',
+            timestamp: new Date().toISOString(),
+            chatResponse: {
+              message: '',
+              needsReview: true,
+              pendingRecipe: storeData.recipe,
+              recipe: storeData.recipe,
+            },
+          };
+          
+          setMessages((prev) => [...prev, previewMessage]);
           setPendingRecipe(storeData.recipe);
         } else {
           console.warn('⚠️ No recipe in response!');
@@ -895,6 +893,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
     };
     setMessages((prev) => [...prev, cancelMessage]);
   };
+
 
   return (
     <Drawer
@@ -954,6 +953,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
                   )}
                 </MessageBubble>
               )}
+
 
               {/* Display recipe if present */}
               {msg.chatResponse?.recipe && (

@@ -367,15 +367,16 @@ function isSafeUrl(urlString: string): boolean {
 }
 
 export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<ExtractedRecipe> {
-  console.log('🎥 Processing YouTube video:', videoUrl);
+  console.log('🎥 [videoExtractor] Processing YouTube video:', videoUrl);
 
   // Extract video ID
   const videoId = extractYouTubeId(videoUrl);
   if (!videoId) {
+    console.error('🎥 [videoExtractor] ❌ Could not extract video ID from URL:', videoUrl);
     throw new Error('Could not extract video ID from URL');
   }
 
-  console.log('📺 YouTube video ID:', videoId);
+  console.log('🎥 [videoExtractor] 📺 YouTube video ID extracted:', videoId);
 
   // First, check video description for recipe links
   const metadata = await getYouTubeMetadata(videoId);
@@ -426,15 +427,19 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
   }
 
   // Fall back to caption extraction
-  console.log('📝 Attempting caption-based extraction...');
+  console.log('🎥 [videoExtractor] 📝 Attempting caption-based extraction...');
+  console.log('🎥 [videoExtractor] Calling getYouTubeCaptions for videoId:', videoId);
+  
   const captions = await getYouTubeCaptions(videoId);
   
   if (!captions) {
+    console.error('🎥 [videoExtractor] ❌ No captions found for video:', videoId);
+    console.error('🎥 [videoExtractor] Throwing VIDEO_LINK_ONLY error');
     // No captions and no description recipe - offer to save video-only
     throw new Error('VIDEO_LINK_ONLY');
   }
 
-  console.log(`✅ Got captions (${captions.length} characters), extracting recipe...`);
+  console.log(`🎥 [videoExtractor] ✅ Got captions (${captions.length} characters), extracting recipe...`);
 
   // Try to get section hints from description first (usually better formatted)
   let sectionHints: string[] | undefined;
@@ -452,9 +457,20 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
   }
 
   // Extract recipe from captions with section hints
+  console.log('🎥 [videoExtractor] Calling extractRecipeFromTranscript...');
   const recipe = await extractRecipeFromTranscript(captions, sectionHints.length > 0 ? sectionHints : undefined);
 
+  console.log('🎥 [videoExtractor] Recipe extraction result:', {
+    incomplete: recipe.incomplete,
+    hasTitle: !!recipe.title,
+    ingredientsCount: recipe.ingredients?.length || 0,
+    stepsCount: recipe.steps?.length || 0,
+    sectionsCount: recipe.sections?.length || 0,
+    reason: recipe.reason,
+  });
+
   if (recipe.incomplete) {
+    console.error('🎥 [videoExtractor] ❌ Recipe extraction incomplete:', recipe.reason);
     throw new Error(recipe.reason || 'Could not find a recipe in this video');
   }
 
@@ -465,7 +481,7 @@ export async function extractRecipeFromYouTubeVideo(videoUrl: string): Promise<E
     video_platform: 'youtube',
   };
 
-  console.log('✅ Recipe extracted from video:', recipeWithVideo.title);
+  console.log('🎥 [videoExtractor] ✅ Recipe extracted from video:', recipeWithVideo.title);
 
   return recipeWithVideo;
 }

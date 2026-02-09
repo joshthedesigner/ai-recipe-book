@@ -248,10 +248,10 @@ export default function MobileNav() {
               <>
                 {/* Logo */}
                 <Box
-                  onClick={handleHomeClick}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
+                    onClick={handleHomeClick}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
                     cursor: 'pointer',
                     mr: 1,
                   }}
@@ -304,8 +304,8 @@ export default function MobileNav() {
                             height: '16px',
                             minWidth: '16px',
                           },
-                        }}
-                      >
+                      }}
+                    >
                       <DynamicFeedIcon 
                         sx={{ 
                           fontSize: 20, 

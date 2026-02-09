@@ -279,6 +279,12 @@ export default function BrowsePage() {
     }
   }, [error, showToast]);
 
+  // Reset scroll position to top when filters change
+  useEffect(() => {
+    // Scroll to top smoothly when any filter or sort changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
+
   const handleCardClick = (recipe: Recipe) => {
     if (recipe.id) {
       trackRecipeView(recipe.id);
@@ -406,25 +412,25 @@ export default function BrowsePage() {
 
             {/* Search Bar - Left Aligned */}
             <Box sx={{ display: 'flex', alignItems: 'center', flex: { xs: '1 1 0%', sm: '0 0 auto' }, minWidth: 0, mr: { xs: 1, sm: 0 } }}>
-              <TextField
+            <TextField
                 placeholder="Search recipes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchQuery && (
-                    <InputAdornment position="end">
-                      <IconButton size="small" onClick={() => setSearchQuery('')}>
-                        <ClearIcon />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                size="small"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setSearchQuery('')}>
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              size="small"
                 sx={{ 
                   width: { xs: '100%', sm: '533px' },
                   minWidth: 0,
@@ -487,63 +493,63 @@ export default function BrowsePage() {
               {/* Desktop Filters - Hidden on Mobile */}
               {!isMobile && (
                 <>
-                  {/* Sort by Dropdown */}
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel id="sort-by-label">Sort by</InputLabel>
-                    <Select
-                      labelId="sort-by-label"
-                      id="sort-by-select"
-                      value={sortBy}
-                      label="Sort by"
-                      onChange={(e) => handleSortChange(e.target.value as SortOption)}
-                    >
-                      <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
-                      <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
-                      <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
-                    </Select>
-                  </FormControl>
+            {/* Sort by Dropdown */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="sort-by-label">Sort by</InputLabel>
+              <Select
+                labelId="sort-by-label"
+                id="sort-by-select"
+                value={sortBy}
+                label="Sort by"
+                onChange={(e) => handleSortChange(e.target.value as SortOption)}
+              >
+                <MenuItem value={SORT_OPTIONS.RECENTLY_ADDED}>Recently Added</MenuItem>
+                <MenuItem value={SORT_OPTIONS.FIRST_ADDED}>First Added</MenuItem>
+                <MenuItem value={SORT_OPTIONS.RECENTLY_VIEWED}>Recently Viewed</MenuItem>
+              </Select>
+            </FormControl>
 
-                  {/* Cuisines Filter */}
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
-                    <Select
-                      labelId="cuisine-filter-label"
-                      id="cuisine-filter-select"
-                      value={filterCuisine}
-                      label="Cuisines"
-                      onChange={(e) => setFilterCuisine(e.target.value)}
-                    >
-                      <MenuItem value="">All Cuisines</MenuItem>
-                      {availableCuisines.map((cuisine) => (
-                        <MenuItem key={cuisine} value={cuisine}>
-                          {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+            {/* Cuisines Filter */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="cuisine-filter-label">Cuisines</InputLabel>
+              <Select
+                labelId="cuisine-filter-label"
+                id="cuisine-filter-select"
+                value={filterCuisine}
+                label="Cuisines"
+                onChange={(e) => setFilterCuisine(e.target.value)}
+              >
+                <MenuItem value="">All Cuisines</MenuItem>
+                {availableCuisines.map((cuisine) => (
+                  <MenuItem key={cuisine} value={cuisine}>
+                    {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
-                  {/* Ingredients Filter */}
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
-                    <Select
-                      labelId="ingredient-filter-label"
-                      id="ingredient-filter-select"
-                      value={filterMainIngredient}
-                      label="Ingredients"
-                      onChange={(e) => setFilterMainIngredient(e.target.value)}
-                    >
-                      <MenuItem value="">All Ingredients</MenuItem>
-                      {availableIngredients.map((ingredient) => (
-                        <MenuItem key={ingredient} value={ingredient}>
-                          {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+            {/* Ingredients Filter */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="ingredient-filter-label">Ingredients</InputLabel>
+              <Select
+                labelId="ingredient-filter-label"
+                id="ingredient-filter-select"
+                value={filterMainIngredient}
+                label="Ingredients"
+                onChange={(e) => setFilterMainIngredient(e.target.value)}
+              >
+                <MenuItem value="">All Ingredients</MenuItem>
+                {availableIngredients.map((ingredient) => (
+                  <MenuItem key={ingredient} value={ingredient}>
+                    {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
                   {/* Favorites Filter Icon Button */}
                   <IconButton
-                    onClick={() => setFilterFavorites(!filterFavorites)}
+              onClick={() => setFilterFavorites(!filterFavorites)}
                     sx={{
                       border: '1px solid',
                       borderColor: filterFavorites ? 'primary.main' : 'divider',
@@ -563,21 +569,21 @@ export default function BrowsePage() {
                   <Button
                     onClick={clearFilters}
                     disabled={!hasActiveFilters}
-                    size="small"
-                    sx={{
+              size="small"
+              sx={{
                       textTransform: 'none',
                       color: 'text.secondary',
                       fontSize: '0.875rem',
                       minWidth: 'auto',
                       px: 1.5,
-                      '&:hover': {
+                '&:hover': {
                         bgcolor: 'transparent',
                         color: 'text.primary',
                       },
                       '&:disabled': {
                         color: 'text.disabled',
-                      },
-                    }}
+                },
+              }}
                   >
                     Reset Filters
                   </Button>

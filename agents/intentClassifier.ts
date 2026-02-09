@@ -75,12 +75,18 @@ export async function classifyIntent(message: string): Promise<IntentClassificat
   try {
     // Quick check: If message is just a URL, it's always store_recipe
     const urlRegex = /^https?:\/\/[^\s]+$/i;
-    if (urlRegex.test(message.trim())) {
+    const isUrl = urlRegex.test(message.trim());
+    
+    if (isUrl) {
+      const isYouTube = /(?:youtube\.com|youtu\.be)/.test(message);
+      console.log(`🎥 [intentClassifier] URL detected (YouTube: ${isYouTube}), classifying as store_recipe`);
       return {
         intent: 'store_recipe',
         confidence: 0.99,
       };
     }
+    
+    console.log(`🎥 [intentClassifier] Not a URL, using AI classification for: ${message.substring(0, 50)}...`);
 
     const client = getOpenAIClient();
     const response = await client.chat.completions.create({
