@@ -731,6 +731,172 @@ export async function mergeAutoTags(
 }
 
 /**
+ * Detect course type from recipe content
+ * Follows strict decision hierarchy based on how dishes are served and eaten
+ * 
+ * Decision hierarchy (first match wins):
+ * 1. Soup - liquid base, eaten with spoon, served alone
+ * 2. Main - primary calorie/protein source, served with rice/pasta/bread
+ * 3. Side - accompanies main dish, smaller portion
+ * 4. Appetizer - starter/small plate, finger food
+ * 5. Dessert - sweet-focused, end of meal
+ * 6. Other - if none apply
+ * 
+ * @param title - Recipe title
+ * @param ingredients - Array of ingredient strings
+ * @param steps - Array of cooking step strings
+ * @returns Detected course tag (or null if unclear)
+ */
+export function detectCourse(
+  title: string,
+  ingredients: string[],
+  steps: string[]
+): string | null {
+  const titleLower = (title || '').toLowerCase();
+  const ingredientsText = (ingredients || []).join(' ').toLowerCase();
+  const stepsText = (steps || []).join(' ').toLowerCase();
+  const fullText = `${titleLower} ${ingredientsText} ${stepsText}`;
+
+  // Helper: Check if text contains keywords (case-insensitive)
+  const hasKeywords = (text: string, keywords: string[]): boolean => {
+    return keywords.some(keyword => text.includes(keyword.toLowerCase()));
+  };
+
+  // Helper: Check if steps mention serving with something
+  const mentionsServeWith = (): boolean => {
+    const serveWithKeywords = [
+      'serve with', 'serve over', 'serve on', 'serve alongside',
+      'accompanied by', 'with rice', 'with pasta', 'with bread',
+      'over rice', 'over pasta', 'on rice', 'on pasta', 'on bread',
+      'with grains', 'with noodles', 'with naan', 'with roti'
+    ];
+    return hasKeywords(stepsText, serveWithKeywords);
+  };
+
+  // Helper: Check if dish has primarily liquid base
+  const hasLiquidBase = (): boolean => {
+    const liquidKeywords = [
+      'broth', 'stock', 'coconut milk', 'blended', 'pureed',
+      'liquid', 'soup base', 'soup stock', 'soup broth'
+    ];
+    return hasKeywords(fullText, liquidKeywords);
+  };
+
+  // Helper: Check if dish is typically eaten with spoon
+  const eatenWithSpoon = (): boolean => {
+    const spoonKeywords = ['spoon', 'ladle', 'soup spoon', 'eaten with spoon'];
+    return hasKeywords(fullText, spoonKeywords) || 
+           (hasLiquidBase() && !hasKeywords(fullText, ['rice', 'pasta', 'bread', 'noodles']));
+  };
+
+  // Helper: Check if dish is served over/with starch
+  const servedWithStarch = (): boolean => {
+    const starchKeywords = [
+      'rice', 'pasta', 'bread', 'noodles', 'quinoa', 'couscous',
+      'naan', 'roti', 'tortilla', 'wrap', 'pita'
+    ];
+    return hasKeywords(titleLower, starchKeywords) || 
+           mentionsServeWith() ||
+           hasKeywords(stepsText, starchKeywords);
+  };
+
+  // Helper: Check if explicitly described as starter/small plate
+  const isStarter = (): boolean => {
+    const starterKeywords = [
+      'appetizer', 'appetiser', 'starter', 'hors d\'oeuvre',
+      'small plate', 'mezze', 'tapas', 'finger food', 'amuse-bouche'
+    ];
+    return hasKeywords(titleLower, starterKeywords) ||
+           hasKeywords(fullText, starterKeywords);
+  };
+
+  // Helper: Check if sweet-focused
+  const isSweet = (): boolean => {
+    const sweetKeywords = [
+      'sugar', 'honey', 'syrup', 'chocolate', 'caramel', 'vanilla',
+      'dessert', 'sweet', 'cake', 'pie', 'tart', 'cookie', 'biscuit',
+      'pudding', 'custard', 'mousse', 'ice cream', 'sorbet', 'gelato'
+    ];
+    return hasKeywords(titleLower, sweetKeywords) ||
+           hasKeywords(fullText, sweetKeywords);
+  };
+
+  // Helper: Check if explicitly described as side dish
+  const isSideDish = (): boolean => {
+    const sideKeywords = [
+      'side', 'side dish', 'accompaniment', 'garnish', 'topping'
+    ];
+    return hasKeywords(titleLower, sideKeywords) ||
+           hasKeywords(fullText, sideKeywords);
+  };
+
+  // DECISION HIERARCHY (first match wins)
+
+  // 1. SOUP - Only if liquid base, eaten with spoon, served alone
+  if (hasLiquidBase() && eatenWithSpoon() && !servedWithStarch()) {
+    // Additional check: title should indicate soup or liquid dish
+    const soupTitleKeywords = ['soup', 'broth', 'chowder', 'bisque', 'gazpacho', 'consommé', 'consomme', 'ramen', 'pho'];
+    if (hasKeywords(titleLower, soupTitleKeywords) || hasLiquidBase()) {
+      return 'soup';
+    }
+  }
+
+  // 2. MAIN - Primary calorie/protein source, served with rice/pasta/bread
+  // Check if intended as main dish
+  const mainIndicators = [
+    // Title indicates main dish
+    hasKeywords(titleLower, ['curry', 'stew', 'tagine', 'casserole', 'roast', 'braise', 'grill', 'skillet', 'chili', 'ragout', 'goulash', 'bolognese', 'ragu', 'stroganoff', 'teriyaki', 'stir-fry', 'fricassee']),
+    // Served with starch
+    servedWithStarch(),
+    // Instructions say "serve with"
+    mentionsServeWith(),
+    // Has substantial protein (indicates main dish)
+    hasKeywords(ingredientsText, ['chicken', 'beef', 'pork', 'lamb', 'fish', 'seafood', 'tofu', 'tempeh', 'beans', 'lentils']),
+    // Not explicitly a side or appetizer
+    !isSideDish() && !isStarter()
+  ];
+
+  if (mainIndicators.some(indicator => indicator === true)) {
+    return 'main';
+  }
+
+  // 3. SIDE - Accompanies main dish, smaller portion, not full meal
+  if (isSideDish() || 
+      (hasKeywords(titleLower, ['salad', 'coleslaw', 'slaw']) && !hasKeywords(titleLower, ['main', 'entree', 'dinner']))) {
+    // Additional check: not a main dish salad (like cobb salad, caesar salad as main)
+    const mainSaladKeywords = ['cobb', 'caesar', 'nicoise', 'chef salad', 'dinner salad'];
+    if (!hasKeywords(titleLower, mainSaladKeywords)) {
+      return 'side';
+    }
+  }
+
+  // 4. APPETIZER - Starter/small plate, finger food, small portions
+  if (isStarter() || 
+      hasKeywords(titleLower, ['dip', 'spread', 'crostini', 'bruschetta', 'canapé', 'canape'])) {
+    return 'appetizer';
+  }
+
+  // 5. DESSERT - Sweet-focused, end of meal
+  if (isSweet() && 
+      (hasKeywords(titleLower, ['dessert', 'sweet', 'cake', 'pie', 'tart', 'cookie', 'biscuit', 'pudding', 'custard', 'mousse', 'ice cream', 'sorbet']) ||
+       hasKeywords(fullText, ['dessert', 'end of meal', 'after dinner']))) {
+    return 'dessert';
+  }
+
+  // 6. OTHER - If none of the above apply
+  // Check for breakfast/brunch (could be main or other)
+  if (hasKeywords(titleLower, ['breakfast', 'brunch', 'pancake', 'waffle', 'french toast', 'omelet', 'omelette', 'frittata'])) {
+    // Breakfast dishes are typically mains unless explicitly small
+    if (!hasKeywords(titleLower, ['small', 'mini', 'bite'])) {
+      return 'main';
+    }
+  }
+
+  // If we can't determine, return null (will be handled as "other" or not tagged)
+  return null;
+}
+
+/**
  * Helper function to check if tag review is needed
  * @param title - Recipe title
  * @param ingredients - Array of ingredient strings

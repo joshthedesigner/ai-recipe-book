@@ -8,6 +8,7 @@ interface InfiniteRecipesParams {
   search?: string;
   cuisine?: string;
   ingredient?: string;
+  course?: string;
   favorites?: boolean;
   pageSize?: number;
 }
@@ -18,6 +19,7 @@ interface RecipesResponse {
   facets?: {
     cuisines: string[];
     ingredients: string[];
+    courses: string[];
   };
 }
 
@@ -29,6 +31,7 @@ export function useInfiniteRecipes(params: InfiniteRecipesParams) {
     search,
     cuisine,
     ingredient,
+    course,
     favorites,
     pageSize = 12,
   } = params;
@@ -41,6 +44,7 @@ export function useInfiniteRecipes(params: InfiniteRecipesParams) {
       search,
       cuisine,
       ingredient,
+      course,
       favorites,
       pageSize,
     }],
@@ -56,6 +60,7 @@ export function useInfiniteRecipes(params: InfiniteRecipesParams) {
       if (search) searchParams.set('search', search);
       if (cuisine) searchParams.set('cuisine', cuisine);
       if (ingredient) searchParams.set('ingredient', ingredient);
+      if (course) searchParams.set('course', course);
       if (favorites) searchParams.set('favorites', 'true');
 
       const response = await fetch(`/api/recipes?${searchParams}`);

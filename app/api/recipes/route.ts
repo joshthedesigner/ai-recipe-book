@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search');
     const cuisine = searchParams.get('cuisine');
     const ingredient = searchParams.get('ingredient');
+    const course = searchParams.get('course');
     const favorites = searchParams.get('favorites') === 'true';
     
     // Validate sortBy against whitelist
@@ -109,6 +110,13 @@ export async function GET(request: NextRequest) {
     if (ingredient && ingredient.length > 100) {
       return NextResponse.json(
         { success: false, error: 'Ingredient parameter exceeds maximum length' },
+        { status: 400 }
+      );
+    }
+    
+    if (course && course.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Course parameter exceeds maximum length' },
         { status: 400 }
       );
     }
@@ -195,6 +203,11 @@ export async function GET(request: NextRequest) {
         query = query.contains('tags', [ingredientLower]);
       }
     }
+    
+    // Server-side course filter (matches tags)
+    if (course && course.trim()) {
+      query = query.contains('tags', [course.toLowerCase().trim()]);
+    }
 
     // Fetch user's favorites for filtering and is_favorite flag
     const { data: userFavorites } = await supabase
@@ -254,6 +267,9 @@ export async function GET(request: NextRequest) {
           retry = retry.contains('tags', [ingredientLower]);
         }
       }
+      if (course && course.trim()) {
+        retry = retry.contains('tags', [course.toLowerCase().trim()]);
+      }
       
       // Apply favorites filter to retry query
       if (favorites) {
@@ -309,6 +325,7 @@ export async function GET(request: NextRequest) {
     // Calculate available filter options from all recipes
     const availableCuisines: string[] = [];
     const availableIngredients: string[] = [];
+    const availableCourses: string[] = [];
     const CUISINE_OPTIONS = [
       'american', 'chinese', 'french', 'greek', 'indian', 'italian', 
       'japanese', 'korean', 'mexican', 'thai', 'vietnamese', 
@@ -316,6 +333,9 @@ export async function GET(request: NextRequest) {
     ];
     const INGREDIENT_OPTIONS = [
       'fish', 'seafood', 'chicken', 'beef', 'pork', 'lamb', 'tofu', 'vegetarian', 'vegan'
+    ];
+    const COURSE_OPTIONS = [
+      'soup', 'main', 'side', 'appetizer', 'dessert', 'other'
     ];
     
     if (allRecipesForFacets) {
@@ -418,6 +438,14 @@ export async function GET(request: NextRequest) {
           }
         }
       });
+      
+      // Check which courses exist in tags
+      COURSE_OPTIONS.forEach(courseOption => {
+        const courseLower = courseOption.toLowerCase();
+        if (allTags.has(courseLower)) {
+          availableCourses.push(courseOption);
+        }
+      });
     }
 
     const response = NextResponse.json(
@@ -428,6 +456,7 @@ export async function GET(request: NextRequest) {
         facets: {
           cuisines: availableCuisines,
           ingredients: availableIngredients,
+          courses: availableCourses,
         },
         pagination: {
           limit,

@@ -72,6 +72,7 @@ export default function BrowsePage() {
   const [sortBy, setSortBy] = useState<SortOption>(SORT_OPTIONS.RECENTLY_ADDED);
   const [filterCuisine, setFilterCuisine] = useState('');
   const [filterMainIngredient, setFilterMainIngredient] = useState('');
+  const [filterCourse, setFilterCourse] = useState('');
   const [filterFavorites, setFilterFavorites] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -168,6 +169,7 @@ export default function BrowsePage() {
     search: searchQuery.trim() || undefined,
     cuisine: filterCuisine || undefined,
     ingredient: filterMainIngredient || undefined,
+    course: filterCourse || undefined,
     favorites: filterFavorites || undefined,
     pageSize: PAGE_SIZE,
   });
@@ -180,6 +182,7 @@ export default function BrowsePage() {
   // Get facets from first page
   const availableCuisines = data?.pages[0]?.facets?.cuisines ?? [];
   const availableIngredients = data?.pages[0]?.facets?.ingredients ?? [];
+  const availableCourses = data?.pages[0]?.facets?.courses ?? [];
 
   // Client-side sort for "recently_viewed" (uses localStorage)
   const sortedRecipes = useMemo(() => {
@@ -211,6 +214,12 @@ export default function BrowsePage() {
     if (filterMainIngredient) {
       const ingredientName = filterMainIngredient.charAt(0).toUpperCase() + filterMainIngredient.slice(1);
       parts.push(ingredientName);
+    }
+    
+    // Add course filter
+    if (filterCourse) {
+      const courseName = filterCourse.charAt(0).toUpperCase() + filterCourse.slice(1);
+      parts.push(courseName);
     }
     
     // Add favorites filter
@@ -283,7 +292,7 @@ export default function BrowsePage() {
   useEffect(() => {
     // Scroll to top smoothly when any filter or sort changes
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [searchQuery, filterCuisine, filterMainIngredient, filterFavorites, sortBy]);
+  }, [searchQuery, filterCuisine, filterMainIngredient, filterCourse, filterFavorites, sortBy]);
 
   const handleCardClick = (recipe: Recipe) => {
     if (recipe.id) {
@@ -357,11 +366,12 @@ export default function BrowsePage() {
     setSearchQuery('');
     setFilterCuisine('');
     setFilterMainIngredient('');
+    setFilterCourse('');
     setFilterFavorites(false);
     handleSortChange(SORT_OPTIONS.RECENTLY_ADDED); // Reset to default
   };
 
-  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterFavorites || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
+  const hasActiveFilters = searchQuery || filterCuisine || filterMainIngredient || filterCourse || filterFavorites || sortBy !== SORT_OPTIONS.RECENTLY_ADDED;
   
   // Count active filters for badge (exclude default sort and favorites - favorites has its own button)
   const activeFilterCount = useMemo(() => {
@@ -369,11 +379,12 @@ export default function BrowsePage() {
     if (searchQuery) count++;
     if (filterCuisine) count++;
     if (filterMainIngredient) count++;
+    if (filterCourse) count++;
     // Don't count favorites - it has its own button now
     // Sort only counts if changed from default
     if (sortBy !== SORT_OPTIONS.RECENTLY_ADDED) count++;
     return count;
-  }, [searchQuery, filterCuisine, filterMainIngredient, sortBy]);
+  }, [searchQuery, filterCuisine, filterMainIngredient, filterCourse, sortBy]);
 
   const handleRecipeAdded = () => {
     showToast('Recipe saved successfully', 'success');
@@ -542,6 +553,25 @@ export default function BrowsePage() {
                 {availableIngredients.map((ingredient) => (
                   <MenuItem key={ingredient} value={ingredient}>
                     {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            {/* Course Type Filter */}
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel id="course-filter-label">Course</InputLabel>
+              <Select
+                labelId="course-filter-label"
+                id="course-filter-select"
+                value={filterCourse}
+                label="Course"
+                onChange={(e) => setFilterCourse(e.target.value)}
+              >
+                <MenuItem value="">All Courses</MenuItem>
+                {availableCourses.map((course) => (
+                  <MenuItem key={course} value={course.toLowerCase()}>
+                    {course.charAt(0).toUpperCase() + course.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
@@ -747,12 +777,15 @@ export default function BrowsePage() {
         sortBy={sortBy}
         filterCuisine={filterCuisine}
         filterMainIngredient={filterMainIngredient}
+        filterCourse={filterCourse}
         availableCuisines={availableCuisines}
         availableIngredients={availableIngredients}
+        availableCourses={availableCourses}
         sortOptions={SORT_OPTIONS}
         onSortChange={(value) => handleSortChange(value as SortOption)}
         onCuisineChange={setFilterCuisine}
         onIngredientChange={setFilterMainIngredient}
+        onCourseChange={setFilterCourse}
         onReset={clearFilters}
       />
 

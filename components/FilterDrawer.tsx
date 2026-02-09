@@ -24,9 +24,11 @@ interface FilterDrawerProps {
   sortBy: string;
   filterCuisine: string;
   filterMainIngredient: string;
+  filterCourse: string;
   // Available options
   availableCuisines: string[];
   availableIngredients: string[];
+  availableCourses: string[];
   // Sort options
   sortOptions: {
     RECENTLY_ADDED: string;
@@ -38,6 +40,7 @@ interface FilterDrawerProps {
   onSortChange: (value: string) => void;
   onCuisineChange: (value: string) => void;
   onIngredientChange: (value: string) => void;
+  onCourseChange: (value: string) => void;
   onReset?: () => void; // Optional reset callback
 }
 
@@ -47,18 +50,22 @@ export default function FilterDrawer({
   sortBy,
   filterCuisine,
   filterMainIngredient,
+  filterCourse,
   availableCuisines,
   availableIngredients,
+  availableCourses,
   sortOptions,
   onSortChange,
   onCuisineChange,
   onIngredientChange,
+  onCourseChange,
   onReset,
 }: FilterDrawerProps) {
   const [expandedSections, setExpandedSections] = useState({
     sort: true,
     cuisines: true,
     ingredients: true,
+    courses: true,
   });
 
   const toggleSection = (section: keyof typeof expandedSections) => {
@@ -80,6 +87,9 @@ export default function FilterDrawer({
       case 'ingredients':
         // Count as 1 if an ingredient filter is selected
         return filterMainIngredient ? 1 : 0;
+      case 'courses':
+        // Count as 1 if a course filter is selected
+        return filterCourse ? 1 : 0;
       default:
         return 0;
     }
@@ -262,6 +272,31 @@ export default function FilterDrawer({
                   value={ingredient}
                   control={<Radio />}
                   label={ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+                  sx={{ mb: 1 }}
+                />
+              ))}
+            </RadioGroup>
+          </CollapsibleSection>
+
+          {/* Course Type Section */}
+          <CollapsibleSection title="Course type" sectionKey="courses">
+            <RadioGroup
+              value={filterCourse}
+              onChange={(e) => onCourseChange(e.target.value)}
+              sx={{ mt: 1 }}
+            >
+              <FormControlLabel
+                value=""
+                control={<Radio />}
+                label="All Courses"
+                sx={{ mb: 1 }}
+              />
+              {availableCourses.map((course) => (
+                <FormControlLabel
+                  key={course}
+                  value={course.toLowerCase()}
+                  control={<Radio />}
+                  label={course.charAt(0).toUpperCase() + course.slice(1)}
                   sx={{ mb: 1 }}
                 />
               ))}
