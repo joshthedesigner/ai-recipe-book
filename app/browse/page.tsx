@@ -432,7 +432,7 @@ export default function BrowsePage() {
               }}
               size="small"
                 sx={{ 
-                  width: { xs: '100%', sm: '533px' },
+                  width: { xs: '100%', sm: '426px' },
                   minWidth: 0,
                   '& .MuiOutlinedInput-root': {
                     minWidth: 0,
