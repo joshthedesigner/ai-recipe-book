@@ -38,6 +38,11 @@ import { Recipe, ChatMessage } from '@/types';
 interface RecipeChatProps {
   recipeId: string;
   recipe?: Recipe; // Optional - preferred to avoid extra API calls
+  // Controlled mode props (optional)
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  // Layout mode: 'inline' for side-by-side column, 'overlay' for floating
+  mode?: 'inline' | 'overlay';
 }
 
 const INITIAL_MESSAGE: ChatMessage = {
@@ -55,11 +60,21 @@ What would you like to know?`,
   created_at: new Date().toISOString(),
 };
 
-export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeChatProps) {
+export default function RecipeChat({ 
+  recipeId, 
+  recipe: providedRecipe,
+  isOpen: controlledIsOpen,
+  onOpenChange,
+  mode = 'overlay',
+}: RecipeChatProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
-  const [isOpen, setIsOpen] = useState(false);
+  // Controlled/uncontrolled pattern
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isControlled = typeof controlledIsOpen === 'boolean';
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+  
   const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
@@ -90,7 +105,10 @@ export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeC
   }, [isOpen, isMinimized]);
 
   const handleOpen = () => {
-    setIsOpen(true);
+    if (!isControlled) {
+      setInternalIsOpen(true);
+    }
+    onOpenChange?.(true);
     setIsMinimized(false);
     setHasUnread(false);
     // Reset to initial message when opening
@@ -99,7 +117,10 @@ export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeC
   };
 
   const handleClose = () => {
-    setIsOpen(false);
+    if (!isControlled) {
+      setInternalIsOpen(false);
+    }
+    onOpenChange?.(false);
     setIsMinimized(false);
   };
 
@@ -356,9 +377,35 @@ export default function RecipeChat({ recipeId, recipe: providedRecipe }: RecipeC
 
   // Don't render Portal until mounted (SSR safety)
   if (!mounted) {
-    return fabButton;
+    return mode === 'overlay' ? fabButton : null;
   }
 
+  // Inline mode: render as a normal in-flow component (no Portal, no FAB)
+  if (mode === 'inline') {
+    if (!isOpen) return null;
+    
+    return (
+      <Paper
+        ref={chatWindowRef}
+        elevation={0}
+        sx={{
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.paper',
+          borderLeft: '1px solid',
+          borderColor: 'divider',
+          overflow: 'hidden',
+        }}
+        role="dialog"
+        aria-label="Recipe chat"
+      >
+        {chatContent}
+      </Paper>
+    );
+  }
+
+  // Overlay mode (original behavior)
   // Mobile: Full screen window
   if (isMobile && isOpen) {
     return (

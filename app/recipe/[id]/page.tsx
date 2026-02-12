@@ -6,9 +6,8 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {
   Box,
-  Container,
   Typography,
-  Chip,
+  // Chip, // Unused
   CircularProgress,
   Button,
   Divider,
@@ -21,8 +20,8 @@ import {
   ListItemIcon,
   ListItemText as MenuItemText,
   Grid,
-  Tabs,
-  Tab,
+  // Tabs, // HIDDEN - Notes feature
+  // Tab, // HIDDEN - Notes feature
   Checkbox,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -35,8 +34,8 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import TopNav from '@/components/TopNav';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
-import RecipeChat from '@/components/RecipeChat';
-import RecipeNotesTab from '@/components/RecipeNotesTab';
+import RecipeChatLayout from '@/components/RecipeChatLayout';
+// import RecipeNotesTab from '@/components/RecipeNotesTab'; // HIDDEN - Notes feature
 import { Recipe } from '@/types';
 import { supabase } from '@/db/supabaseClient';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,8 +57,8 @@ export default function RecipeDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState<'recipe' | 'notes'>('recipe');
-  const [notesCount, setNotesCount] = useState(0);
+  // const [activeTab, setActiveTab] = useState<'recipe' | 'notes'>('recipe'); // HIDDEN - Notes feature
+  // const [notesCount, setNotesCount] = useState(0); // HIDDEN - Notes feature
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [togglingFavorite, setTogglingFavorite] = useState(false);
@@ -69,16 +68,18 @@ export default function RecipeDetailPage() {
   // Check if recipe belongs to current user
   const isOwnRecipe = recipe?.user_id === user?.id;
 
+  // HIDDEN - Notes feature
   // Check if user came from feed
-  const fromFeed = searchParams.get('from') === 'feed';
+  // const fromFeed = searchParams.get('from') === 'feed';
   
+  // HIDDEN - Notes feature
   // Check for tab query param (for navigation from feed notes)
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'notes') {
-      setActiveTab('notes');
-    }
-  }, [searchParams]);
+  // useEffect(() => {
+  //   const tab = searchParams.get('tab');
+  //   if (tab === 'notes') {
+  //     setActiveTab('notes');
+  //   }
+  // }, [searchParams]);
 
   // Smart back navigation
   const handleBack = () => {
@@ -266,26 +267,27 @@ export default function RecipeDetailPage() {
     fetchRecipe();
   }, [recipeId, user]);
 
+  // HIDDEN - Notes feature
   // Fetch notes count on page load (for badge display)
-  useEffect(() => {
-    if (!recipeId || !user) return;
+  // useEffect(() => {
+  //   if (!recipeId || !user) return;
 
-    const fetchNotesCount = async () => {
-      try {
-        const response = await fetch(`/api/recipes/${recipeId}/notes`);
-        const data = await response.json();
+  //   const fetchNotesCount = async () => {
+  //     try {
+  //       const response = await fetch(`/api/recipes/${recipeId}/notes`);
+  //       const data = await response.json();
 
-        if (response.ok && data.success) {
-          setNotesCount(data.notes?.length || 0);
-        }
-      } catch (err) {
-        console.error('Error fetching notes count:', err);
-        // Silently fail - badge will just show 0
-      }
-    };
+  //       if (response.ok && data.success) {
+  //         setNotesCount(data.notes?.length || 0);
+  //       }
+  //     } catch (err) {
+  //       console.error('Error fetching notes count:', err);
+  //       // Silently fail - badge will just show 0
+  //     }
+  //   };
 
-    fetchNotesCount();
-  }, [recipeId, user]);
+  //   fetchNotesCount();
+  // }, [recipeId, user]);
 
   if (loading) {
     return (
@@ -302,7 +304,7 @@ export default function RecipeDetailPage() {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <TopNav />
-        <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
+        <Box sx={{ py: 4, flex: 1, px: 3 }}>
           <Typography variant="h5">Recipe not found</Typography>
           <Button
             startIcon={<ArrowBackIcon />}
@@ -311,79 +313,132 @@ export default function RecipeDetailPage() {
           >
             Back
           </Button>
-        </Container>
+        </Box>
       </Box>
     );
   }
 
+  // Main recipe page render
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* Sub-nav: Source URL and Action Buttons */}
-      <Box
-        sx={{
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <Container maxWidth="xl" sx={{ pt: { xs: 0.5, sm: 1 }, pb: 1 }}>
+      <RecipeChatLayout recipeId={recipeId} recipe={recipe}>
+        <Box sx={{ py: 4, flex: 1, px: 3 }}>
+        {/* Single fixed-width container for all content */}
+        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+
+          {/* Large Image/Video */}
+          {recipe.video_url && recipe.video_platform === 'youtube' ? (
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: '900px',
+              aspectRatio: '16/9',
+              borderRadius: 2,
+              overflow: 'hidden',
+                mb: 5,
+              bgcolor: 'black',
+                position: 'relative',
+            }}
+            >
+            <iframe
+              width="100%"
+              height="100%"
+              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
+              title={recipe.title}
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+              style={{ display: 'block', border: 'none' }}
+            />
+          </Box>
+          ) : recipe.image_url ? (
+          <Box
+            sx={{
+                width: '100%',
+                maxWidth: '900px',
+                height: { xs: 300, sm: 400, md: 500 },
+              borderRadius: 2,
+              overflow: 'hidden',
+                mb: 5,
+              position: 'relative',
+            }}
+          >
+            <img
+              src={recipe.image_url}
+              alt={recipe.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                  display: 'block',
+              }}
+            />
+          </Box>
+          ) : null}
+
+          {/* Title */}
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 600,
+              textAlign: 'left',
+              py: 1.5,
+              mb: 1,
+              fontSize: { xs: '1.875rem', md: '2.5rem' },
+            }}
+          >
+            {recipe.title}
+          </Typography>
+
+          {/* Source URL and Action Buttons Row */}
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'row', 
             gap: { xs: 1, sm: 2 }, 
             alignItems: 'center', 
-            justifyContent: { xs: 'flex-start', sm: 'space-between' }, 
-            flexWrap: { xs: 'nowrap', sm: 'wrap' }, 
-            py: 1 
+            mb: 3,
+            position: 'relative',
+            zIndex: 1,
           }}>
-            {/* Source URL - Left Aligned */}
-              {recipe.source_url && (
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 0.5,
-                flex: { xs: '1 1 0%', sm: '0 0 auto' },
-                minWidth: 0,
-              }}>
-                {/* Full "Via [source]" text on mobile and desktop */}
-                  <Typography
-                    variant="body2"
-                    component="a"
-                    href={recipe.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-              sx={{ 
-                      color: 'text.secondary',
-                      textDecoration: 'none',
-                      textTransform: 'uppercase',
-                      fontSize: '0.75rem',
-                      letterSpacing: '0.05em',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                '&:hover': {
-                        textDecoration: 'underline',
-                },
-              }}
-            >
-                    Via {getSourceName(recipe.source_url)}
-                  <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
-                  </Typography>
-          </Box>
-              )}
-              
-            {/* Favorite and Delete buttons - Right Aligned */}
+            {/* Source URL and Action Buttons - Left Aligned Group */}
             <Box sx={{ 
               display: 'flex', 
               gap: { xs: 1, sm: 2 }, 
               alignItems: 'center',
               flexShrink: 0,
             }}>
+              {/* Source URL - First in the group */}
+              {recipe.source_url && (
+                <Typography
+                  variant="body2"
+                  component="a"
+                  href={recipe.source_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{ 
+                    color: 'text.secondary',
+                    textDecoration: 'none',
+                    textTransform: 'uppercase',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    cursor: 'pointer',
+                    pointerEvents: 'auto',
+                    position: 'relative',
+                    zIndex: 1,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Via {getSourceName(recipe.source_url)}
+                  <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
+                </Typography>
+              )}
               {/* Favorite button - Icon only on mobile, Button with text on desktop */}
               {isMobile ? (
                 <IconButton
@@ -425,7 +480,7 @@ export default function RecipeDetailPage() {
               )}
 
               {/* Delete button - only for own recipes - Icon only on mobile, Button with text on desktop */}
-                {isOwnRecipe && (
+              {isOwnRecipe && (
                 isMobile ? (
                   <IconButton
                     onClick={handleDeleteClick}
@@ -445,107 +500,37 @@ export default function RecipeDetailPage() {
                     <DeleteIcon />
                   </IconButton>
                 ) : (
-                <Button
+                  <Button
                     onClick={handleDeleteClick}
                     startIcon={<DeleteIcon sx={{ fontSize: '1rem' }} />}
-                  sx={{ 
-                    textTransform: 'none',
-                    color: 'text.secondary',
+                    sx={{ 
+                      textTransform: 'none',
+                      color: 'text.secondary',
                       fontSize: '0.875rem',
                       minWidth: 'auto',
                       px: 1,
-                    '&:hover': {
+                      '&:hover': {
                         bgcolor: 'transparent',
                         color: 'error.main',
-                    },
-                  }}
-                >
+                      },
+                    }}
+                  >
                     Delete
-                </Button>
+                  </Button>
                 )
               )}
             </Box>
           </Box>
-        </Container>
-      </Box>
 
-      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
-        {/* Single fixed-width container for all content */}
-        <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+          {/* Divider */}
+          <Divider sx={{ mt: 2, mb: 4 }} />
 
-          {/* Centered Title */}
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 600,
-              textAlign: 'center',
-              py: 1.5,
-              mb: 4,
-              fontSize: { xs: '1.875rem', md: '2.5rem' },
-            }}
-          >
-            {recipe.title}
-          </Typography>
-
-          {/* Large Image/Video */}
-          {recipe.video_url && recipe.video_platform === 'youtube' ? (
-            <Box
-              sx={{
-                width: '100%',
-                maxWidth: '900px',
-              aspectRatio: '16/9',
-              borderRadius: 2,
-              overflow: 'hidden',
-                mb: 5,
-                mx: 'auto',
-              bgcolor: 'black',
-                position: 'relative',
-            }}
-          >
-            <iframe
-              width="100%"
-              height="100%"
-              src={`https://www.youtube.com/embed/${extractYouTubeId(recipe.video_url)}`}
-              title={recipe.title}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              style={{ display: 'block', border: 'none' }}
-            />
-          </Box>
-          ) : recipe.image_url ? (
-          <Box
-            sx={{
-                width: '100%',
-                maxWidth: '900px',
-                height: { xs: 300, sm: 400, md: 500 },
-              borderRadius: 2,
-              overflow: 'hidden',
-                mb: 5,
-                mx: 'auto',
-              position: 'relative',
-            }}
-          >
-            <img
-              src={recipe.image_url}
-              alt={recipe.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                  display: 'block',
-              }}
-            />
-          </Box>
-          ) : null}
-
-        {/* Tabs: Recipe / Notes */}
-          <Box sx={{ mb: 4 }}>
+        {/* Tabs: Recipe / Notes - HIDDEN FOR NOW */}
+        {/* <Box sx={{ mb: 4 }}>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs
             value={activeTab}
             onChange={(e, newValue) => setActiveTab(newValue)}
-                centered
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
@@ -585,16 +570,16 @@ export default function RecipeDetailPage() {
             />
           </Tabs>
             </Box>
-        </Box>
+        </Box> */}
 
-        {/* Tab Content */}
-        {activeTab === 'recipe' && (
+        {/* Recipe Content */}
+        {true && (
           <>
               {/* Ingredients and Instructions - Two columns with colored bars */}
         {Array.isArray((recipe as any).sections) && (recipe as any).sections.length > 0 ? (
-                <Grid container spacing={17}>
+                <Grid container spacing={{ xs: 4, xl: 17 }}>
             {/* Ingredients column */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} xl={4}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
@@ -665,7 +650,7 @@ export default function RecipeDetailPage() {
             </Grid>
 
                 {/* Instructions column */}
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} xl={8}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar - using a muted/secondary color */}
@@ -738,9 +723,9 @@ export default function RecipeDetailPage() {
             </Grid>
           </Grid>
         ) : (
-              <Grid container spacing={17}>
+              <Grid container spacing={{ xs: 4, xl: 17 }}>
                 {/* Ingredients column */}
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} xl={4}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
@@ -800,7 +785,7 @@ export default function RecipeDetailPage() {
             </Grid>
 
                 {/* Instructions column */}
-                <Grid item xs={12} md={8}>
+                <Grid item xs={12} xl={8}>
                   <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
                       {/* Colored vertical bar */}
@@ -875,43 +860,40 @@ export default function RecipeDetailPage() {
           </>
         )}
 
-        {activeTab === 'notes' && (
+        {/* Notes Tab - HIDDEN FOR NOW */}
+        {/* {activeTab === 'notes' && (
           <RecipeNotesTab
             recipeId={recipeId}
             onNotesCountChange={setNotesCount}
             canAddNotes={isOwnRecipe}
           />
-        )}
+        )} */}
         </Box>
-      </Container>
+      </Box>
 
-      {/* Overflow Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={menuOpen}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleDeleteClick}>
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <MenuItemText primary="Delete Recipe" />
-        </MenuItem>
-      </Menu>
+        {/* Overflow Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleDeleteClick}>
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" color="error" />
+            </ListItemIcon>
+            <MenuItemText primary="Delete Recipe" />
+          </MenuItem>
+        </Menu>
 
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        title={recipe?.title || ''}
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-        loading={deleting}
-      />
-
-      {/* Recipe Chat FAB */}
-      {recipe && (
-        <RecipeChat recipeId={recipeId} recipe={recipe} />
-      )}
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmDialog
+          open={deleteDialogOpen}
+          title={recipe?.title || ''}
+          onConfirm={handleDeleteConfirm}
+          onCancel={handleDeleteCancel}
+          loading={deleting}
+        />
+      </RecipeChatLayout>
     </Box>
   );
 }

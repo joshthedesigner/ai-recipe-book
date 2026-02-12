@@ -7,7 +7,6 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import { useRouter } from 'next/navigation';
 import {
   Box,
-  Container,
   Typography,
   TextField,
   InputAdornment,
@@ -384,6 +383,7 @@ export default function BrowsePage() {
     });
   };
 
+  // Main render
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
@@ -402,7 +402,7 @@ export default function BrowsePage() {
           zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
         }}
       >
-        <Container maxWidth="xl" sx={{ pt: { xs: 0.5, sm: 1 }, pb: 1 }}>
+        <Box sx={{ width: '100%', pt: { xs: 0.5, sm: 1 }, pb: 1, px: 3 }}>
           {/* Header Title and Search/Filters */}
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: { xs: 1, sm: 2 }, alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: { xs: 'nowrap', sm: 'wrap' }, py: 1 }}>
             {/* Title and CTA - Removed on desktop (using FAB instead) */}
@@ -591,11 +591,11 @@ export default function BrowsePage() {
               )}
             </Box>
           </Box>
-        </Container>
+        </Box>
       </Box>
 
       {/* Content Container */}
-      <Container maxWidth="xl" sx={{ pt: 4, pb: 4, flex: 1 }}>
+      <Box sx={{ pt: 4, pb: 4, flex: 1, px: 3 }}>
         {/* Loading State */}
         {isLoading && (
           <Grid container spacing={3}>
@@ -722,7 +722,7 @@ export default function BrowsePage() {
             )}
           </>
         )}
-      </Container>
+      </Box>
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
