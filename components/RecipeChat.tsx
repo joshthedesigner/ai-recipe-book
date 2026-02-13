@@ -30,7 +30,6 @@ import {
 } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import CloseIcon from '@mui/icons-material/Close';
-import MinimizeIcon from '@mui/icons-material/Remove';
 import SendIcon from '@mui/icons-material/Send';
 import MessageBubble from '@/components/MessageBubble';
 import { Recipe, ChatMessage } from '@/types';
@@ -75,7 +74,6 @@ export default function RecipeChat({
   const isControlled = typeof controlledIsOpen === 'boolean';
   const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
   
-  const [isMinimized, setIsMinimized] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -99,17 +97,16 @@ export default function RecipeChat({
 
   // Reset unread when chat is opened
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen) {
       setHasUnread(false);
     }
-  }, [isOpen, isMinimized]);
+  }, [isOpen]);
 
   const handleOpen = () => {
     if (!isControlled) {
       setInternalIsOpen(true);
     }
     onOpenChange?.(true);
-    setIsMinimized(false);
     setHasUnread(false);
     // Reset to initial message when opening
     setMessages([INITIAL_MESSAGE]);
@@ -121,11 +118,6 @@ export default function RecipeChat({
       setInternalIsOpen(false);
     }
     onOpenChange?.(false);
-    setIsMinimized(false);
-  };
-
-  const handleMinimize = () => {
-    setIsMinimized(true);
   };
 
   const handleSend = async () => {
@@ -177,8 +169,8 @@ export default function RecipeChat({
       setMessages(updatedMessages);
       conversationHistoryRef.current = updatedMessages;
 
-      // If chat is closed or minimized, mark as unread
-      if (!isOpen || isMinimized) {
+      // If chat is closed, mark as unread
+      if (!isOpen) {
         setHasUnread(true);
       }
 
@@ -265,15 +257,6 @@ export default function RecipeChat({
           Recipe Chat
         </Typography>
         <Box>
-          {!isMobile && (
-            <IconButton
-              size="small"
-              onClick={handleMinimize}
-              aria-label="Minimize"
-            >
-              <MinimizeIcon />
-            </IconButton>
-          )}
           <IconButton
             size="small"
             onClick={handleClose}
@@ -443,7 +426,7 @@ export default function RecipeChat({
   return (
     <>
       {fabButton}
-      {isOpen && !isMinimized && createPortal(
+      {isOpen && createPortal(
         <Paper
           ref={chatWindowRef}
           elevation={0}
