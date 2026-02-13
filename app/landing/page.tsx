@@ -75,7 +75,7 @@ export default function LandingPage() {
                   fontWeight: 700,
                   lineHeight: 1,
                   letterSpacing: '-0.05em',
-                  color: 'text.primary',
+                  color: '#000000',
                 }}
               >
                 RecipeAssist.
