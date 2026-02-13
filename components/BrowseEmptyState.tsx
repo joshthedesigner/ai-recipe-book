@@ -20,7 +20,7 @@ const features: Feature[] = [
   },
   {
     icon: <LinkOutlinedIcon sx={{ fontSize: 17 }} />,
-    title: 'Share a link',
+    title: 'Share a URL',
     desc: 'Paste a link. Done.',
   },
   {
