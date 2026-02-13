@@ -391,19 +391,19 @@ export default function BrowsePage() {
 
       {/* Header Container - Full Width White Container - Sticky - Hidden when showing empty state */}
       {!(recipes.length === 0 && !hasActiveFilters && !isLoading) && (
-      <Box
-        sx={{
-          bgcolor: '#ffffff',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          width: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          position: 'sticky',
-          top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
-          zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
-        }}
-      >
+        <Box
+          sx={{
+            bgcolor: '#ffffff',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            position: 'sticky',
+            top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
+            zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
+          }}
+        >
         <Box sx={{ width: '100%', pt: { xs: 0.5, sm: 1 }, pb: 1, px: 3 }}>
           {/* Header Title and Search/Filters */}
           <Box sx={{ display: 'flex', flexDirection: 'row', gap: { xs: 1, sm: 2 }, alignItems: 'center', justifyContent: { xs: 'flex-start', sm: 'space-between' }, flexWrap: { xs: 'nowrap', sm: 'wrap' }, py: 1 }}>
@@ -594,7 +594,7 @@ export default function BrowsePage() {
             </Box>
           </Box>
         </Box>
-      </Box>
+        </Box>
       )}
 
       {/* Content Container */}
