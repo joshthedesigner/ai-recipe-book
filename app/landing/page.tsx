@@ -116,7 +116,7 @@ export default function LandingPage() {
                     lineHeight: 1.2,
                   }}
                 >
-              Manage all your recipes in a single place!
+              Manage all your recipes in a single place.
                 </Typography>
                 <Typography
                   variant="body1"
