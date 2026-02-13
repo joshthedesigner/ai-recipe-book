@@ -92,7 +92,7 @@ const slides: Slide[] = [
   },
 ];
 
-const customEasing = [0.32, 0.72, 0, 1];
+const customEasing: [number, number, number, number] = [0.32, 0.72, 0, 1];
 
 export default function BrowseEmptyState() {
   const [currentSlide, setCurrentSlide] = useState(0);
