@@ -389,7 +389,8 @@ export default function BrowsePage() {
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <TopNav />
 
-      {/* Header Container - Full Width White Container - Sticky */}
+      {/* Header Container - Full Width White Container - Sticky - Hidden when showing empty state */}
+      {!(recipes.length === 0 && !hasActiveFilters && !isLoading) && (
       <Box
         sx={{
           bgcolor: '#ffffff',
@@ -594,6 +595,7 @@ export default function BrowsePage() {
           </Box>
         </Box>
       </Box>
+      )}
 
       {/* Content Container */}
       <Box sx={{ pt: 4, pb: 4, flex: 1, px: 3 }}>
