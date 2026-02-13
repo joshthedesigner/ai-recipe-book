@@ -33,6 +33,7 @@ import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import RecipeSidebar from '@/components/RecipeSidebar';
 import FilterDrawer from '@/components/FilterDrawer';
+import BrowseEmptyState from '@/components/BrowseEmptyState';
 import { Badge } from '@mui/material';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -609,44 +610,7 @@ export default function BrowsePage() {
 
         {/* Empty State */}
         {!isLoading && recipes.length === 0 && !hasActiveFilters && (
-          <Box
-            sx={{
-              textAlign: 'center',
-              py: 8,
-              px: 3,
-            }}
-          >
-            <Box
-              sx={{
-                fontSize: '5rem',
-                mb: 3,
-                lineHeight: 1,
-              }}
-            >
-              🎉
-            </Box>
-            <Typography 
-              variant="h5" 
-              sx={{ 
-                fontWeight: 500,
-                color: 'text.primary',
-                mb: 2,
-              }}
-            >
-              Add your first recipe to get started!
-            </Typography>
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                color: 'text.secondary',
-                maxWidth: 600,
-                mx: 'auto',
-              }}
-            >
-              Your recipe collection is waiting to be filled with delicious discoveries. 
-              Start building your culinary library!
-            </Typography>
-          </Box>
+          <BrowseEmptyState />
         )}
 
         {/* No Results State */}
