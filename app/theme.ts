@@ -4,8 +4,8 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#000000', // Black
-      contrastText: '#ffffff', // White
+      main: 'hsl(24, 85%, 55%)', // Warm orange
+      contrastText: 'hsl(32, 40%, 98%)', // Light cream
     },
     secondary: {
       main: 'hsl(32, 45%, 92%)', // Light warm grey
@@ -70,9 +70,9 @@ const theme = createTheme({
   },
   shadows: [
     'none',
-    '0 4px 24px -2px rgba(0, 0, 0, 0.08)', // soft shadow
-    '0 8px 32px -4px rgba(0, 0, 0, 0.12)', // medium shadow
-    ...Array(22).fill('0 8px 32px -4px rgba(0, 0, 0, 0.12)'), // fill remaining shadow levels
+    '0 4px 24px -2px hsl(24 85% 55% / 0.08)', // soft shadow
+    '0 8px 32px -4px hsl(24 85% 55% / 0.12)', // medium shadow
+    ...Array(22).fill('0 8px 32px -4px hsl(24 85% 55% / 0.12)'), // fill remaining shadow levels
   ] as any,
   components: {
     MuiButton: {
