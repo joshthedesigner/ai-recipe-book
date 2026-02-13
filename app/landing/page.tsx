@@ -68,7 +68,30 @@ export default function LandingPage() {
             }}
           >
             {/* Logo */}
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
+              <Box
+                sx={{
+                  width: { xs: 28, sm: 32 },
+                  height: { xs: 28, sm: 32 },
+                  bgcolor: 'hsl(24, 85%, 55%)',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: { xs: '1rem', sm: '1.25rem' },
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    letterSpacing: '-0.05em',
+                    color: 'white',
+                  }}
+                >
+                  R.
+                </Typography>
+              </Box>
               <Typography
                 sx={{
                   fontSize: { xs: '1.25rem', sm: '1.5rem' },
