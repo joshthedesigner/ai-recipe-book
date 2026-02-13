@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import ContentPasteOutlinedIcon from '@mui/icons-material/ContentPasteOutlined';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Feature {
   icon: React.ReactNode;
@@ -121,31 +120,16 @@ export default function BrowseEmptyState() {
                   bgcolor: 'action.hover',
                   px: '20px',
                   py: '16px',
-                  transition: 'all 0.2s ease',
-                  cursor: 'default',
-                  position: 'relative',
-                  '&:hover': {
-                    bgcolor: 'action.selected',
-                    '& .feature-icon': {
-                      color: 'text.primary',
-                    },
-                    '& .arrow-icon': {
-                      opacity: 1,
-                      transform: 'translateX(0)',
-                    },
-                  },
                 }}
               >
                 {/* Icon - No Container */}
                 <Box
-                  className="feature-icon"
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     flexShrink: 0,
                     color: 'text.secondary',
-                    transition: 'color 0.2s ease',
                   }}
                 >
                   {feature.icon}
@@ -175,19 +159,6 @@ export default function BrowseEmptyState() {
                     {feature.desc}
                   </Box>
                 </Box>
-
-                {/* Hidden Arrow - Slides in on Hover */}
-                <ArrowForwardIcon
-                  className="arrow-icon"
-                  sx={{
-                    fontSize: 16,
-                    color: 'text.secondary',
-                    opacity: 0,
-                    transform: 'translateX(-4px)',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
-                  }}
-                />
               </Box>
             </motion.div>
           ))}
