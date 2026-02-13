@@ -101,7 +101,6 @@ export default function LoginPage() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
                   textDecoration: 'none',
                   cursor: 'pointer',
                   '&:hover': {
@@ -109,29 +108,6 @@ export default function LoginPage() {
                   },
                 }}
               >
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: 'hsl(24, 85%, 55%)',
-                    borderRadius: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: '1.25rem',
-                      fontWeight: 700,
-                      lineHeight: 1,
-                      letterSpacing: '-0.05em',
-                      color: 'white',
-                    }}
-                  >
-                    R.
-                  </Typography>
-                </Box>
                 <Typography
                   sx={{
                     fontSize: '1.5rem',
