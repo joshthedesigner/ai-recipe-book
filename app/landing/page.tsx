@@ -111,7 +111,7 @@ export default function LandingPage() {
                   sx={{
                     fontSize: { xs: '2.5rem', md: '3.5rem' },
                     fontWeight: 700,
-                    color: 'hsl(24, 85%, 55%)',
+                    color: '#000000',
                     mb: 2,
                     lineHeight: 1.2,
                   }}
