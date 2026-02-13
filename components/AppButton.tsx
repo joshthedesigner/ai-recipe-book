@@ -40,13 +40,13 @@ export default function AppButton({ variant = 'primary', sx, ...props }: AppButt
         textTransform: 'none',
         fontWeight: 600,
         color: 'white',
-        bgcolor: 'hsl(24, 85%, 55%)',
+        bgcolor: '#000000',
         px: 3,
         py: 1.25,
         boxShadow: 'none',
         '&:hover': {
           boxShadow: 'none',
-          bgcolor: 'hsl(24, 85%, 50%)',
+          bgcolor: '#1a1a1a',
         },
         ...sx,
       }}

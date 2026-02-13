@@ -151,7 +151,7 @@ export default function LandingPage() {
                   variant="body2"
                   sx={{
                     fontSize: '16px',
-                    color: 'hsl(24, 85%, 55%)',
+                    color: '#000000',
                     fontWeight: 600,
                 mb: 'calc(32px + 48px)',
                   }}
@@ -218,7 +218,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                <MenuBookIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+                <MenuBookIcon sx={{ fontSize: 40, color: '#000000' }} />
               </Box>
               <Typography
                 variant="h6"
@@ -260,7 +260,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                <FavoriteIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+                <FavoriteIcon sx={{ fontSize: 40, color: '#000000' }} />
               </Box>
               <Typography
                 variant="h6"
@@ -302,7 +302,7 @@ export default function LandingPage() {
                   mb: 2,
                 }}
               >
-                <AutoAwesomeIcon sx={{ fontSize: 40, color: 'hsl(24, 85%, 55%)' }} />
+                <AutoAwesomeIcon sx={{ fontSize: 40, color: '#000000' }} />
               </Box>
               <Typography
                 variant="h6"
@@ -389,7 +389,7 @@ export default function LandingPage() {
                   'Access from any device, anywhere'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <CheckCircleIcon sx={{ fontSize: 24, color: '#000000' }} />
                     <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
                       {item}
                     </Typography>
@@ -437,7 +437,7 @@ export default function LandingPage() {
                   'Translate recipes to any language'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <CheckCircleIcon sx={{ fontSize: 24, color: '#000000' }} />
                     <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
                       {item}
                     </Typography>
@@ -528,7 +528,7 @@ export default function LandingPage() {
                   'Smart tagging finds recipes when you need them'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
+                    <CheckCircleIcon sx={{ fontSize: 24, color: '#000000' }} />
                     <Typography variant="body1" sx={{ fontSize: '1rem', color: 'hsl(24, 20%, 15%)' }}>
                       {item}
                     </Typography>
