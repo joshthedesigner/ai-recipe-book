@@ -232,7 +232,7 @@ export default function DesktopNav() {
                 color: 'text.primary',
               }}
             >
-              RecipeAssist
+              RecipeAssist.
             </Typography>
           </Box>
 

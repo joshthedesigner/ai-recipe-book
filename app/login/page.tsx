@@ -117,7 +117,7 @@ export default function LoginPage() {
                     color: 'text.primary',
                   }}
                 >
-                  RecipeAssist
+                  RecipeAssist.
                 </Typography>
               </Box>
             </Link>

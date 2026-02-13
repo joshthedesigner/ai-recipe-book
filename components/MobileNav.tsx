@@ -265,7 +265,7 @@ export default function MobileNav() {
                       color: 'text.primary',
                     }}
                   >
-                    RecipeAssist
+                    RecipeAssist.
                   </Typography>
                 </Box>
 

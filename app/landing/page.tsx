@@ -78,7 +78,7 @@ export default function LandingPage() {
                   color: 'text.primary',
                 }}
               >
-                RecipeAssist
+                RecipeAssist.
               </Typography>
             </Box>
 

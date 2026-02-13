@@ -137,7 +137,7 @@ export default function SignupPage() {
                     color: 'text.primary',
                   }}
                 >
-                  RecipeAssist
+                  RecipeAssist.
                 </Typography>
               </Box>
             </Link>
