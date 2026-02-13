@@ -328,12 +328,27 @@ export default function RecipeDetailPage() {
         {/* Single fixed-width container for all content */}
         <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
 
+          {/* Title */}
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 600,
+              textAlign: 'center',
+              py: 1.5,
+              mb: 3,
+              fontSize: { xs: '1.875rem', md: '2.5rem' },
+            }}
+          >
+            {recipe.title}
+          </Typography>
+
           {/* Large Image/Video */}
           {recipe.video_url && recipe.video_platform === 'youtube' ? (
             <Box
               sx={{
                 width: '100%',
                 maxWidth: '900px',
+                mx: 'auto',
               aspectRatio: '16/9',
               borderRadius: 2,
               overflow: 'hidden',
@@ -358,6 +373,7 @@ export default function RecipeDetailPage() {
             sx={{
                 width: '100%',
                 maxWidth: '900px',
+                mx: 'auto',
                 height: { xs: 300, sm: 400, md: 500 },
               borderRadius: 2,
               overflow: 'hidden',
@@ -378,67 +394,53 @@ export default function RecipeDetailPage() {
           </Box>
           ) : null}
 
-          {/* Title */}
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 600,
-              textAlign: 'left',
-              py: 1.5,
-              mb: 1,
-              fontSize: { xs: '1.875rem', md: '2.5rem' },
-            }}
-          >
-            {recipe.title}
-          </Typography>
-
           {/* Source URL and Action Buttons Row */}
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'row', 
-            gap: { xs: 1, sm: 2 }, 
+            justifyContent: 'space-between',
             alignItems: 'center', 
             mb: 3,
             position: 'relative',
             zIndex: 1,
           }}>
-            {/* Source URL and Action Buttons - Left Aligned Group */}
+            {/* Source URL - Left Aligned */}
+            {recipe.source_url && (
+              <Typography
+                variant="body2"
+                component="a"
+                href={recipe.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{ 
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  textTransform: 'uppercase',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  cursor: 'pointer',
+                  pointerEvents: 'auto',
+                  position: 'relative',
+                  zIndex: 1,
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Via {getSourceName(recipe.source_url)}
+                <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
+              </Typography>
+            )}
+
+            {/* Action Buttons - Right Aligned Group */}
             <Box sx={{ 
               display: 'flex', 
               gap: { xs: 1, sm: 2 }, 
               alignItems: 'center',
-              flexShrink: 0,
             }}>
-              {/* Source URL - First in the group */}
-              {recipe.source_url && (
-                <Typography
-                  variant="body2"
-                  component="a"
-                  href={recipe.source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{ 
-                    color: 'text.secondary',
-                    textDecoration: 'none',
-                    textTransform: 'uppercase',
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.05em',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    cursor: 'pointer',
-                    pointerEvents: 'auto',
-                    position: 'relative',
-                    zIndex: 1,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Via {getSourceName(recipe.source_url)}
-                  <OpenInNewIcon sx={{ fontSize: '0.875rem', flexShrink: 0 }} />
-                </Typography>
-              )}
               {/* Favorite button - Icon only on mobile, Button with text on desktop */}
               {isMobile ? (
                 <IconButton
