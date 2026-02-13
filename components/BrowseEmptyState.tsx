@@ -15,17 +15,17 @@ interface Feature {
 const features: Feature[] = [
   {
     icon: <CameraAltOutlinedIcon sx={{ fontSize: 17 }} />,
-    title: 'Photo',
+    title: 'Take a photo',
     desc: 'Snap a photo of a written recipe. We read it.',
   },
   {
     icon: <LinkOutlinedIcon sx={{ fontSize: 17 }} />,
-    title: 'URL',
+    title: 'Share a link',
     desc: 'Paste a link. Done.',
   },
   {
     icon: <ContentPasteOutlinedIcon sx={{ fontSize: 17 }} />,
-    title: 'Text',
+    title: 'Copy and paste text',
     desc: 'Copy and paste raw text, it works too.',
   },
 ];
