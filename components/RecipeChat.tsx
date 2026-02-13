@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Recipe Chat Component
+ * Recipe Assist Component
  * 
  * Floating Action Button (FAB) with chat window for recipe-specific questions
  * - FAB in bottom-right corner with drop shadow
@@ -192,9 +192,11 @@ export default function RecipeChat({
     }
   };
 
-  // Handle click outside to close (optional - can be removed if not desired)
+  // Handle click outside to close - DISABLED for inline mode to allow interaction with recipe page
+  // In inline mode (side-by-side desktop layout), user should be able to interact with recipe
+  // content without closing the chat. Only explicit close (X button or FAB) should close it.
   useEffect(() => {
-    if (!isOpen || isMobile) return;
+    if (!isOpen || isMobile || mode === 'inline') return;
 
     const handleClickOutside = (event: MouseEvent) => {
       if (chatWindowRef.current && !chatWindowRef.current.contains(event.target as Node)) {
@@ -210,13 +212,13 @@ export default function RecipeChat({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, isMobile]);
+  }, [isOpen, isMobile, mode]);
 
   // FAB Button with drop shadow
   const fabButton = (
     <Fab
       color="primary"
-      aria-label="Open recipe chat"
+      aria-label="Open recipe assist"
       onClick={handleOpen}
       className="recipe-chat-fab"
       sx={{
@@ -254,7 +256,7 @@ export default function RecipeChat({
         borderColor: 'divider',
       }}>
         <Typography variant="h6" sx={{ fontWeight: 600 }}>
-          Recipe Chat
+          Recipe Assist
         </Typography>
         <Box>
           <IconButton
@@ -381,7 +383,7 @@ export default function RecipeChat({
           overflow: 'hidden',
         }}
         role="dialog"
-        aria-label="Recipe chat"
+        aria-label="Recipe assist"
       >
         {chatContent}
       </Paper>
@@ -412,7 +414,7 @@ export default function RecipeChat({
               boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
             }}
             role="dialog"
-            aria-label="Recipe chat"
+            aria-label="Recipe assist"
           >
             {chatContent}
           </Paper>,
@@ -447,7 +449,7 @@ export default function RecipeChat({
             overflow: 'hidden',
           }}
           role="dialog"
-          aria-label="Recipe chat"
+          aria-label="Recipe assist"
         >
           {chatContent}
         </Paper>,

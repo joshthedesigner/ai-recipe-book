@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Recipe Chat Layout Component
+ * Recipe Assist Layout Component
  * 
  * Manages side-by-side layout for recipe content + chat on desktop/tablet
  * - Desktop: Two columns (recipe content left, chat right)
@@ -136,7 +136,7 @@ export default function RecipeChatLayout({
         {/* FAB button - always visible on desktop */}
         <Fab
           color="primary"
-          aria-label={isChatOpen ? "Chat open" : "Open recipe chat"}
+          aria-label={isChatOpen ? "Assist open" : "Open recipe assist"}
           onClick={isChatOpen ? closeChat : openChat}
           sx={{
             position: 'fixed',
