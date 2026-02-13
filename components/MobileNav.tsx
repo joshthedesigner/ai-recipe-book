@@ -256,11 +256,17 @@ export default function MobileNav() {
                     mr: 1,
                   }}
                 >
-                  <img 
-                    src="/logo1.svg" 
-                    alt="RecipeAssist" 
-                    style={{ height: '32px', width: 'auto' }}
-                  />
+                  <Typography
+                    sx={{
+                      fontSize: '1.25rem',
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      letterSpacing: '-0.05em',
+                      color: 'text.primary',
+                    }}
+                  >
+                    RecipeAssist
+                  </Typography>
                 </Box>
 
                 {/* Navigation Items - Left (Feed/Friends) */}

@@ -121,7 +121,6 @@ export default function SignupPage() {
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 1.5,
                   textDecoration: 'none',
                   cursor: 'pointer',
                   '&:hover': {
@@ -129,11 +128,17 @@ export default function SignupPage() {
                   },
                 }}
               >
-                <img 
-                  src="/logo1.svg" 
-                  alt="RecipeAssist" 
-                  style={{ height: '40px', width: 'auto' }}
-                />
+                <Typography
+                  sx={{
+                    fontSize: '1.5rem',
+                    fontWeight: 700,
+                    lineHeight: 1,
+                    letterSpacing: '-0.05em',
+                    color: 'text.primary',
+                  }}
+                >
+                  RecipeAssist
+                </Typography>
               </Box>
             </Link>
           </Box>

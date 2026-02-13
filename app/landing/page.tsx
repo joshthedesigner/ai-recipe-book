@@ -69,15 +69,17 @@ export default function LandingPage() {
           >
             {/* Logo */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Box
-                component="img"
-                src="/logo1.svg"
-                alt="RecipeAssist"
+              <Typography
                 sx={{
-                  height: { xs: '32px', sm: '40px' },
-                  width: 'auto',
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  fontWeight: 700,
+                  lineHeight: 1,
+                  letterSpacing: '-0.05em',
+                  color: 'text.primary',
                 }}
-              />
+              >
+                RecipeAssist
+              </Typography>
             </Box>
 
             {/* CTA Buttons */}
