@@ -56,7 +56,8 @@ export default function BrowseEmptyState() {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '80vh',
+        minHeight: { xs: 'auto', md: '80vh' },
+        py: { xs: 6, md: 0 },
         px: 3,
       }}
     >
