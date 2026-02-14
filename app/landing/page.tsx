@@ -483,7 +483,7 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/add.png"
+                  src="/photo1.png"
                   alt="AI-powered recipe management"
                   style={{
                     width: '100%',
