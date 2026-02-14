@@ -777,6 +777,20 @@ export default function UnifiedChat({
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
+            // Custom scrollbar styling
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-track': {
+              backgroundColor: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'divider',
+              borderRadius: '4px',
+              '&:hover': {
+                backgroundColor: 'action.disabled',
+              },
+            },
           }}
         >
           {messages.map((msg, idx) => (
@@ -1045,8 +1059,10 @@ export default function UnifiedChat({
           maxWidth: '100%',
           height: '100%',
           borderLeft: '1px solid',
+          borderTop: '1px solid',
           borderColor: 'divider',
           bgcolor: 'background.paper',
+          overflow: 'hidden', // Prevent scrollbar on outer container
         }}
       >
         {chatContent}
