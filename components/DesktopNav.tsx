@@ -378,7 +378,7 @@ export default function DesktopNav() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={openChat}
+                onClick={() => openChat('add')}
                 sx={{
                   bgcolor: 'primary.main',
                   color: 'white',

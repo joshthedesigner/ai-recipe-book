@@ -72,7 +72,7 @@ export default function RecipeChatLayout({
           <Fab
             color="primary"
             aria-label="Open recipe assistant"
-            onClick={openChat}
+            onClick={() => openChat('recipe')}
             sx={{
               position: 'fixed',
               bottom: { xs: 16, sm: 24 },

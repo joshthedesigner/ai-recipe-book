@@ -11,9 +11,12 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react';
 
+type ChatIntent = 'add' | 'recipe';
+
 interface ChatContextType {
   isChatOpen: boolean;
-  openChat: () => void;
+  chatIntent: ChatIntent;
+  openChat: (intent?: ChatIntent) => void;
   closeChat: () => void;
   toggleChat: () => void;
 }
@@ -22,13 +25,18 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatIntent, setChatIntent] = useState<ChatIntent>('add');
 
-  const openChat = () => setIsChatOpen(true);
+  const openChat = (intent: ChatIntent = 'add') => {
+    setChatIntent(intent);
+    setIsChatOpen(true);
+  };
+  
   const closeChat = () => setIsChatOpen(false);
   const toggleChat = () => setIsChatOpen(prev => !prev);
 
   return (
-    <ChatContext.Provider value={{ isChatOpen, openChat, closeChat, toggleChat }}>
+    <ChatContext.Provider value={{ isChatOpen, chatIntent, openChat, closeChat, toggleChat }}>
       {children}
     </ChatContext.Provider>
   );

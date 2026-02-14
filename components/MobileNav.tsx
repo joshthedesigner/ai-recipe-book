@@ -434,7 +434,7 @@ export default function MobileNav() {
                   {/* Add Recipe Button */}
                   {user && (
                     <Button
-                      onClick={openChat}
+                      onClick={() => openChat('add')}
                       startIcon={<AddIcon sx={{ fontSize: 18 }} />}
                       sx={{
                         bgcolor: 'primary.main',

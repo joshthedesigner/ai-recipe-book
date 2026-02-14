@@ -751,7 +751,7 @@ export default function BrowsePage() {
         <Fab
           color="primary"
           aria-label="recipe assistant"
-          onClick={openChat}
+          onClick={() => openChat('add')}
           sx={{
             position: 'fixed',
             bottom: 24,

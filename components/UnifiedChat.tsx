@@ -35,6 +35,7 @@ import { Recipe, ChatMessage, ChatResponse } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
+import { useChat } from '@/contexts/ChatContext';
 
 interface UnifiedChatProps {
   open: boolean;
@@ -64,8 +65,8 @@ interface ExtendedChatMessage extends ChatMessage {
   chatResponse?: ChatResponse; // For recipe preview
 }
 
-const getWelcomeMessage = (context: 'browse' | 'recipe', recipe?: Recipe): ChatMessage => {
-  if (context === 'browse') {
+const getWelcomeMessage = (intent: 'add' | 'recipe', recipe?: Recipe): ChatMessage => {
+  if (intent === 'add') {
     return {
       message: `Hi! 👋 I'm your recipe assistant.
 
@@ -82,7 +83,7 @@ What would you like to do?`,
     };
   }
   
-  // Recipe context - personalize with recipe name
+  // Recipe intent - personalize with recipe name
   const recipeName = recipe?.title || 'this recipe';
   return {
     message: `Hi! 👋 I'm your recipe assistant, can I assist you with **${recipeName}**?
@@ -116,8 +117,9 @@ export default function UnifiedChat({
   const { user } = useAuth();
   const { showToast } = useToast();
   const { activeGroup } = useGroup();
+  const { chatIntent } = useChat();
   
-  const welcomeMessage = getWelcomeMessage(context, recipe);
+  const welcomeMessage = getWelcomeMessage(chatIntent, recipe);
   const [messages, setMessages] = useState<ExtendedChatMessage[]>([welcomeMessage]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -143,12 +145,14 @@ export default function UnifiedChat({
   const MAX_IMAGES = 5;
   const MAX_CONCURRENT = 3; // Parallel image processing limit
 
-  // Reset messages when context or recipe changes
+  // Reset messages when chat opens or intent changes
   useEffect(() => {
-    const newWelcome = getWelcomeMessage(context, recipe);
-    setMessages([newWelcome]);
-    conversationHistoryRef.current = [newWelcome];
-  }, [context, recipe]);
+    if (open) {
+      const newWelcome = getWelcomeMessage(chatIntent, recipe);
+      setMessages([newWelcome]);
+      conversationHistoryRef.current = [newWelcome];
+    }
+  }, [open, chatIntent, recipe]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
