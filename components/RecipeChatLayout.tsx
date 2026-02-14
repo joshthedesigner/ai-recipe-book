@@ -11,9 +11,9 @@
  */
 
 import { useState, createContext, useContext, ReactNode } from 'react';
-import { Box, useTheme, useMediaQuery, Fab, Badge } from '@mui/material';
+import { Box, Fab, Badge } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
-import RecipeChat from './RecipeChat';
+import UnifiedChat from './UnifiedChat';
 import { Recipe } from '@/types';
 
 interface RecipeChatLayoutProps {
@@ -45,8 +45,6 @@ export default function RecipeChatLayout({
   recipe,
   defaultIsChatOpen = false,
 }: RecipeChatLayoutProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isChatOpen, setIsChatOpen] = useState(defaultIsChatOpen);
 
   const openChat = () => setIsChatOpen(true);
@@ -58,82 +56,12 @@ export default function RecipeChatLayout({
     isChatOpen,
   };
 
-  // Mobile: single column + overlay chat (same as before)
-  if (isMobile) {
-    return (
-      <RecipeChatContext.Provider value={controls}>
-        {children}
-        <RecipeChat
-          recipeId={recipeId}
-          recipe={recipe}
-          isOpen={isChatOpen}
-          onOpenChange={setIsChatOpen}
-          mode="overlay"
-        />
-      </RecipeChatContext.Provider>
-    );
-  }
-
-  // Desktop: side-by-side layout
   return (
     <RecipeChatContext.Provider value={controls}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'row',
-          width: '100%',
-          minHeight: '100vh',
-          position: 'relative',
-        }}
-      >
-        {/* Left: Recipe content column */}
-        <Box
-          sx={{
-            flex: 1,
-            minWidth: 0,
-            pl: { xs: 0, sm: 3, md: 4 },
-            pr: isChatOpen ? 3 : 0,
-            transition: 'padding-right 0.3s ease',
-          }}
-        >
-          {children}
-        </Box>
+      <Box sx={{ position: 'relative' }}>
+        {children}
 
-        {/* Right: Chat column space (reserves space when open) */}
-        {isChatOpen && (
-          <Box
-            sx={{
-              flex: '0 0 400px',
-              maxWidth: 400,
-              position: 'relative',
-            }}
-          >
-            {/* Chat window positioned at bottom of this column */}
-            <Box
-              sx={{
-                position: 'fixed',
-                top: 88,
-                bottom: 100,
-                right: 24,
-                width: '400px',
-                maxHeight: 'calc(100vh - 188px)',
-                minHeight: '400px',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
-              <RecipeChat
-                recipeId={recipeId}
-                recipe={recipe}
-                isOpen={isChatOpen}
-                onOpenChange={setIsChatOpen}
-                mode="inline"
-              />
-            </Box>
-          </Box>
-        )}
-
-        {/* FAB button - always visible on desktop */}
+        {/* FAB button - always visible */}
         <Fab
           color="primary"
           aria-label={isChatOpen ? "Assist open" : "Open recipe assist"}
@@ -157,6 +85,15 @@ export default function RecipeChatLayout({
             <ChatBubbleIcon />
           </Badge>
         </Fab>
+
+        {/* Unified Chat */}
+        <UnifiedChat
+          open={isChatOpen}
+          onClose={closeChat}
+          context="recipe"
+          recipeId={recipeId}
+          recipe={recipe}
+        />
       </Box>
     </RecipeChatContext.Provider>
   );

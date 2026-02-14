@@ -26,7 +26,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
-import RecipeSidebar from '@/components/RecipeSidebar';
+import UnifiedChat from '@/components/UnifiedChat';
 
 interface PendingRequest {
   id: string;
@@ -403,13 +403,17 @@ export default function DesktopNav() {
       </Toolbar>
     </AppBar>
 
-      {/* Unified Chat Sidebar */}
-      <RecipeSidebar
+      {/* Unified Chat */}
+      <UnifiedChat
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}
+        context="browse"
         onRecipeAdded={() => {
           setIsChatOpen(false);
-          // Refresh could be handled here if needed
+          // Refresh page to show new recipe
+          if (pathname === '/browse') {
+            router.refresh();
+          }
         }}
       />
   );

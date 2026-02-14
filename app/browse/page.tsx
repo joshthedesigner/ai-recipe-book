@@ -31,7 +31,6 @@ import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
-import RecipeSidebar from '@/components/RecipeSidebar';
 import FilterDrawer from '@/components/FilterDrawer';
 import BrowseEmptyState from '@/components/BrowseEmptyState';
 import { Badge } from '@mui/material';
@@ -76,7 +75,6 @@ export default function BrowsePage() {
   const [recipeToDelete, setRecipeToDelete] = useState<Recipe | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
 
@@ -699,13 +697,6 @@ export default function BrowsePage() {
         loading={deletingRecipe}
       />
 
-      {/* Recipe Sidebar for Adding Recipes */}
-      <RecipeSidebar 
-        open={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        onRecipeAdded={handleRecipeAdded}
-      />
-
       {/* Filter Drawer (Mobile Only) */}
       <FilterDrawer
         open={filterDrawerOpen}
@@ -722,26 +713,6 @@ export default function BrowsePage() {
         onReset={clearFilters}
       />
 
-      {/* Floating Action Button - Add Recipe (Mobile and Desktop) */}
-      {canAddRecipes && (
-        <Fab
-          color="primary"
-          aria-label="add recipe"
-          onClick={() => setSidebarOpen(true)}
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
-            '&:hover': {
-              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
-            },
-          }}
-        >
-          <AddIcon />
-        </Fab>
-      )}
     </Box>
   );
 }
