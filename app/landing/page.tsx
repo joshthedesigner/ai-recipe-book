@@ -331,7 +331,7 @@ export default function LandingPage() {
       </Container>
       </Box>
 
-      {/* Why RecipeAssist Section */}
+      {/* AI Recipe Management Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
@@ -344,8 +344,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/photo2.png"
-                  alt="Find any recipe in seconds"
+                  src="/photo1.png"
+                  alt="AI-powered recipe management"
                   style={{
                     width: '100%',
                     height: 'auto',
@@ -366,7 +366,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Find any recipe in seconds.
+                Recipes made simple and clear.
               </Typography>
               <Typography
                 variant="body1"
@@ -377,16 +377,15 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                Your recipes, organized and ready when you need them. Search by ingredient, 
-                cuisine, or just browse - everything is summarized to get you cooking quickly.
+                No ads, no life stories, no clutter. Just clean, easy-to-follow recipes with everything you need to cook confidently.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                 {[
-                  'Search recipes by ingredient or cuisine',
-                  'Clean, summarized format for easy cooking',
-                  'Filter by what you have in your kitchen',
-                  'Access from any device, anywhere'
+                  'Removes ads and unnecessary blog content',
+                  'Clean ingredient lists with checkboxes',
+                  'Step-by-step instructions, distraction-free',
+                  'Key info at a glance - time, servings, difficulty'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
@@ -470,7 +469,7 @@ export default function LandingPage() {
         </Container>
       </Box>
 
-      {/* AI Recipe Management Section */}
+      {/* Why RecipeAssist Section */}
       <Box sx={{ bgcolor: 'hsl(0, 0%, 100%)', py: { xs: 4, md: 6 } }}>
         <Container maxWidth="lg">
           <Grid container spacing={{ xs: 4, md: 8 }} alignItems="center">
@@ -483,8 +482,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/photo1.png"
-                  alt="AI-powered recipe management"
+                  src="/photo2.png"
+                  alt="Find any recipe in seconds"
                   style={{
                     width: '100%',
                     height: 'auto',
@@ -505,7 +504,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Recipes made simple and clear.
+                Find any recipe in seconds.
               </Typography>
               <Typography
                 variant="body1"
@@ -516,15 +515,16 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                No ads, no life stories, no clutter. Just clean, easy-to-follow recipes with everything you need to cook confidently.
+                Your recipes, organized and ready when you need them. Search by ingredient, 
+                cuisine, or just browse - everything is summarized to get you cooking quickly.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                 {[
-                  'Removes ads and unnecessary blog content',
-                  'Clean ingredient lists with checkboxes',
-                  'Step-by-step instructions, distraction-free',
-                  'Key info at a glance - time, servings, difficulty'
+                  'Search recipes by ingredient or cuisine',
+                  'Clean, summarized format for easy cooking',
+                  'Filter by what you have in your kitchen',
+                  'Access from any device, anywhere'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
