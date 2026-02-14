@@ -482,11 +482,12 @@ export default function MobileNav() {
         />
       )}
 
-      {/* Unified Chat */}
+      {/* Unified Chat - uses drawer mode on mobile */}
       <UnifiedChat
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         context="browse"
+        mode="drawer"
         onRecipeAdded={() => {
           setIsChatOpen(false);
           if (pathname === '/browse') {

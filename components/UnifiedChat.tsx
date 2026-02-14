@@ -44,6 +44,8 @@ interface UnifiedChatProps {
   recipeId?: string;
   recipe?: Recipe;
   onRecipeAdded?: () => void;
+  // Display mode
+  mode?: 'drawer' | 'inline'; // drawer = overlay with scrim, inline = on page
 }
 
 interface ImageQueueItem {
@@ -107,6 +109,7 @@ export default function UnifiedChat({
   recipeId,
   recipe,
   onRecipeAdded,
+  mode = 'drawer',
 }: UnifiedChatProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -737,28 +740,15 @@ export default function UnifiedChat({
     }
   };
 
-  return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
+  // Content wrapper - same content for both modes
+  const chatContent = (
+    <Box
       sx={{
-        zIndex: 10001,
-      }}
-      PaperProps={{
-        sx: {
-          width: isMobile ? '100%' : 450,
-          maxWidth: '100%',
-        },
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-        }}
-      >
         {/* Header */}
         <Box
           sx={{
@@ -1041,6 +1031,46 @@ export default function UnifiedChat({
           </Box>
         </Box>
       </Box>
+    );
+
+  // Render based on mode
+  if (mode === 'inline') {
+    // Inline mode - shown on page, no drawer/scrim
+    if (!open) return null;
+    
+    return (
+      <Box
+        sx={{
+          width: 450,
+          maxWidth: '100%',
+          height: '100%',
+          borderLeft: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+        }}
+      >
+        {chatContent}
+      </Box>
+    );
+  }
+
+  // Drawer mode - overlay with scrim (default)
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      sx={{
+        zIndex: 10001,
+      }}
+      PaperProps={{
+        sx: {
+          width: isMobile ? '100%' : 450,
+          maxWidth: '100%',
+        },
+      }}
+    >
+      {chatContent}
     </Drawer>
   );
 }

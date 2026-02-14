@@ -404,11 +404,12 @@ export default function DesktopNav() {
       </Toolbar>
     </AppBar>
 
-      {/* Unified Chat */}
+      {/* Unified Chat from nav - uses drawer mode (overlay) */}
       <UnifiedChat
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         context="browse"
+        mode="drawer"
         onRecipeAdded={() => {
           setIsChatOpen(false);
           // Refresh page to show new recipe

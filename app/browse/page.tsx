@@ -387,7 +387,13 @@ export default function BrowsePage() {
 
   // Main render
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <Box sx={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      minHeight: '100vh',
+      pr: isFabChatOpen && !isMobile ? '450px' : 0,
+      transition: 'padding-right 0.3s ease',
+    }}>
       <TopNav />
 
       {/* Header Container - Full Width White Container - Sticky - Hidden when showing empty state */}
@@ -737,13 +743,38 @@ export default function BrowsePage() {
         </Fab>
       )}
 
-      {/* Unified Chat - Browse context */}
-      <UnifiedChat
-        open={isFabChatOpen}
-        onClose={() => setIsFabChatOpen(false)}
-        context="browse"
-        onRecipeAdded={handleRecipeAdded}
-      />
+      {/* Unified Chat - Browse context - Inline mode on desktop */}
+      {isFabChatOpen && !isMobile && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 64,
+            right: 0,
+            bottom: 0,
+            width: 450,
+            zIndex: 1200,
+          }}
+        >
+          <UnifiedChat
+            open={isFabChatOpen}
+            onClose={() => setIsFabChatOpen(false)}
+            context="browse"
+            onRecipeAdded={handleRecipeAdded}
+            mode="inline"
+          />
+        </Box>
+      )}
+
+      {/* Unified Chat - Drawer mode on mobile */}
+      {isMobile && (
+        <UnifiedChat
+          open={isFabChatOpen}
+          onClose={() => setIsFabChatOpen(false)}
+          context="browse"
+          onRecipeAdded={handleRecipeAdded}
+          mode="drawer"
+        />
+      )}
     </Box>
   );
 }
