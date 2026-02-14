@@ -391,8 +391,6 @@ export default function BrowsePage() {
       display: 'flex', 
       flexDirection: 'column', 
       minHeight: '100vh',
-      pr: isFabChatOpen && !isMobile ? '450px' : 0,
-      transition: 'padding-right 0.3s ease',
     }}>
       <TopNav />
 
@@ -409,6 +407,8 @@ export default function BrowsePage() {
             position: 'sticky',
             top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
             zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
+            pr: isFabChatOpen && !isMobile ? 'calc(450px + 24px)' : 0,
+            transition: 'padding-right 0.3s ease',
           }}
         >
         <Box sx={{ width: '100%', pt: { xs: 0.5, sm: 1 }, pb: 1, px: 3 }}>
@@ -605,7 +605,14 @@ export default function BrowsePage() {
       )}
 
       {/* Content Container */}
-      <Box sx={{ pt: 4, pb: 4, flex: 1, px: 3 }}>
+      <Box sx={{ 
+        pt: 4, 
+        pb: 4, 
+        flex: 1, 
+        px: 3,
+        pr: isFabChatOpen && !isMobile ? 'calc(450px + 24px)' : 3,
+        transition: 'padding-right 0.3s ease',
+      }}>
         {/* Loading State */}
         {isLoading && (
           <Grid container spacing={3}>
@@ -765,7 +772,7 @@ export default function BrowsePage() {
           sx={{
             position: 'fixed',
             top: { xs: 56, sm: 64 }, // Match TopNav height
-            right: 0,
+            right: 24,
             bottom: 0,
             width: 450,
             zIndex: 1200,
