@@ -25,9 +25,12 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
+import ImageIcon from '@mui/icons-material/Image';
 import MessageBubble from '@/components/MessageBubble';
 import { Recipe, ChatMessage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import { useGroup } from '@/contexts/GroupContext';
 
 interface UnifiedChatProps {
   open: boolean;
@@ -37,6 +40,12 @@ interface UnifiedChatProps {
   recipeId?: string;
   recipe?: Recipe;
   onRecipeAdded?: () => void;
+}
+
+interface ImageQueueItem {
+  file: File;
+  preview: string;
+  id: string;
 }
 
 const getWelcomeMessage = (context: 'browse' | 'recipe', recipe?: Recipe): ChatMessage => {
@@ -88,6 +97,8 @@ export default function UnifiedChat({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
+  const { showToast } = useToast();
+  const { activeGroup } = useGroup();
   
   const welcomeMessage = getWelcomeMessage(context, recipe);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
@@ -96,9 +107,14 @@ export default function UnifiedChat({
   const [error, setError] = useState<string | null>(null);
   const [extractionState, setExtractionState] = useState<'idle' | 'extracting' | 'reviewing'>('idle');
   const [progressMessage, setProgressMessage] = useState('');
+  const [imageQueue, setImageQueue] = useState<ImageQueueItem[]>([]);
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationHistoryRef = useRef<ChatMessage[]>([welcomeMessage]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const MAX_IMAGES = 5;
 
   // Reset messages when context or recipe changes
   useEffect(() => {
@@ -112,8 +128,147 @@ export default function UnifiedChat({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Image handling functions
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    // Check if adding these files would exceed limit
+    const remainingSlots = MAX_IMAGES - imageQueue.length;
+    if (remainingSlots === 0) {
+      showToast(`Maximum ${MAX_IMAGES} images allowed`, 'warning');
+      return;
+    }
+
+    // Process each selected file
+    const filesToAdd = Array.from(files).slice(0, remainingSlots);
+    
+    filesToAdd.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newImage: ImageQueueItem = {
+          file,
+          preview: reader.result as string,
+          id: `${Date.now()}-${Math.random()}`,
+        };
+        setImageQueue((prev) => [...prev, newImage]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
+    if (filesToAdd.length < files.length) {
+      showToast(`Added ${filesToAdd.length} of ${files.length} images (max ${MAX_IMAGES})`, 'info');
+    }
+  };
+
+  const handleRemoveImage = (id: string) => {
+    setImageQueue((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const processImages = async (files: File[]) => {
+    setUploadingImage(true);
+    setImageQueue([]); // Clear image queue immediately
+
+    // Add user message showing the images
+    const userMessage: ChatMessage = {
+      message: input.trim() || 'Here are some recipe photos:',
+      role: 'user',
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    conversationHistoryRef.current = [...conversationHistoryRef.current, userMessage];
+    setInput('');
+
+    try {
+      // Process all images and extract text
+      const extractedTexts: string[] = [];
+
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('translate', 'false');
+
+        const response = await fetch('/api/recipes/extract-from-image', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.extractedText) {
+          extractedTexts.push(data.extractedText);
+        }
+      }
+
+      if (extractedTexts.length === 0) {
+        throw new Error('Could not extract text from images');
+      }
+
+      // Combine all extracted text
+      const combinedText = extractedTexts.join('\n\n---\n\n');
+
+      // Send combined text to chat API
+      const chatResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: combinedText,
+          conversationHistory: conversationHistoryRef.current.slice(-10),
+          userId: user?.id,
+          groupId: activeGroup?.id || null,
+        }),
+      });
+
+      const chatData = await chatResponse.json();
+
+      if (chatData.success) {
+        const assistantMessage: ChatMessage = {
+          message: chatData.message || chatData.response?.message || 'Recipe extracted successfully!',
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        conversationHistoryRef.current = [...conversationHistoryRef.current, assistantMessage];
+
+        // If recipe was added, notify parent
+        if (chatData.response?.recipeAdded && onRecipeAdded) {
+          setTimeout(() => {
+            onRecipeAdded();
+          }, 1500);
+        }
+      } else {
+        throw new Error(chatData.error || 'Failed to process recipe');
+      }
+    } catch (err) {
+      console.error('Error processing images:', err);
+      const errorMessage: ChatMessage = {
+        message: err instanceof Error ? err.message : 'Sorry, I encountered an error processing the images. Please try again.',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      conversationHistoryRef.current = [...conversationHistoryRef.current, errorMessage];
+      showToast('Failed to process images. Please try again.', 'error');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if ((!input.trim() && imageQueue.length === 0) || loading) return;
+    
+    // If there are images, process them first
+    if (imageQueue.length > 0) {
+      await processImages(imageQueue.map(img => img.file));
+      return;
+    }
 
     const userMessage: ChatMessage = {
       message: input.trim(),
@@ -277,11 +432,11 @@ export default function UnifiedChat({
             <MessageBubble key={idx} role={msg.role} message={msg.message} />
           ))}
           
-          {loading && !progressMessage && (
+          {(loading || uploadingImage) && !progressMessage && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <CircularProgress size={20} />
               <Typography variant="body2" color="text.secondary">
-                Thinking...
+                {uploadingImage ? 'Processing images...' : 'Thinking...'}
               </Typography>
             </Box>
           )}
@@ -308,31 +463,133 @@ export default function UnifiedChat({
 
         {/* Input */}
         <Box sx={{ p: 2 }}>
-          <TextField
-            fullWidth
-            multiline
-            maxRows={4}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder={
-              context === 'recipe'
-                ? 'Ask about this recipe...'
-                : 'Add a recipe or ask a question...'
-            }
-            disabled={loading}
-            InputProps={{
-              endAdornment: (
-                <IconButton
-                  onClick={handleSend}
-                  disabled={!input.trim() || loading}
-                  color="primary"
-                >
-                  <SendIcon />
-                </IconButton>
-              ),
-            }}
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            multiple
+            onChange={handleImageSelect}
+            style={{ display: 'none' }}
           />
+
+          {/* Image Thumbnails Preview */}
+          {imageQueue.length > 0 && (
+            <Box
+              sx={{
+                display: 'flex',
+                gap: 1,
+                mb: 1.5,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              {imageQueue.map((img) => (
+                <Box
+                  key={img.id}
+                  sx={{
+                    position: 'relative',
+                    width: 60,
+                    height: 60,
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={img.preview}
+                    alt="Preview"
+                    sx={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveImage(img.id)}
+                    sx={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      bgcolor: 'rgba(0, 0, 0, 0.7)',
+                      color: 'white',
+                      width: 20,
+                      height: 20,
+                      '&:hover': {
+                        bgcolor: 'rgba(0, 0, 0, 0.9)',
+                      },
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 14 }} />
+                  </IconButton>
+                </Box>
+              ))}
+              {imageQueue.length < MAX_IMAGES && (
+                <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                  {imageQueue.length}/{MAX_IMAGES} images
+                </Typography>
+              )}
+            </Box>
+          )}
+
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            {/* Image Upload Button */}
+            <IconButton
+              onClick={() => fileInputRef.current?.click()}
+              disabled={loading || uploadingImage || imageQueue.length >= MAX_IMAGES}
+              sx={{
+                bgcolor: 'transparent',
+                border: '1px solid',
+                borderColor: 'divider',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+                width: 40,
+                height: 40,
+              }}
+            >
+              <ImageIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+
+            {/* Text Input */}
+            <TextField
+              fullWidth
+              multiline
+              maxRows={4}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={
+                context === 'recipe'
+                  ? 'Ask about this recipe...'
+                  : 'Add a recipe or ask a question...'
+              }
+              disabled={loading || uploadingImage}
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    onClick={handleSend}
+                    disabled={(!input.trim() && imageQueue.length === 0) || loading || uploadingImage}
+                    sx={{
+                      bgcolor: (input.trim() || imageQueue.length > 0) && !loading && !uploadingImage ? 'primary.main' : 'transparent',
+                      color: (input.trim() || imageQueue.length > 0) && !loading && !uploadingImage ? 'white' : 'text.disabled',
+                      '&:hover': { 
+                        bgcolor: (input.trim() || imageQueue.length > 0) && !loading && !uploadingImage ? 'primary.dark' : 'transparent',
+                      },
+                      width: 36,
+                      height: 36,
+                      mr: -0.5,
+                    }}
+                  >
+                    <SendIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                ),
+              }}
+            />
+          </Box>
         </Box>
       </Box>
     </Drawer>
