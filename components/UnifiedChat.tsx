@@ -39,9 +39,10 @@ interface UnifiedChatProps {
   onRecipeAdded?: () => void;
 }
 
-const WELCOME_MESSAGES = {
-  browse: {
-    message: `Hi! 👋 I'm your recipe assistant.
+const getWelcomeMessage = (context: 'browse' | 'recipe', recipe?: Recipe): ChatMessage => {
+  if (context === 'browse') {
+    return {
+      message: `Hi! 👋 I'm your recipe assistant.
 
 I can help you add recipes through:
 • URLs from recipe websites
@@ -51,11 +52,15 @@ I can help you add recipes through:
 I can also answer any recipe questions you might have!
 
 What would you like to do?`,
-    role: 'assistant' as const,
-    created_at: new Date().toISOString(),
-  },
-  recipe: {
-    message: `Hi! 👋 I'm here to help with this recipe.
+      role: 'assistant' as const,
+      created_at: new Date().toISOString(),
+    };
+  }
+  
+  // Recipe context - personalize with recipe name
+  const recipeName = recipe?.title || 'this recipe';
+  return {
+    message: `Hi! 👋 I'm here to help with **${recipeName}**.
 
 I can assist with:
 • Ingredient substitutions
@@ -69,7 +74,7 @@ I can also help you add new recipes if you'd like!
 What would you like to know?`,
     role: 'assistant' as const,
     created_at: new Date().toISOString(),
-  },
+  };
 };
 
 export default function UnifiedChat({
@@ -84,7 +89,7 @@ export default function UnifiedChat({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
   
-  const welcomeMessage = WELCOME_MESSAGES[context];
+  const welcomeMessage = getWelcomeMessage(context, recipe);
   const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,12 +100,12 @@ export default function UnifiedChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const conversationHistoryRef = useRef<ChatMessage[]>([welcomeMessage]);
 
-  // Reset messages when context changes
+  // Reset messages when context or recipe changes
   useEffect(() => {
-    const newWelcome = WELCOME_MESSAGES[context];
+    const newWelcome = getWelcomeMessage(context, recipe);
     setMessages([newWelcome]);
     conversationHistoryRef.current = [newWelcome];
-  }, [context]);
+  }, [context, recipe]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
