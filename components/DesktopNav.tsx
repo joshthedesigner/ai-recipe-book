@@ -194,16 +194,17 @@ export default function DesktopNav() {
   const count = pendingRequests.length;
 
   return (
-    <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: '#ffffff',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 0,
-      }}
-    >
+    <>
+      <AppBar
+        position="sticky"
+        elevation={0}
+        sx={{
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          borderRadius: 0,
+        }}
+      >
       <Toolbar 
         sx={{ 
           minHeight: 64,
@@ -416,5 +417,6 @@ export default function DesktopNav() {
           }
         }}
       />
+    </>
   );
 }
