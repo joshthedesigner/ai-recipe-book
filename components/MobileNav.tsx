@@ -16,11 +16,13 @@ import {
   ButtonBase,
   Typography,
   Badge,
+  Button,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DynamicFeedIcon from '@mui/icons-material/DynamicFeed';
 import PeopleIcon from '@mui/icons-material/People';
+import AddIcon from '@mui/icons-material/Add';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +31,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
+import RecipeSidebar from '@/components/RecipeSidebar';
 
 interface PendingRequest {
   id: string;
@@ -44,6 +47,7 @@ export default function MobileNav() {
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [feedUnreadCount, setFeedUnreadCount] = useState(0);
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -395,7 +399,7 @@ export default function MobileNav() {
                   )}
                 </Box>
 
-                {/* Right Side - Search & User */}
+                {/* Right Side - Add Recipe & User */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', ml: 'auto' }}>
                   {/* Search Friends - Hidden until core features are being used */}
                   {false && user && !groupsLoading && (
@@ -427,6 +431,24 @@ export default function MobileNav() {
                     </ButtonBase>
                   )}
 
+                  {/* Add Recipe Button */}
+                  {user && (
+                    <IconButton
+                      onClick={() => setIsChatOpen(true)}
+                      sx={{
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        width: 36,
+                        height: 36,
+                        '&:hover': {
+                          bgcolor: 'primary.dark',
+                        },
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  )}
+
                   {/* User Menu */}
                   {user && <UserAvatarMenu />}
                 </Box>
@@ -452,6 +474,15 @@ export default function MobileNav() {
           }}
         />
       )}
+
+      {/* Unified Chat Sidebar */}
+      <RecipeSidebar
+        open={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onRecipeAdded={() => {
+          setIsChatOpen(false);
+        }}
+      />
     </>
   );
 }

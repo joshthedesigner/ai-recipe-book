@@ -14,7 +14,9 @@ import {
   Box,
   ButtonBase,
   Badge,
+  Button,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
@@ -24,6 +26,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
+import RecipeSidebar from '@/components/RecipeSidebar';
 
 interface PendingRequest {
   id: string;
@@ -40,6 +43,7 @@ export default function DesktopNav() {
   const { showToast } = useToast();
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [feedUnreadCount, setFeedUnreadCount] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const fetchControllerRef = useRef<AbortController | null>(null);
 
   const handleHomeClick = () => {
@@ -360,7 +364,7 @@ export default function DesktopNav() {
             )}
           </Box>
 
-          {/* Right Side - Search & User */}
+          {/* Right Side - Add Recipe & User */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
             {/* Friends Search - Hidden until core features are being used */}
             {false && user && !groupsLoading && (
@@ -369,11 +373,44 @@ export default function DesktopNav() {
               </Box>
             )}
 
+            {/* Add Recipe Button */}
+            {user && (
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setIsChatOpen(true)}
+                sx={{
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: '8px',
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                  },
+                }}
+              >
+                Add Recipe
+              </Button>
+            )}
+
             {/* User Menu */}
             {user && <UserAvatarMenu />}
           </Box>
         </Box>
       </Toolbar>
     </AppBar>
+
+      {/* Unified Chat Sidebar */}
+      <RecipeSidebar
+        open={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        onRecipeAdded={() => {
+          setIsChatOpen(false);
+          // Refresh could be handled here if needed
+        }}
+      />
   );
 }
