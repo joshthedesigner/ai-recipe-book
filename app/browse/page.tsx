@@ -27,7 +27,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AddIcon from '@mui/icons-material/Add';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -733,7 +733,7 @@ export default function BrowsePage() {
             },
           }}
         >
-          <RestaurantMenuIcon />
+          <ChatBubbleIcon />
         </Fab>
       )}
 

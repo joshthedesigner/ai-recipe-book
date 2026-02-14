@@ -12,7 +12,7 @@
 
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { Box, Fab, Badge } from '@mui/material';
-import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import UnifiedChat from './UnifiedChat';
 import { Recipe } from '@/types';
 
@@ -82,7 +82,7 @@ export default function RecipeChatLayout({
             color="primary"
             invisible
           >
-            <RestaurantMenuIcon />
+            <ChatBubbleIcon />
           </Badge>
         </Fab>
 
