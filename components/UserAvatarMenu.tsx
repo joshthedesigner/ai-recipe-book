@@ -76,7 +76,8 @@ export default function UserAvatarMenu() {
           sx={{
             width: 36,
             height: 36,
-            bgcolor: 'primary.main',
+            bgcolor: '#e0e0e0',
+            color: '#000000',
             fontSize: '14px',
             fontWeight: 600,
           }}
