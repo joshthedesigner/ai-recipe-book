@@ -226,6 +226,9 @@ export default function UnifiedChat({
       anchor="right"
       open={open}
       onClose={onClose}
+      sx={{
+        zIndex: 10001,
+      }}
       PaperProps={{
         sx: {
           width: isMobile ? '100%' : 450,
