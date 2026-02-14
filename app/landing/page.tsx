@@ -162,7 +162,7 @@ export default function LandingPage() {
             {/* Hero Image - Cropped and overlapping into tan section */}
               <Box
                 sx={{
-                maxWidth: '600px',
+                maxWidth: '900px',
                 mx: 'auto',
                 borderRadius: '1rem 1rem 0 0',
                   overflow: 'hidden',
@@ -173,7 +173,7 @@ export default function LandingPage() {
                 position: 'relative',
                 zIndex: 1,
                 mb: 0,
-                maxHeight: '400px',
+                maxHeight: '600px',
                 }}
               >
                 <img
