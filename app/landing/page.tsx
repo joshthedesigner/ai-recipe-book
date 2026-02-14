@@ -455,7 +455,7 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/photo1.png"
+                  src="/photo 3.png"
                   alt="AI chat assistant for cooking help"
                   style={{
                     width: '100%',
@@ -505,7 +505,7 @@ export default function LandingPage() {
                   mb: 3,
                 }}
               >
-                Easily add recipes with AI.
+                Recipes made simple and clear.
               </Typography>
               <Typography
                 variant="body1"
@@ -516,16 +516,15 @@ export default function LandingPage() {
                   lineHeight: 1.7,
                 }}
               >
-                Stop manually typing recipes. Our AI extracts and organizes everything for you - 
-                from handwritten recipe cards to YouTube cooking videos.
+                No ads, no life stories, no clutter. Just clean, easy-to-follow recipes with everything you need to cook confidently.
               </Typography>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mb: 4 }}>
                 {[
-                  'Scan photos of cookbook pages instantly',
-                  'Extract recipes from any website or video',
-                  'AI organizes ingredients and steps perfectly',
-                  'Smart tagging finds recipes when you need them'
+                  'Removes ads and unnecessary blog content',
+                  'Clean ingredient lists with checkboxes',
+                  'Step-by-step instructions, distraction-free',
+                  'Key info at a glance - time, servings, difficulty'
                 ].map((item, idx) => (
                   <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <CheckCircleIcon sx={{ fontSize: 24, color: 'hsl(24, 85%, 55%)' }} />
