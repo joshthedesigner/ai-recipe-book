@@ -29,8 +29,9 @@ import ImageIcon from '@mui/icons-material/Image';
 import CheckIcon from '@mui/icons-material/Check';
 import MessageBubble from '@/components/MessageBubble';
 import ListWithHeader from '@/components/ListWithHeader';
+import RecipeCard from '@/components/RecipeCard';
 import AppButton from '@/components/AppButton';
-import { Recipe, ChatMessage } from '@/types';
+import { Recipe, ChatMessage, ChatResponse } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
@@ -58,6 +59,7 @@ interface ExtendedChatMessage extends ChatMessage {
     header?: string;
     items: string[];
   };
+  chatResponse?: ChatResponse; // For recipe preview
 }
 
 const getWelcomeMessage = (context: 'browse' | 'recipe', recipe?: Recipe): ChatMessage => {
@@ -280,6 +282,12 @@ export default function UnifiedChat({
             message: 'Here\'s your recipe preview:',
             role: 'assistant',
             created_at: new Date().toISOString(),
+            chatResponse: {
+              message: '',
+              needsReview: true,
+              pendingRecipe: storeData.recipe,
+              recipe: storeData.recipe,
+            },
           };
           
           setMessages((prev) => [...prev, previewMessage]);
@@ -795,6 +803,13 @@ export default function UnifiedChat({
                   />
                 )}
               </MessageBubble>
+              
+              {/* Show recipe card preview when available */}
+              {msg.chatResponse?.recipe && (
+                <Box sx={{ mb: 2, mt: 2 }}>
+                  <RecipeCard recipe={msg.chatResponse.recipe} />
+                </Box>
+              )}
             </Box>
           ))}
 
@@ -828,13 +843,11 @@ export default function UnifiedChat({
           {/* Recipe Preview Confirmation Buttons */}
           {pendingRecipe && !loading && (
             <Box sx={{ mb: 2 }}>
-              {/* Show recipe card preview here if needed */}
               <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'flex-start',
                   gap: 2,
-                  mt: 2,
                 }}
               >
                 <AppButton
