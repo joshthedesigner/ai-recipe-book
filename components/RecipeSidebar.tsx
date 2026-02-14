@@ -900,6 +900,7 @@ export default function RecipeSidebar({ open, onClose, onRecipeAdded }: RecipeSi
       anchor="right"
       open={open}
       onClose={onClose}
+      transitionDuration={400}
       sx={{
         '& .MuiDrawer-paper': {
           width: { xs: '100%', sm: '500px' },

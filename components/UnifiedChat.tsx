@@ -36,6 +36,72 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { useChat } from '@/contexts/ChatContext';
+import { containsURL } from '@/utils/recipeScraper';
+
+/**
+ * Detect if a message indicates recipe storage intent
+ * (URLs, recipe text, or explicit save/add commands)
+ * This helps route to the correct endpoint on recipe page
+ */
+function isRecipeStorageIntent(message: string): boolean {
+  const trimmed = message.trim().toLowerCase();
+  
+  // URLs are always recipe storage
+  if (containsURL(message)) {
+    return true;
+  }
+  
+  // Explicit save/add commands
+  const storageKeywords = [
+    'save this recipe',
+    'add this recipe',
+    'store this recipe',
+    'here\'s a recipe',
+    'here is a recipe',
+    'here\'s my recipe',
+    'here is my recipe',
+    'paste this recipe',
+    'add recipe',
+    'save recipe',
+  ];
+  
+  if (storageKeywords.some(keyword => trimmed.includes(keyword))) {
+    return true;
+  }
+  
+  // Recipe text indicators (ingredients, steps, etc.)
+  const recipeIndicators = [
+    'ingredients:',
+    'ingredients',
+    'instructions:',
+    'instructions',
+    'directions:',
+    'directions',
+    'steps:',
+    'prep time',
+    'cook time',
+    'serves',
+    'servings',
+  ];
+  
+  // If message contains recipe indicators and is longer than 50 chars (likely recipe text)
+  if (message.length > 50 && recipeIndicators.some(indicator => trimmed.includes(indicator))) {
+    return true;
+  }
+  
+  // Doesn't look like a question (no question words at start)
+  const questionWords = ['how', 'what', 'why', 'when', 'where', 'can you', 'could you', 'would you', 'should i'];
+  const startsWithQuestion = questionWords.some(word => trimmed.startsWith(word));
+  
+  // If it's a clear question, it's NOT recipe storage
+  if (startsWithQuestion || trimmed.endsWith('?')) {
+    return false;
+  }
+  
+  // For ambiguous cases, return null to indicate we should let the router decide
+  // This is handled in the routing logic below
+  return false;
+}
 
 interface UnifiedChatProps {
   open: boolean;
@@ -653,8 +719,15 @@ export default function UnifiedChat({
     setError(null);
 
     try {
+      // Detect if message indicates recipe storage intent (URLs, recipe text, save commands)
+      // This helps route correctly on recipe page: storage → /api/chat, questions → /api/recipe-chat
+      const isRecipeStorage = isRecipeStorageIntent(userMessage.message);
+      
       // Determine which API endpoint based on context
-      const endpoint = context === 'recipe' && recipeId 
+      // On recipe page: route recipe storage to /api/chat (uses router/intent classifier)
+      // On recipe page: route questions to /api/recipe-chat (recipe-specific chat)
+      // On browse page: always use /api/chat (router handles everything)
+      const endpoint = (context === 'recipe' && recipeId && !isRecipeStorage)
         ? '/api/recipe-chat'
         : '/api/chat';
 
@@ -664,10 +737,15 @@ export default function UnifiedChat({
         userId: user?.id,
       };
 
-      // Add context-specific data
-      if (context === 'recipe' && recipeId) {
+      // Add context-specific data only for recipe chat (questions about current recipe)
+      if (context === 'recipe' && recipeId && !isRecipeStorage) {
         body.recipeId = recipeId;
         body.recipe = recipe;
+      }
+      
+      // Add groupId for recipe storage (handled by /api/chat router)
+      if (isRecipeStorage || context === 'browse') {
+        body.groupId = activeGroup?.id || null;
       }
 
       const response = await fetch(endpoint, {
@@ -694,11 +772,22 @@ export default function UnifiedChat({
       if (data.response?.needsReview) {
         // Recipe extraction - needs review
         setExtractionState('reviewing');
-        assistantMessage = {
+        // Set pendingRecipe state so confirmation buttons appear
+        if (data.response.pendingRecipe) {
+          setPendingRecipe(data.response.pendingRecipe);
+        }
+        const assistantMessageExtended: ExtendedChatMessage = {
           message: data.response.message || data.message,
           role: 'assistant',
           created_at: new Date().toISOString(),
+          chatResponse: {
+            message: data.response.message || data.message,
+            needsReview: true,
+            pendingRecipe: data.response.pendingRecipe,
+            recipe: data.response.pendingRecipe, // Also store in recipe field for RecipeCard display
+          },
         };
+        assistantMessage = assistantMessageExtended;
       } else if (data.response?.intent === 'extracting_video') {
         // Video extraction in progress
         setExtractionState('extracting');
