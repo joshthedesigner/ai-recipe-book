@@ -404,20 +404,33 @@ export default function DesktopNav() {
       </Toolbar>
     </AppBar>
 
-      {/* Unified Chat from nav - uses drawer mode (overlay) */}
-      <UnifiedChat
-        open={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        context="browse"
-        mode="drawer"
-        onRecipeAdded={() => {
-          setIsChatOpen(false);
-          // Refresh page to show new recipe
-          if (pathname === '/browse') {
-            router.refresh();
-          }
-        }}
-      />
+      {/* Unified Chat from nav - inline mode on desktop pages */}
+      {isChatOpen && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 64, // Below nav
+            right: 0,
+            bottom: 0,
+            width: 450,
+            zIndex: 1200,
+          }}
+        >
+          <UnifiedChat
+            open={isChatOpen}
+            onClose={() => setIsChatOpen(false)}
+            context="browse"
+            mode="inline"
+            onRecipeAdded={() => {
+              setIsChatOpen(false);
+              // Refresh page to show new recipe
+              if (pathname === '/browse') {
+                router.refresh();
+              }
+            }}
+          />
+        </Box>
+      )}
     </>
   );
 }
