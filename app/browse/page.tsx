@@ -27,12 +27,14 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AddIcon from '@mui/icons-material/Add';
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
 import DeleteConfirmDialog from '@/components/DeleteConfirmDialog';
 import FilterDrawer from '@/components/FilterDrawer';
 import BrowseEmptyState from '@/components/BrowseEmptyState';
+import UnifiedChat from '@/components/UnifiedChat';
 import { Badge } from '@mui/material';
 import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,6 +78,7 @@ export default function BrowsePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [isFabChatOpen, setIsFabChatOpen] = useState(false);
   const [canAddRecipes, setCanAddRecipes] = useState(false);
 
   // Filter options are now provided by the server via facets API response
@@ -713,6 +716,34 @@ export default function BrowsePage() {
         onReset={clearFilters}
       />
 
+      {/* FAB - Context-aware chat */}
+      {user && (
+        <Fab
+          color="primary"
+          aria-label="recipe assist"
+          onClick={() => setIsFabChatOpen(true)}
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
+            '&:hover': {
+              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
+            },
+          }}
+        >
+          <ChatBubbleIcon />
+        </Fab>
+      )}
+
+      {/* Unified Chat - Browse context */}
+      <UnifiedChat
+        open={isFabChatOpen}
+        onClose={() => setIsFabChatOpen(false)}
+        context="browse"
+        onRecipeAdded={handleRecipeAdded}
+      />
     </Box>
   );
 }
