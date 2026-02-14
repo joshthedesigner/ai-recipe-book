@@ -26,7 +26,10 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import ImageIcon from '@mui/icons-material/Image';
+import CheckIcon from '@mui/icons-material/Check';
 import MessageBubble from '@/components/MessageBubble';
+import ListWithHeader from '@/components/ListWithHeader';
+import AppButton from '@/components/AppButton';
 import { Recipe, ChatMessage } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
@@ -46,6 +49,15 @@ interface ImageQueueItem {
   file: File;
   preview: string;
   id: string;
+}
+
+// Extended message type with photo flow support
+interface ExtendedChatMessage extends ChatMessage {
+  images?: string[]; // Image preview URLs for display
+  listWithHeader?: {
+    header?: string;
+    items: string[];
+  };
 }
 
 const getWelcomeMessage = (context: 'browse' | 'recipe', recipe?: Recipe): ChatMessage => {
@@ -101,7 +113,7 @@ export default function UnifiedChat({
   const { activeGroup } = useGroup();
   
   const welcomeMessage = getWelcomeMessage(context, recipe);
-  const [messages, setMessages] = useState<ChatMessage[]>([welcomeMessage]);
+  const [messages, setMessages] = useState<ExtendedChatMessage[]>([welcomeMessage]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -109,12 +121,22 @@ export default function UnifiedChat({
   const [progressMessage, setProgressMessage] = useState('');
   const [imageQueue, setImageQueue] = useState<ImageQueueItem[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [pendingRecipe, setPendingRecipe] = useState<Recipe | null>(null);
+  const [pendingTranslation, setPendingTranslation] = useState<{
+    text: string;
+    language: string;
+    images: File[];
+  } | null>(null);
+  const [pendingCookbookInfo, setPendingCookbookInfo] = useState<{
+    extractedText: string;
+  } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const conversationHistoryRef = useRef<ChatMessage[]>([welcomeMessage]);
+  const conversationHistoryRef = useRef<ExtendedChatMessage[]>([welcomeMessage]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const MAX_IMAGES = 5;
+  const MAX_CONCURRENT = 3; // Parallel image processing limit
 
   // Reset messages when context or recipe changes
   useEffect(() => {
@@ -170,103 +192,434 @@ export default function UnifiedChat({
     setImageQueue((prev) => prev.filter((img) => img.id !== id));
   };
 
-  const processImages = async (files: File[]) => {
+  // Translation flow handlers
+  const handleTranslateYes = () => {
+    if (!pendingTranslation) return;
+    // Re-process images with translation
+    processImages(pendingTranslation.images, true);
+  };
+
+  const handleTranslateNo = () => {
+    if (!pendingTranslation) return;
+    // Continue with original text
+    setPendingCookbookInfo({ extractedText: pendingTranslation.text });
+    
+    const sourceText = 'Do you want to share a source? You can add a cookbook, friend\'s name, or anything else.';
+    const listItems = [
+      '*"Joy of Cooking, Page 245" (for cookbooks)*',
+      '*"Sarah\'s recipe" (for friends)*',
+      '*"Grandma\'s cookbook" (for family recipes)*',
+      '*Or just skip by leaving it blank*'
+    ];
+    
+    const assistantMessage: ExtendedChatMessage = {
+      message: sourceText,
+      role: 'assistant',
+      created_at: new Date().toISOString(),
+      listWithHeader: {
+        header: '*Examples:*',
+        items: listItems,
+      },
+    };
+
+    setMessages((prev) => [...prev, assistantMessage]);
+    setPendingTranslation(null);
+  };
+
+  // Process cookbook info and store recipe
+  const processCookbookInfo = async (userInput: string) => {
+    if (!pendingCookbookInfo) return;
+
+    const userMessage: ExtendedChatMessage = {
+      message: userInput,
+      role: 'user',
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput('');
+    setLoading(true);
+
+    try {
+      let cookbookName: string | null = userInput.trim() || null;
+      let cookbookPage: string | null = null;
+
+      if (cookbookName) {
+        const pageMatch = userInput.match(/,\s*(p\.?|page)\s*(\d+)/i);
+        if (pageMatch) {
+          cookbookPage = pageMatch[2];
+          cookbookName = userInput.substring(0, pageMatch.index).trim();
+        }
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      try {
+        const storeResponse = await fetch('/api/recipes/store', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: pendingCookbookInfo.extractedText,
+            userId: user?.id,
+            reviewMode: true,
+            cookbookName: cookbookName || null,
+            cookbookPage: cookbookPage || null,
+            groupId: activeGroup?.id || null,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        const storeData = await storeResponse.json();
+
+        if (storeData.success && storeData.recipe) {
+          const previewMessage: ExtendedChatMessage = {
+            message: 'Here\'s your recipe preview:',
+            role: 'assistant',
+            created_at: new Date().toISOString(),
+          };
+          
+          setMessages((prev) => [...prev, previewMessage]);
+          setPendingRecipe(storeData.recipe);
+          setPendingCookbookInfo(null);
+        } else {
+          throw new Error(storeData.error || 'Failed to process recipe');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && (fetchError.name === 'AbortError' || fetchError.message.includes('timeout'))) {
+          throw new Error('Request timed out. The recipe might be too long. Please try again.');
+        }
+        
+        throw fetchError;
+      }
+    } catch (error) {
+      console.error('Error processing cookbook info:', error);
+      const errorMessage: ExtendedChatMessage = {
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error. Please try again.',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      showToast(error instanceof Error ? error.message : 'Failed to save recipe', 'error');
+      setPendingCookbookInfo(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Recipe confirmation handlers
+  const handleConfirmRecipe = async () => {
+    if (!pendingRecipe || loading) return;
+
+    setLoading(true);
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: 'confirm',
+            userId: user?.id,
+            confirmRecipe: pendingRecipe,
+            groupId: activeGroup?.id || null,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+
+        const data = await response.json();
+
+        if (data.success) {
+          const assistantMessage: ExtendedChatMessage = {
+            message: '✅ Recipe saved! Would you like to add another?',
+            role: 'assistant',
+            created_at: new Date().toISOString(),
+          };
+
+          setMessages((prev) => [...prev, assistantMessage]);
+          setPendingRecipe(null);
+          
+          if (onRecipeAdded) {
+            onRecipeAdded();
+          }
+        } else {
+          throw new Error(data.error || 'Failed to save recipe');
+        }
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        throw fetchError;
+      }
+    } catch (error) {
+      console.error('Error confirming recipe:', error);
+      const errorMessage: ExtendedChatMessage = {
+        message: error instanceof Error ? error.message : 'Sorry, I encountered an error saving the recipe. Please try again.',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      showToast('Failed to save recipe. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelRecipe = () => {
+    setPendingRecipe(null);
+    const cancelMessage: ExtendedChatMessage = {
+      message: 'No problem! Recipe not saved. Is there anything else I can help you with?',
+      role: 'assistant',
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, cancelMessage]);
+  };
+
+  // Copy exact processImages logic from RecipeSidebar - uses all backend features
+  const processImages = async (files: File[], translate: boolean = false) => {
     setUploadingImage(true);
     setImageQueue([]); // Clear image queue immediately
 
-    // Add user message showing the images
-    const userMessage: ChatMessage = {
+    // Add user message with image previews
+    const imagePreviews = await Promise.all(
+      files.map((file) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      })
+    );
+
+    const userMessage: ExtendedChatMessage = {
       message: input.trim() || 'Here are some recipe photos:',
       role: 'user',
       created_at: new Date().toISOString(),
+      images: imagePreviews,
     };
     setMessages((prev) => [...prev, userMessage]);
     conversationHistoryRef.current = [...conversationHistoryRef.current, userMessage];
     setInput('');
 
     try {
-      // Process all images and extract text
+      // Process all images and extract text (using RecipeSidebar logic)
       const extractedTexts: string[] = [];
+      let detectedLanguage = 'en';
+      let detectedLanguageName = 'English';
+      let hasTranslationWarning = false;
+      let hasOcrTruncation = false;
 
-      for (const file of files) {
+      // Process image function (handles individual image)
+      const processImage = async (file: File, index: number) => {
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('translate', 'false');
+        formData.append('translate', translate.toString());
 
-        const response = await fetch('/api/recipes/extract-from-image', {
-          method: 'POST',
-          body: formData,
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-        const data = await response.json();
+        try {
+          const response = await fetch('/api/recipes/extract-from-image', {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
 
-        if (data.success && data.extractedText) {
-          extractedTexts.push(data.extractedText);
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+            
+            if (response.status === 429) {
+              throw new Error(`Rate limit exceeded. Please wait a moment and try again. (Image ${index + 1}/${files.length})`);
+            } else if (response.status === 413) {
+              throw new Error(`Image ${index + 1}/${files.length} is too large. Maximum file size is 10MB.`);
+            } else if (response.status === 401) {
+              throw new Error('Please log in to process images.');
+            } else {
+              throw new Error(errorData.error || `Failed to process image ${index + 1}/${files.length}`);
+            }
+          }
+
+          const data = await response.json();
+
+          if (!data.success) {
+            throw new Error(data.error || `Failed to extract recipe from image ${index + 1}`);
+          }
+
+          const { raw_text, translated_text, language, language_name, needs_translation, translation_warning, translation_status, ocr_truncated } = data.data;
+
+          if (!raw_text || raw_text.trim().length === 0) {
+            throw new Error(`No text found in image ${index + 1}/${files.length}`);
+          }
+
+          if (ocr_truncated) {
+            hasOcrTruncation = true;
+          }
+
+          if (needs_translation && detectedLanguage === 'en') {
+            detectedLanguage = language;
+            detectedLanguageName = language_name;
+          }
+
+          if (translation_warning) {
+            hasTranslationWarning = true;
+          }
+
+          const textToAdd = (translate && translation_status === 'completed' && translated_text && translated_text.trim().length > 0)
+            ? translated_text 
+            : raw_text;
+          
+          extractedTexts[index] = textToAdd;
+          return { success: true, index };
+        } catch (imageError) {
+          clearTimeout(timeoutId);
+          throw imageError;
+        }
+      };
+
+      // Process images in batches (max 3 concurrent)
+      const processBatch = async (batch: { file: File; index: number }[]) => {
+        return Promise.allSettled(
+          batch.map(({ file, index }) => processImage(file, index))
+        );
+      };
+
+      const batches: { file: File; index: number }[][] = [];
+      for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
+        batches.push(
+          files.slice(i, i + MAX_CONCURRENT).map((file, batchIndex) => ({
+            file,
+            index: i + batchIndex,
+          }))
+        );
+      }
+
+      for (const batch of batches) {
+        const results = await processBatch(batch);
+        const failures = results.filter(r => r.status === 'rejected');
+        if (failures.length > 0) {
+          const firstFailure = failures[0];
+          if (firstFailure.status === 'rejected') {
+            throw firstFailure.reason;
+          }
         }
       }
 
-      if (extractedTexts.length === 0) {
-        throw new Error('Could not extract text from images');
+      const combinedText = extractedTexts.filter(Boolean).join('\n\n---\n\n');
+      
+      if (!combinedText || combinedText.trim().length === 0) {
+        throw new Error('No text could be extracted from any of the images');
       }
 
-      // Combine all extracted text
-      const combinedText = extractedTexts.join('\n\n---\n\n');
-
-      // Send combined text to chat API
-      const chatResponse = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: combinedText,
-          conversationHistory: conversationHistoryRef.current.slice(-10),
-          userId: user?.id,
-          groupId: activeGroup?.id || null,
-        }),
-      });
-
-      const chatData = await chatResponse.json();
-
-      if (chatData.success) {
-        const assistantMessage: ChatMessage = {
-          message: chatData.message || chatData.response?.message || 'Recipe extracted successfully!',
+      // If needs translation and haven't translated yet, ask user
+      if (detectedLanguage !== 'en' && !translate) {
+        setPendingTranslation({ 
+          text: combinedText, 
+          language: detectedLanguageName,
+          images: files,
+        });
+        const assistantMessage: ExtendedChatMessage = {
+          message: `${files.length > 1 ? 'These recipes appear' : 'This recipe appears'} to be in **${detectedLanguageName}**. Would you like me to translate to English before saving?`,
           role: 'assistant',
           created_at: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, assistantMessage]);
-        conversationHistoryRef.current = [...conversationHistoryRef.current, assistantMessage];
-
-        // If recipe was added, notify parent
-        if (chatData.response?.recipeAdded && onRecipeAdded) {
-          setTimeout(() => {
-            onRecipeAdded();
-          }, 1500);
-        }
       } else {
-        throw new Error(chatData.error || 'Failed to process recipe');
+        // Ask for cookbook source information
+        setPendingCookbookInfo({ extractedText: combinedText });
+        
+        let sourceMessage = 'Great! I extracted the recipe from your photo. 📖';
+        
+        const warnings: string[] = [];
+        if (hasOcrTruncation) {
+          warnings.push('⚠️ **Note:** Some text may have been cut off due to length limits.');
+        }
+        if (hasTranslationWarning && translate) {
+          warnings.push('⚠️ **Note:** Translation may be incomplete. Please review carefully.');
+        }
+        if (warnings.length > 0) {
+          sourceMessage += '\n\n' + warnings.join('\n\n');
+        }
+        
+        const sourceText = 'Do you want to share a source? You can add a cookbook, friend\'s name, or anything else.';
+        const listItems = [
+          '*"Joy of Cooking, Page 245" (for cookbooks)*',
+          '*"Sarah\'s recipe" (for friends)*',
+          '*"Grandma\'s cookbook" (for family recipes)*',
+          '*Or just skip by leaving it blank*'
+        ];
+        
+        const assistantMessage: ExtendedChatMessage = {
+          message: sourceMessage + '\n\n' + sourceText,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          listWithHeader: {
+            header: '*Examples:*',
+            items: listItems,
+          },
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+        setPendingTranslation(null);
       }
-    } catch (err) {
-      console.error('Error processing images:', err);
-      const errorMessage: ChatMessage = {
-        message: err instanceof Error ? err.message : 'Sorry, I encountered an error processing the images. Please try again.',
+    } catch (error) {
+      console.error('Error processing images:', error);
+      
+      let errorMsg = 'Sorry, I encountered an error processing your images. Please try again.';
+      
+      if (error instanceof Error) {
+        const errorMessage = error.message.toLowerCase();
+        
+        if (errorMessage.includes('rate limit')) {
+          errorMsg = 'Too many requests. Please wait a moment and try again.';
+        } else if (errorMessage.includes('too large')) {
+          errorMsg = 'One or more images are too large. Maximum file size is 10MB per image.';
+        } else if (errorMessage.includes('no text found')) {
+          errorMsg = 'Could not read text from the image. Please try a clearer image.';
+        } else if (errorMessage.includes('log in') || errorMessage.includes('unauthorized')) {
+          errorMsg = 'Please log in to process images.';
+        } else {
+          errorMsg = error.message;
+        }
+      }
+      
+      const errorMessage: ExtendedChatMessage = {
+        message: errorMsg,
         role: 'assistant',
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-      conversationHistoryRef.current = [...conversationHistoryRef.current, errorMessage];
-      showToast('Failed to process images. Please try again.', 'error');
+      showToast(errorMsg, 'error');
+      setImageQueue([]);
+      setPendingTranslation(null);
     } finally {
       setUploadingImage(false);
     }
   };
 
   const handleSend = async () => {
-    if ((!input.trim() && imageQueue.length === 0) || loading) return;
+    if ((!input.trim() && imageQueue.length === 0) || loading || uploadingImage) return;
     
     // If there are images, process them first
     if (imageQueue.length > 0) {
       await processImages(imageQueue.map(img => img.file));
+      return;
+    }
+
+    // If waiting for cookbook info, process it
+    if (pendingCookbookInfo) {
+      await processCookbookInfo(input);
       return;
     }
 
@@ -429,8 +782,91 @@ export default function UnifiedChat({
           }}
         >
           {messages.map((msg, idx) => (
-            <MessageBubble key={idx} role={msg.role} message={msg.message} />
+            <Box key={idx}>
+              <MessageBubble 
+                role={msg.role} 
+                message={msg.message}
+                images={msg.images}
+              >
+                {msg.listWithHeader && (
+                  <ListWithHeader
+                    header={msg.listWithHeader.header}
+                    items={msg.listWithHeader.items}
+                  />
+                )}
+              </MessageBubble>
+            </Box>
           ))}
+
+          {/* Translation Confirmation Buttons */}
+          {pendingTranslation && !uploadingImage && (
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'flex-start',
+                mb: 2,
+                gap: 2,
+              }}
+            >
+              <AppButton
+                variant="primary"
+                startIcon={<CheckIcon />}
+                onClick={handleTranslateYes}
+              >
+                Yes, Translate
+              </AppButton>
+              <AppButton
+                variant="secondary"
+                startIcon={<CloseIcon />}
+                onClick={handleTranslateNo}
+              >
+                No, Skip
+              </AppButton>
+            </Box>
+          )}
+
+          {/* Recipe Preview Confirmation Buttons */}
+          {pendingRecipe && !loading && (
+            <Box sx={{ mb: 2 }}>
+              {/* Show recipe card preview here if needed */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  gap: 2,
+                  mt: 2,
+                }}
+              >
+                <AppButton
+                  variant="primary"
+                  startIcon={<CheckIcon />}
+                  onClick={handleConfirmRecipe}
+                  disabled={loading}
+                >
+                  Yes, Save Recipe
+                </AppButton>
+                <AppButton
+                  variant="secondary"
+                  startIcon={<CloseIcon />}
+                  onClick={handleCancelRecipe}
+                  disabled={loading}
+                >
+                  No, Cancel
+                </AppButton>
+              </Box>
+              <Typography 
+                variant="caption" 
+                sx={{ 
+                  color: 'text.secondary',
+                  fontStyle: 'italic',
+                  display: 'block',
+                  mt: 1,
+                }}
+              >
+                Drafted by AI. Human review advised.
+              </Typography>
+            </Box>
+          )}
           
           {(loading || uploadingImage) && !progressMessage && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
