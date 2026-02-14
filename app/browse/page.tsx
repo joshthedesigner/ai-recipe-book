@@ -610,7 +610,15 @@ export default function BrowsePage() {
         {isLoading && (
           <Grid container spacing={3}>
             {[...Array(8)].map((_, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+              <Grid 
+                item 
+                xs={12} 
+                sm={6} 
+                md={isFabChatOpen && !isMobile ? 6 : 4}
+                lg={isFabChatOpen && !isMobile ? 6 : 3}
+                xl={isFabChatOpen && !isMobile ? 4 : 3}
+                key={index}
+              >
                 <RecipeCardSkeleton />
               </Grid>
             ))}
@@ -654,17 +662,25 @@ export default function BrowsePage() {
                 // Load fewer images eagerly on mobile (4 vs 8)
                 const eagerLoadCount = isMobile ? 4 : 8;
                 return (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                    <RecipeCard 
-                      recipe={recipe} 
-                      compact 
-                      onClick={() => handleCardClick(recipe)}
-                      onDelete={canAddRecipes ? handleDeleteClick : undefined}
-                      onFavoriteToggle={handleFavoriteToggle}
-                      loading={index < eagerLoadCount ? 'eager' : 'lazy'}
-                    />
-                  </Grid>
-                );
+                  <Grid 
+                    item 
+                    xs={12} 
+                    sm={6} 
+                    md={isFabChatOpen && !isMobile ? 6 : 4}
+                    lg={isFabChatOpen && !isMobile ? 6 : 3}
+                    xl={isFabChatOpen && !isMobile ? 4 : 3}
+                    key={recipe.id}
+                  >
+                      <RecipeCard 
+                        recipe={recipe}
+                        compact 
+                        onClick={() => handleCardClick(recipe)}
+                        onDelete={canAddRecipes ? handleDeleteClick : undefined}
+                        onFavoriteToggle={handleFavoriteToggle}
+                        loading={index < eagerLoadCount ? 'eager' : 'lazy'}
+                      />
+                    </Grid>
+                  );
               })}
             </Grid>
 
@@ -748,7 +764,7 @@ export default function BrowsePage() {
         <Box
           sx={{
             position: 'fixed',
-            top: 64,
+            top: { xs: 56, sm: 64 }, // Match TopNav height
             right: 0,
             bottom: 0,
             width: 450,
