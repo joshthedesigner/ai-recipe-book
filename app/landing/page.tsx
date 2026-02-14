@@ -455,7 +455,7 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/add.png"
+                  src="/photo1.png"
                   alt="AI chat assistant for cooking help"
                   style={{
                     width: '100%',
