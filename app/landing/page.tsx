@@ -344,8 +344,8 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/mapo.png"
-                  alt="Delicious mapo tofu recipe"
+                  src="/photo2.png"
+                  alt="Find any recipe in seconds"
                   style={{
                     width: '100%',
                     height: 'auto',
