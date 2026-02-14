@@ -433,20 +433,24 @@ export default function MobileNav() {
 
                   {/* Add Recipe Button */}
                   {user && (
-                    <IconButton
+                    <Button
                       onClick={() => setIsChatOpen(true)}
+                      startIcon={<AddIcon sx={{ fontSize: 18 }} />}
                       sx={{
                         bgcolor: 'primary.main',
                         color: 'white',
-                        width: 36,
                         height: 36,
+                        px: 1.5,
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        textTransform: 'none',
                         '&:hover': {
                           bgcolor: 'primary.dark',
                         },
                       }}
                     >
-                      <AddIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
+                      Add
+                    </Button>
                   )}
 
                   {/* User Menu */}
