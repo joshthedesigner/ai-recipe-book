@@ -3,15 +3,15 @@
 /**
  * Recipe Assist Layout Component
  * 
- * Manages side-by-side layout for recipe content + chat on desktop/tablet
- * - Desktop: Two columns (recipe content left, chat right)
- * - Mobile: Single column (overlay chat as before)
+ * Manages inline sidebar layout for recipe content + chat on desktop/tablet
+ * - Desktop: Content shifts left, chat sidebar on right (inline mode)
+ * - Mobile: Overlay chat with scrim (drawer mode)
  * - Owns chat open/close state
  * - Provides controls to children via context
  */
 
 import { useState, createContext, useContext, ReactNode } from 'react';
-import { Box, Fab, Badge } from '@mui/material';
+import { Box, Fab, Badge, useMediaQuery, useTheme } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import UnifiedChat from './UnifiedChat';
 import { Recipe } from '@/types';
@@ -46,6 +46,8 @@ export default function RecipeChatLayout({
   defaultIsChatOpen = false,
 }: RecipeChatLayoutProps) {
   const [isChatOpen, setIsChatOpen] = useState(defaultIsChatOpen);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const openChat = () => setIsChatOpen(true);
   const closeChat = () => setIsChatOpen(false);
@@ -58,42 +60,70 @@ export default function RecipeChatLayout({
 
   return (
     <RecipeChatContext.Provider value={controls}>
-      <Box sx={{ position: 'relative' }}>
+      <Box 
+        sx={{ 
+          position: 'relative',
+          pr: isChatOpen && !isMobile ? 'calc(450px + 48px)' : 0,
+          transition: 'padding-right 0.3s ease',
+        }}
+      >
         {children}
 
-        {/* FAB button - always visible */}
-        <Fab
-          color="primary"
-          aria-label={isChatOpen ? "Assistant open" : "Open recipe assistant"}
-          onClick={isChatOpen ? closeChat : openChat}
-          sx={{
-            position: 'fixed',
-            bottom: { xs: 16, sm: 24 },
-            right: { xs: 16, sm: 24 },
-            zIndex: 10000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
-            '&:hover': {
-              boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
-            },
-          }}
-        >
-          <Badge
-            badgeContent={isChatOpen ? '' : 0}
+        {/* FAB button - hidden when chat is open on desktop */}
+        {(!isChatOpen || isMobile) && (
+          <Fab
             color="primary"
-            invisible
+            aria-label="Open recipe assistant"
+            onClick={openChat}
+            sx={{
+              position: 'fixed',
+              bottom: { xs: 16, sm: 24 },
+              right: { xs: 16, sm: 24 },
+              zIndex: 10000,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1)',
+              '&:hover': {
+                boxShadow: '0 6px 16px rgba(0, 0, 0, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1)',
+              },
+            }}
           >
             <ChatBubbleIcon />
-          </Badge>
-        </Fab>
+          </Fab>
+        )}
 
-        {/* Unified Chat */}
-        <UnifiedChat
-          open={isChatOpen}
-          onClose={closeChat}
-          context="recipe"
-          recipeId={recipeId}
-          recipe={recipe}
-        />
+        {/* Unified Chat - Inline mode on desktop */}
+        {isChatOpen && !isMobile && (
+          <Box
+            sx={{
+              position: 'fixed',
+              top: { xs: 56, sm: 64 }, // Match TopNav height
+              right: 0,
+              bottom: 0,
+              width: 450,
+              zIndex: 1200,
+            }}
+          >
+            <UnifiedChat
+              open={isChatOpen}
+              onClose={closeChat}
+              context="recipe"
+              recipeId={recipeId}
+              recipe={recipe}
+              mode="inline"
+            />
+          </Box>
+        )}
+
+        {/* Unified Chat - Drawer mode on mobile */}
+        {isMobile && (
+          <UnifiedChat
+            open={isChatOpen}
+            onClose={closeChat}
+            context="recipe"
+            recipeId={recipeId}
+            recipe={recipe}
+            mode="drawer"
+          />
+        )}
       </Box>
     </RecipeChatContext.Provider>
   );
