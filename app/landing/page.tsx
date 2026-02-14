@@ -177,7 +177,7 @@ export default function LandingPage() {
                 }}
               >
                 <img
-                  src="/hero-app-screenshot.png"
+                  src="/herooo.png"
                 alt="RecipeAssist app showing recipe collection"
                   style={{
                     width: '100%',
