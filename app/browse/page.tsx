@@ -27,7 +27,7 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import AddIcon from '@mui/icons-material/Add';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import TopNav from '@/components/TopNav';
 import RecipeCard from '@/components/RecipeCard';
 import RecipeCardSkeleton from '@/components/RecipeCardSkeleton';
@@ -720,7 +720,7 @@ export default function BrowsePage() {
       {user && (
         <Fab
           color="primary"
-          aria-label="recipe assist"
+          aria-label="recipe assistant"
           onClick={() => setIsFabChatOpen(true)}
           sx={{
             position: 'fixed',
@@ -733,7 +733,7 @@ export default function BrowsePage() {
             },
           }}
         >
-          <ChatBubbleIcon />
+          <RestaurantMenuIcon />
         </Fab>
       )}
 

@@ -60,7 +60,7 @@ What would you like to do?`,
   // Recipe context - personalize with recipe name
   const recipeName = recipe?.title || 'this recipe';
   return {
-    message: `Hi! 👋 I'm your cooking assistant, can I assist you with **${recipeName}**?
+    message: `Hi! 👋 I'm your recipe assistant, can I assist you with **${recipeName}**?
 
 I can help with:
 • Ingredient substitutions
@@ -252,7 +252,7 @@ export default function UnifiedChat({
           }}
         >
           <Typography variant="h6" fontWeight={600}>
-            Recipe Assist
+            Recipe Assistant
           </Typography>
           <IconButton onClick={onClose} edge="end">
             <CloseIcon />

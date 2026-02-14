@@ -12,7 +12,7 @@
 
 import { useState, createContext, useContext, ReactNode } from 'react';
 import { Box, Fab, Badge } from '@mui/material';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import UnifiedChat from './UnifiedChat';
 import { Recipe } from '@/types';
 
@@ -64,7 +64,7 @@ export default function RecipeChatLayout({
         {/* FAB button - always visible */}
         <Fab
           color="primary"
-          aria-label={isChatOpen ? "Assist open" : "Open recipe assist"}
+          aria-label={isChatOpen ? "Assistant open" : "Open recipe assistant"}
           onClick={isChatOpen ? closeChat : openChat}
           sx={{
             position: 'fixed',
@@ -82,7 +82,7 @@ export default function RecipeChatLayout({
             color="primary"
             invisible
           >
-            <ChatBubbleIcon />
+            <RestaurantMenuIcon />
           </Badge>
         </Fab>
 
