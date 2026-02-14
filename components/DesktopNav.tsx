@@ -23,10 +23,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useChat } from '@/contexts/ChatContext';
 import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
-import UnifiedChat from '@/components/UnifiedChat';
 
 interface PendingRequest {
   id: string;
@@ -41,9 +41,9 @@ export default function DesktopNav() {
   const { user } = useAuth();
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
+  const { openChat } = useChat();
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [feedUnreadCount, setFeedUnreadCount] = useState(0);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const fetchControllerRef = useRef<AbortController | null>(null);
 
   const handleHomeClick = () => {
@@ -379,7 +379,7 @@ export default function DesktopNav() {
               <Button
                 variant="contained"
                 startIcon={<AddIcon />}
-                onClick={() => setIsChatOpen(true)}
+                onClick={openChat}
                 sx={{
                   bgcolor: 'primary.main',
                   color: 'white',
@@ -403,34 +403,5 @@ export default function DesktopNav() {
         </Box>
       </Toolbar>
     </AppBar>
-
-      {/* Unified Chat from nav - inline mode on desktop pages */}
-      {isChatOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: 64, // Below nav
-            right: 0,
-            bottom: 0,
-            width: 450,
-            zIndex: 1200,
-          }}
-        >
-          <UnifiedChat
-            open={isChatOpen}
-            onClose={() => setIsChatOpen(false)}
-            context="browse"
-            mode="inline"
-            onRecipeAdded={() => {
-              setIsChatOpen(false);
-              // Refresh page to show new recipe
-              if (pathname === '/browse') {
-                router.refresh();
-              }
-            }}
-          />
-        </Box>
-      )}
-    </>
   );
 }

@@ -10,10 +10,11 @@
  * - Provides controls to children via context
  */
 
-import { useState, createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { Box, Fab, Badge, useMediaQuery, useTheme } from '@mui/material';
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import UnifiedChat from './UnifiedChat';
+import { useChat } from '@/contexts/ChatContext';
 import { Recipe } from '@/types';
 
 interface RecipeChatLayoutProps {
@@ -45,12 +46,9 @@ export default function RecipeChatLayout({
   recipe,
   defaultIsChatOpen = false,
 }: RecipeChatLayoutProps) {
-  const [isChatOpen, setIsChatOpen] = useState(defaultIsChatOpen);
+  const { isChatOpen, openChat, closeChat } = useChat();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const openChat = () => setIsChatOpen(true);
-  const closeChat = () => setIsChatOpen(false);
 
   const controls: RecipeChatControls = {
     openChat,

@@ -40,6 +40,7 @@ import { Recipe } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useGroup } from '@/contexts/GroupContext';
+import { useChat } from '@/contexts/ChatContext';
 import { useInfiniteRecipes } from '@/hooks/useInfiniteRecipes';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 
@@ -78,7 +79,7 @@ export default function BrowsePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingRecipe, setDeletingRecipe] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [isFabChatOpen, setIsFabChatOpen] = useState(false);
+  const { isChatOpen, openChat, closeChat } = useChat();
   const [canAddRecipes, setCanAddRecipes] = useState(false);
 
   // Filter options are now provided by the server via facets API response
@@ -407,7 +408,7 @@ export default function BrowsePage() {
             position: 'sticky',
             top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
             zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
-            pr: isFabChatOpen && !isMobile ? 'calc(450px + 48px)' : 0,
+            pr: isChatOpen && !isMobile ? 'calc(450px + 48px)' : 0,
             transition: 'padding-right 0.3s ease',
           }}
         >
@@ -610,7 +611,7 @@ export default function BrowsePage() {
         pb: 4, 
         flex: 1, 
         px: 3,
-        pr: isFabChatOpen && !isMobile ? 'calc(450px + 48px)' : 3,
+        pr: isChatOpen && !isMobile ? 'calc(450px + 48px)' : 3,
         transition: 'padding-right 0.3s ease',
       }}>
         {/* Loading State */}
@@ -621,9 +622,9 @@ export default function BrowsePage() {
                 item 
                 xs={12} 
                 sm={6} 
-                md={isFabChatOpen && !isMobile ? 6 : 4}
-                lg={isFabChatOpen && !isMobile ? 6 : 3}
-                xl={isFabChatOpen && !isMobile ? 4 : 3}
+                md={isChatOpen && !isMobile ? 6 : 4}
+                lg={isChatOpen && !isMobile ? 6 : 3}
+                xl={isChatOpen && !isMobile ? 4 : 3}
                 key={index}
               >
                 <RecipeCardSkeleton />
@@ -673,9 +674,9 @@ export default function BrowsePage() {
                     item 
                     xs={12} 
                     sm={6} 
-                    md={isFabChatOpen && !isMobile ? 6 : 4}
-                    lg={isFabChatOpen && !isMobile ? 6 : 3}
-                    xl={isFabChatOpen && !isMobile ? 4 : 3}
+                    md={isChatOpen && !isMobile ? 6 : 4}
+                    lg={isChatOpen && !isMobile ? 6 : 3}
+                    xl={isChatOpen && !isMobile ? 4 : 3}
                     key={recipe.id}
                   >
                       <RecipeCard 
@@ -746,11 +747,11 @@ export default function BrowsePage() {
       />
 
       {/* FAB - Context-aware chat */}
-      {user && !isFabChatOpen && (
+      {user && !isChatOpen && (
         <Fab
           color="primary"
           aria-label="recipe assistant"
-          onClick={() => setIsFabChatOpen(true)}
+          onClick={openChat}
           sx={{
             position: 'fixed',
             bottom: 24,
@@ -767,7 +768,7 @@ export default function BrowsePage() {
       )}
 
       {/* Unified Chat - Browse context - Inline mode on desktop */}
-      {isFabChatOpen && !isMobile && (
+      {isChatOpen && !isMobile && (
         <Box
           sx={{
             position: 'fixed',
@@ -779,8 +780,8 @@ export default function BrowsePage() {
           }}
         >
           <UnifiedChat
-            open={isFabChatOpen}
-            onClose={() => setIsFabChatOpen(false)}
+            open={isChatOpen}
+            onClose={closeChat}
             context="browse"
             onRecipeAdded={handleRecipeAdded}
             mode="inline"
@@ -791,8 +792,8 @@ export default function BrowsePage() {
       {/* Unified Chat - Drawer mode on mobile */}
       {isMobile && (
         <UnifiedChat
-          open={isFabChatOpen}
-          onClose={() => setIsFabChatOpen(false)}
+          open={isChatOpen}
+          onClose={closeChat}
           context="browse"
           onRecipeAdded={handleRecipeAdded}
           mode="drawer"

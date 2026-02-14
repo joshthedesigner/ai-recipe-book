@@ -10,6 +10,7 @@ import theme from './theme';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { GroupProvider } from '@/contexts/GroupContext';
+import { ChatProvider } from '@/contexts/ChatContext';
 import { PostHogProvider } from '@/components/PostHogProvider';
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -35,7 +36,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <AuthProvider>
             <GroupProvider>
               <ToastProvider>
-                {children}
+                <ChatProvider>
+                  {children}
+                </ChatProvider>
               </ToastProvider>
             </GroupProvider>
           </AuthProvider>

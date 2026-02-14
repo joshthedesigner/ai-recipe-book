@@ -28,10 +28,10 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGroup } from '@/contexts/GroupContext';
 import { useToast } from '@/contexts/ToastContext';
+import { useChat } from '@/contexts/ChatContext';
 import { supabase } from '@/db/supabaseClient';
 import FriendsSearch from '@/components/FriendsSearch';
 import UserAvatarMenu from '@/components/UserAvatarMenu';
-import UnifiedChat from '@/components/UnifiedChat';
 
 interface PendingRequest {
   id: string;
@@ -46,8 +46,8 @@ export default function MobileNav() {
   const { user } = useAuth();
   const { activeGroup, groups, loading: groupsLoading, switchGroup } = useGroup();
   const { showToast } = useToast();
+  const { openChat } = useChat();
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [feedUnreadCount, setFeedUnreadCount] = useState(0);
   const fetchControllerRef = useRef<AbortController | null>(null);
@@ -434,7 +434,7 @@ export default function MobileNav() {
                   {/* Add Recipe Button */}
                   {user && (
                     <Button
-                      onClick={() => setIsChatOpen(true)}
+                      onClick={openChat}
                       startIcon={<AddIcon sx={{ fontSize: 18 }} />}
                       sx={{
                         bgcolor: 'primary.main',
@@ -481,20 +481,6 @@ export default function MobileNav() {
           }}
         />
       )}
-
-      {/* Unified Chat - uses drawer mode on mobile */}
-      <UnifiedChat
-        open={isChatOpen}
-        onClose={() => setIsChatOpen(false)}
-        context="browse"
-        mode="drawer"
-        onRecipeAdded={() => {
-          setIsChatOpen(false);
-          if (pathname === '/browse') {
-            router.refresh();
-          }
-        }}
-      />
     </>
   );
 }
