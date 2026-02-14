@@ -266,7 +266,7 @@ export default function UnifiedChat({
           }}
         >
           {messages.map((msg, idx) => (
-            <MessageBubble key={idx} message={msg} />
+            <MessageBubble key={idx} role={msg.role} message={msg.message} />
           ))}
           
           {loading && !progressMessage && (
