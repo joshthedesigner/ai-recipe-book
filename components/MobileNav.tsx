@@ -444,6 +444,9 @@ export default function MobileNav() {
                         fontSize: '0.875rem',
                         fontWeight: 500,
                         textTransform: 'none',
+                        '& .MuiButton-startIcon': {
+                          marginRight: '4px',
+                        },
                         '&:hover': {
                           bgcolor: 'primary.dark',
                         },
