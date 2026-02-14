@@ -60,9 +60,9 @@ What would you like to do?`,
   // Recipe context - personalize with recipe name
   const recipeName = recipe?.title || 'this recipe';
   return {
-    message: `Hi! 👋 I'm here to help with **${recipeName}**.
+    message: `Hi! 👋 I'm your cooking assistant, can I assist you with **${recipeName}**?
 
-I can assist with:
+I can help with:
 • Ingredient substitutions
 • Measurement conversions
 • Cooking techniques and tips
