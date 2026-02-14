@@ -407,7 +407,7 @@ export default function BrowsePage() {
             position: 'sticky',
             top: { xs: 56, sm: 64 }, // Account for TopNav height (mobile: 56px, desktop: 64px)
             zIndex: 100, // Higher than recipe card menu buttons (zIndex: 10) but below MUI Menu (zIndex: 1300)
-            pr: isFabChatOpen && !isMobile ? 'calc(450px + 24px)' : 0,
+            pr: isFabChatOpen && !isMobile ? 'calc(450px + 48px)' : 0,
             transition: 'padding-right 0.3s ease',
           }}
         >
@@ -610,7 +610,7 @@ export default function BrowsePage() {
         pb: 4, 
         flex: 1, 
         px: 3,
-        pr: isFabChatOpen && !isMobile ? 'calc(450px + 24px)' : 3,
+        pr: isFabChatOpen && !isMobile ? 'calc(450px + 48px)' : 3,
         transition: 'padding-right 0.3s ease',
       }}>
         {/* Loading State */}
@@ -746,7 +746,7 @@ export default function BrowsePage() {
       />
 
       {/* FAB - Context-aware chat */}
-      {user && (
+      {user && !isFabChatOpen && (
         <Fab
           color="primary"
           aria-label="recipe assistant"
@@ -772,7 +772,7 @@ export default function BrowsePage() {
           sx={{
             position: 'fixed',
             top: { xs: 56, sm: 64 }, // Match TopNav height
-            right: 24,
+            right: 0,
             bottom: 0,
             width: 450,
             zIndex: 1200,
