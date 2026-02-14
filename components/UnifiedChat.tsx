@@ -45,7 +45,7 @@ const WELCOME_MESSAGES = {
 
 I can help you add recipes through:
 • URLs from recipe websites
-• Photos of recipe cards or cookbook pages  
+• Photos of recipe cards or cookbook pages
 • Raw text - just paste it in
 
 I can also answer any recipe questions you might have!
