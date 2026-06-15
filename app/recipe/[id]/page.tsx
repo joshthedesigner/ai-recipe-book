@@ -68,9 +68,7 @@ export default function RecipeDetailPage() {
   // Check if recipe belongs to current user
   const isOwnRecipe = recipe?.user_id === user?.id;
 
-  // HIDDEN - Notes feature
-  // Check if user came from feed
-  // const fromFeed = searchParams.get('from') === 'feed';
+  const fromFeed = searchParams.get('from') === 'feed';
   
   // HIDDEN - Notes feature
   // Check for tab query param (for navigation from feed notes)
