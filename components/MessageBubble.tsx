@@ -62,10 +62,15 @@ export default function MessageBubble({ role, message, timestamp, children, imag
             my: 1,
           },
           // List Style: 12px top/bottom (equal to paragraph spacing), 4px between items
-          '& ul, & ol': {
-            pl: 1.25,  // 20px - left padding for bullets
-            mb: 0.75,  // 12px - same as paragraph spacing
-            mt: 0.75,  // 12px - same as paragraph spacing (equal spacing)
+          '& ul': {
+            pl: 1.25,
+            mb: 0.75,
+            mt: 0.75,
+          },
+          '& ol': {
+            pl: 3,     // 24px - extra room so double-digit numbers don't bleed left
+            mb: 0.75,
+            mt: 0.75,
           },
           // When list immediately follows a block element (e.g., "Examples:" → list), reduce spacing
           // This creates visual connection between introducing content and its list
