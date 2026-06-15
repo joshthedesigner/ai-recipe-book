@@ -244,7 +244,7 @@ export default function DesktopNav() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '16px', ml: 5 }}>
 
             {/* Feed - Hidden until core features are being used */}
-            {false && user && (
+            {user && (
               <ButtonBase
                 onClick={() => router.push('/feed')}
                 sx={{
@@ -304,7 +304,7 @@ export default function DesktopNav() {
             )}
 
             {/* Friends - Hidden until core features are being used */}
-            {false && user && (
+            {user && (
               <ButtonBase
                 onClick={() => router.push('/friends')}
                 sx={{

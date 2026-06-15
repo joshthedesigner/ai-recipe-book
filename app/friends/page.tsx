@@ -66,11 +66,6 @@ export default function FriendsPage() {
   const { showToast } = useToast();
   const { groups, switchGroup } = useGroup();
   
-  // Redirect to browse page - Friends feature is hidden until core features are being used
-  useEffect(() => {
-    router.replace('/browse');
-  }, [router]);
-  
   const [friends, setFriends] = useState<Friend[]>([]);
   const [pendingIncoming, setPendingIncoming] = useState<PendingRequest[]>([]);
   const [pendingOutgoing, setPendingOutgoing] = useState<PendingOutgoing[]>([]);

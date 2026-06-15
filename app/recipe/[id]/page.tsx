@@ -83,8 +83,11 @@ export default function RecipeDetailPage() {
 
   // Smart back navigation
   const handleBack = () => {
-    // Feed feature is hidden, always go to browse
-    router.push('/browse');
+    if (fromFeed) {
+      router.push('/feed');
+    } else {
+      router.push('/browse');
+    }
   };
 
   // Extract and format domain name from URL

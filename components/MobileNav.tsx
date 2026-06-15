@@ -277,7 +277,7 @@ export default function MobileNav() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
                   {/* Feed - Hidden until core features are being used */}
-                  {false && user && (
+                  {user && (
                     <ButtonBase
                       onClick={() => router.push('/feed')}
                       sx={{
@@ -338,7 +338,7 @@ export default function MobileNav() {
                   )}
 
                   {/* Friends - Hidden until core features are being used */}
-                  {false && user && (
+                  {user && (
                     <ButtonBase
                       onClick={() => router.push('/friends')}
                         sx={{
