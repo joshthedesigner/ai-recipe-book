@@ -9,7 +9,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
-import { getUserGroups } from '@/utils/permissions';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/utils/rateLimit';
 
 // Force dynamic rendering - this route uses cookies for auth
@@ -62,36 +61,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get friend groups
-    const allGroups = await getUserGroups(supabase, user.id);
-    const friendGroups = allGroups.filter(g => g.isFriend);
-
-    if (friendGroups.length === 0) {
-      return NextResponse.json(
-        {
-          success: true,
-          count: 0,
-        },
-        { status: 200 }
-      );
-    }
-
-    const friendGroupIds = friendGroups.map(g => g.id);
-
-    // Get last view timestamp (NULL means never viewed = all recipes are new)
     const lastViewAt = userRecord?.last_feed_view_at || null;
-    
-    // Efficient COUNT query - only count, don't fetch data
+
+    // Count all new public recipes from other users
     let query = supabase
       .from('recipes')
       .select('*', { count: 'exact', head: true })
-      .in('group_id', friendGroupIds);
+      .eq('is_public', true)
+      .neq('user_id', user.id);
 
-    // If user has viewed feed before, only count recipes created after that
     if (lastViewAt) {
       query = query.gt('created_at', lastViewAt);
     }
-    // If lastViewAt is NULL, count all recipes (user never viewed feed)
 
     const { count, error: countError } = await query;
 
