@@ -1,13 +1,3 @@
-/**
- * Public Feed API Route
- *
- * GET /api/feed/public
- *
- * Returns all recipes from all users, newest first.
- * Uses the admin client to bypass RLS (auth check is enforced manually).
- * Excludes the current user's own recipes.
- */
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
@@ -21,7 +11,6 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = createClient();
 
-    // Auth check — user must be logged in
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
@@ -30,10 +19,8 @@ export async function GET(request: NextRequest) {
     const rateLimitResult = await checkRateLimit(request, RATE_LIMITS.general, user.id);
     if (!rateLimitResult.success) return rateLimitResponse(rateLimitResult);
 
-    const searchParams = request.nextUrl.searchParams;
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
+    const offset = Math.max(parseInt(request.nextUrl.searchParams.get('offset') || '0', 10), 0);
 
-    // Get last feed view for is_new flag
     const { data: userRecord } = await supabase
       .from('users')
       .select('last_feed_view_at')
@@ -42,42 +29,25 @@ export async function GET(request: NextRequest) {
 
     const lastViewAt = userRecord?.last_feed_view_at || null;
 
-    // Use admin client to read all recipes regardless of RLS group membership
     const { data: recipes, error, count } = await supabaseAdmin
       .from('recipes')
-      .select(`
-        id,
-        user_id,
-        group_id,
-        title,
-        ingredients,
-        steps,
-        tags,
-        source_url,
-        image_url,
-        video_url,
-        video_platform,
-        cookbook_name,
-        cookbook_page,
-        contributor_name,
-        created_at,
-        updated_at
-      `, { count: 'exact' })
+      .select(
+        'id, user_id, group_id, title, ingredients, steps, tags, source_url, image_url, video_url, video_platform, cookbook_name, cookbook_page, contributor_name, created_at, updated_at',
+        { count: 'exact' }
+      )
       .neq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + LIMIT - 1);
 
     if (error) {
-      console.error('[Public Feed API] Error fetching recipes:', error);
-      return NextResponse.json({ success: false, error: 'Failed to load feed' }, { status: 500 });
+      console.error('[Public Feed API] Error:', error);
+      return NextResponse.json({ success: false, error: error.message || 'Failed to load feed' }, { status: 500 });
     }
 
-    // Fetch user names separately to avoid FK naming issues
     const userIds = [...new Set((recipes || []).map((r: any) => r.user_id))];
     const { data: users } = userIds.length
       ? await supabaseAdmin.from('users').select('id, name').in('id', userIds)
       : { data: [] };
-
     const userMap = new Map((users || []).map((u: any) => [u.id, u.name]));
 
     const feedItems = (recipes || []).map((recipe: any) => ({
@@ -102,10 +72,13 @@ export async function GET(request: NextRequest) {
       is_new: lastViewAt ? new Date(recipe.created_at) > new Date(lastViewAt) : true,
     }));
 
-    const totalCount = count || 0;
-    const hasMore = offset + LIMIT < totalCount;
-
-    return NextResponse.json({ success: true, feedItems, hasMore, offset, totalCount });
+    return NextResponse.json({
+      success: true,
+      feedItems,
+      hasMore: (count || 0) > offset + LIMIT,
+      offset,
+      totalCount: count || 0,
+    });
   } catch (error) {
     console.error('[Public Feed API] Unexpected error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
