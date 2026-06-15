@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/db/supabaseServer';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { checkRateLimit, rateLimitResponse, RATE_LIMITS } from '@/utils/rateLimit';
 
 // Force dynamic rendering - this route uses cookies for auth
@@ -63,11 +64,10 @@ export async function GET(request: NextRequest) {
 
     const lastViewAt = userRecord?.last_feed_view_at || null;
 
-    // Count all new public recipes from other users
-    let query = supabase
+    // Count all new recipes from other users (admin client bypasses RLS)
+    let query = supabaseAdmin
       .from('recipes')
       .select('*', { count: 'exact', head: true })
-      .eq('is_public', true)
       .neq('user_id', user.id);
 
     if (lastViewAt) {
