@@ -26,7 +26,7 @@
     "cheerio": "^1.1.2",
     "framer-motion": "^12.34.0",
     "heic-convert": "^2.1.0",
-    "next": "14.2.33",
+    "next": "16.1.1",
     "openai": "^4.20.1",
     "posthog-js": "^1.290.0",
     "react": "^18.2.0",
